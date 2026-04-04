@@ -1,0 +1,48 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1200px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.row-link {
+  cursor: pointer;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.empty {
+  margin: 0;
+  padding: 2rem;
+  color: var(--ds-on-surface-variant);
+}
+
+.ds-on-variant {
+  color: var(--ds-on-surface-variant);
+}

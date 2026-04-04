@@ -1,0 +1,235 @@
+﻿<section class="page">
+  <div class="page-head">
+    <a mat-button routerLink="/students"><mat-icon>arrow_back</mat-icon> Back</a>
+    <div>
+      <h1 class="ds-display-md">Register student</h1>
+      <p class="ds-body-sm ds-on-variant">Multi-step admission form</p>
+    </div>
+  </div>
+
+  <mat-card class="card">
+    <mat-stepper linear>
+      <mat-step [stepControl]="s1" label="Personal">
+        <form [formGroup]="s1" class="grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Admission No</mat-label>
+            <input matInput formControlName="admission_no" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>First name</mat-label>
+            <input matInput formControlName="first_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Last name</mat-label>
+            <input matInput formControlName="last_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Gender</mat-label>
+            <mat-select formControlName="gender">
+              <mat-option value="">—</mat-option>
+              <mat-option value="male">Male</mat-option>
+              <mat-option value="female">Female</mat-option>
+              <mat-option value="other">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date of birth</mat-label>
+            <input matInput type="date" formControlName="dob" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+        </form>
+        <div class="actions">
+          <button mat-button matStepperNext type="button" color="primary">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="s2" label="Guardian">
+        <form [formGroup]="s2" class="grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Guardian focus</mat-label>
+            <mat-select formControlName="guardian_type">
+              <mat-option value="father">Father</mat-option>
+              <mat-option value="mother">Mother</mat-option>
+              <mat-option value="other">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Father name</mat-label>
+            <input matInput formControlName="father_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Father phone</mat-label>
+            <input matInput formControlName="father_phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Father occupation</mat-label>
+            <input matInput formControlName="father_occupation" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mother name</mat-label>
+            <input matInput formControlName="mother_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mother occupation</mat-label>
+            <input matInput formControlName="mother_occupation" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Guardian name</mat-label>
+            <input matInput formControlName="guardian_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Guardian phone</mat-label>
+            <input matInput formControlName="guardian_phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Guardian address</mat-label>
+            <textarea matInput rows="2" formControlName="guardian_address"></textarea>
+          </mat-form-field>
+        </form>
+        <div class="actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-button matStepperNext type="button" color="primary">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="s3" label="Medical">
+        <form [formGroup]="s3" class="grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Blood group</mat-label>
+            <input matInput formControlName="blood_group" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Height (cm)</mat-label>
+            <input matInput formControlName="height_cm" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Weight (kg)</mat-label>
+            <input matInput formControlName="weight_kg" />
+          </mat-form-field>
+        </form>
+        <div class="actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-button matStepperNext type="button" color="primary">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="s4" label="Previous school">
+        <form [formGroup]="s4" class="grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Previous school name</mat-label>
+            <input matInput formControlName="school_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Previous school address</mat-label>
+            <textarea matInput rows="2" formControlName="school_address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Current school name (if transferring)</mat-label>
+            <input matInput formControlName="current_school_name" />
+          </mat-form-field>
+        </form>
+        <div class="actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-button matStepperNext type="button" color="primary">Next</button>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="s5" label="Address & enrollment">
+        <form [formGroup]="s5" class="grid">
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Current address</mat-label>
+            <textarea matInput rows="2" formControlName="current_address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Permanent address</mat-label>
+            <textarea matInput rows="2" formControlName="permanent_address"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Description / notes</mat-label>
+            <textarea matInput rows="2" formControlName="extra_details"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Bank name</mat-label>
+            <input matInput formControlName="bank_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Branch</mat-label>
+            <input matInput formControlName="bank_branch" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>IFSC</mat-label>
+            <input matInput formControlName="bank_ifsc" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Hostel</mat-label>
+            <input matInput formControlName="hostel_name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Room no.</mat-label>
+            <input matInput formControlName="room_no" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Room type</mat-label>
+            <input matInput formControlName="room_type" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Academic year</mat-label>
+            <mat-select formControlName="academic_year_id">
+              @for (y of years; track y.id) {
+                <mat-option [value]="y.id">{{ y.name || ('Year ' + y.id) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Class</mat-label>
+            <mat-select formControlName="class_id">
+              @for (c of classes; track c.id) {
+                <mat-option [value]="c.id">{{ c.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Section</mat-label>
+            <mat-select formControlName="section_id">
+              @for (s of sections; track s.id) {
+                <mat-option [value]="s.id">{{ s.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Roll number</mat-label>
+            <input matInput type="number" formControlName="roll_number" />
+          </mat-form-field>
+          @if (categoryOptions().length) {
+            <mat-form-field appearance="outline" class="span-2">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="category">
+                <mat-option value="">—</mat-option>
+                @for (opt of categoryOptions(); track opt) {
+                  <mat-option [value]="opt">{{ opt }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+          <mat-checkbox formControlName="create_student_login" class="span-2">
+            Create student login (username: subdomain-admission, default password, inactive)
+          </mat-checkbox>
+        </form>
+        <div class="actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="submitting">
+            Submit
+          </button>
+        </div>
+      </mat-step>
+    </mat-stepper>
+  </mat-card>
+</section>

@@ -1,0 +1,100 @@
+﻿<section class="tenant-list ds-section-pad">
+  <div class="tenant-list__head">
+    <h2 class="ds-headline-md tenant-list__title">Tenants</h2>
+    <p class="ds-body-md ds-on-variant">Enable or disable product modules per school.</p>
+  </div>
+
+  <div class="tenant-list__toolbar">
+    <button mat-flat-button color="primary" type="button" (click)="openCreateTenant()">
+      <mat-icon>add</mat-icon>
+      Add tenant
+    </button>
+  </div>
+
+  @if (loading) {
+    <p class="ds-body-md ds-on-variant">Loading...</p>
+  } @else if (tenants().length === 0) {
+    <div class="tenant-list__empty ds-body-md ds-on-variant">
+      <p class="tenant-list__empty-title">No tenants yet</p>
+      <p>Create a tenant to get started.</p>
+    </div>
+  } @else {
+    <div class="tenant-list__table-wrap mat-elevation-z0">
+      <table mat-table [dataSource]="tenants()" class="tenant-table">
+        <ng-container matColumnDef="tenant">
+          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Tenant</th>
+          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--tenant">
+            <div class="tenant-table__tenant">
+              <span [class]="avatarToneClass(row.id)" aria-hidden="true">{{ initials(row.name) }}</span>
+              <div class="tenant-table__tenant-meta">
+                <span class="tenant-table__name">{{ row.name }}</span>
+                <span class="tenant-table__sub">ID: {{ row.subdomain }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Status</th>
+          <td mat-cell *matCellDef="let row" class="tenant-table__cell">
+            <span
+              class="tenant-status"
+              [class.tenant-status--active]="statusKind(row.status) === 'active'"
+              [class.tenant-status--inactive]="statusKind(row.status) === 'inactive'"
+              [class.tenant-status--pending]="statusKind(row.status) === 'pending' || statusKind(row.status) === 'unknown'"
+            >
+              {{ statusLabel(row.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="lastUpdated">
+          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Last updated</th>
+          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--updated">
+            {{ relativeUpdated(row) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="tenant-table__th tenant-table__th--actions">Actions</th>
+          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--actions">
+            <button
+              mat-icon-button
+              type="button"
+              class="tenant-table__action-btn"
+              aria-label="Open row actions"
+              [matMenuTriggerFor]="tenantRowMenu"
+              (click)="menuRow.set(row)"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="tenant-table__header-row"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="tenant-table__data-row"></tr>
+      </table>
+
+      <mat-paginator
+        class="tenant-list__paginator"
+        [length]="total()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+
+      <mat-menu #tenantRowMenu="matMenu" class="tenant-table__row-menu" (closed)="menuRow.set(null)">
+        <a mat-menu-item [routerLink]="['/super-admin/tenants', menuRow()?.id, 'features']">
+          <mat-icon>tune</mat-icon>
+          <span>Manage features</span>
+        </a>
+        <button mat-menu-item type="button" disabled>
+          <mat-icon>edit</mat-icon>
+          <span>Edit</span>
+        </button>
+      </mat-menu>
+    </div>
+  }
+</section>

@@ -1,0 +1,55 @@
+<section class="fm ds-section-pad">
+  @if (loading) {
+    <p class="ds-body-md ds-on-variant">Loading…</p>
+  } @else if (!tenant()) {
+    <p class="ds-body-md ds-on-variant">Tenant not found.</p>
+  } @else {
+    <div class="fm__head">
+      <h2 class="ds-headline-md fm__title">Tenant: {{ tenant()!.name }}</h2>
+      <p class="ds-body-sm ds-on-variant">{{ tenant()!.subdomain }} · {{ tenant()!.status }}</p>
+    </div>
+
+    <div class="fm__groups">
+      @for (g of grouped(); track g.key) {
+        <mat-card class="fm-card">
+          <mat-card-header>
+            <mat-card-title class="ds-headline-sm">{{ g.label }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @for (m of g.items; track m.module_key) {
+              <div class="fm-row">
+                <div class="fm-row__meta">
+                  <span class="ds-body-md">{{ m.name }}</span>
+                  <span
+                    class="ds-label-sm"
+                    [class.fm-status--on]="m.is_enabled"
+                    [class.fm-status--off]="!m.is_enabled"
+                  >
+                    {{ m.is_enabled ? 'Enabled' : 'Disabled' }}
+                  </span>
+                </div>
+                <mat-slide-toggle
+                  [ngModel]="m.is_enabled"
+                  (ngModelChange)="onToggle(m.module_key, $event)"
+                  color="primary"
+                />
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <div class="fm__actions">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="!hasChanges() || saving"
+        (click)="save()"
+      >
+        {{ saving ? 'Saving…' : 'Save changes' }}
+      </button>
+    </div>
+  }
+</section>

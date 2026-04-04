@@ -1,0 +1,483 @@
+/* App-level tokens — alias Material 3 system vars (theme.scss) for custom layout chrome. */
+
+/*
+  Font stacks — use these for all new UI (body uses --font-family--apple-system).
+  Pair with --ds-on-surface / --ds-on-surface-variant for readable text in both themes.
+*/
+:root {
+  --font-family--sans-serif: 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-family--apple-system: -apple-system, 'BlinkMacSystemFont', 'Segoe UI', roboto,
+    oxygen-sans, ubuntu, cantarell, 'Helvetica Neue', sans-serif;
+}
+
+/* --ds-* mirror --mat-sys-* from Material Theme Builder (see theme.scss + _material-theme-schemes.scss). */
+
+html.theme-dark {
+  --ds-surface: var(--mat-sys-surface);
+  --ds-surface-container-lowest: var(--mat-sys-surface-container-lowest);
+  --ds-surface-container-low: var(--mat-sys-surface-container-low);
+  --ds-surface-container-high: var(--mat-sys-surface-container-high);
+  --ds-surface-container-highest: var(--mat-sys-surface-container-highest);
+  --ds-surface-bright: var(--mat-sys-surface-bright);
+
+  --ds-primary: var(--mat-sys-primary);
+  --ds-primary-container: var(--mat-sys-primary-container);
+  --ds-on-primary: var(--mat-sys-on-primary);
+
+  --ds-on-surface: var(--mat-sys-on-surface);
+  --ds-on-surface-variant: var(--mat-sys-on-surface-variant);
+  --ds-outline-variant: var(--mat-sys-outline-variant);
+
+  --ds-secondary-container: var(--mat-sys-secondary-container);
+  --ds-on-secondary-container: var(--mat-sys-on-secondary-container);
+
+  --ds-radius-default: 0.5rem;
+  --ds-radius-md: 0.75rem;
+
+  --ds-shadow-ambient: 0 12px 36px color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+
+  --ds-toolbar-bg: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+  --ds-toolbar-fg: var(--mat-sys-on-surface);
+  --ds-toolbar-icon: var(--mat-sys-on-surface);
+  --ds-toolbar-muted: var(--mat-sys-on-surface-variant);
+  --ds-toolbar-border: color-mix(in srgb, var(--mat-sys-outline) 22%, transparent);
+
+  --ds-user-menu-header-bg: var(--mat-sys-tertiary-container);
+  --ds-user-menu-header-fg: var(--mat-sys-on-tertiary-container);
+
+  --ds-nav-inactive-label: color-mix(in srgb, var(--mat-sys-on-surface) 92%, transparent);
+  --ds-nav-inactive-icon: var(--mat-sys-on-surface-variant);
+  --ds-nav-inactive-hover-label: var(--mat-sys-on-surface);
+  --ds-nav-inactive-hover-icon: var(--mat-sys-on-surface);
+
+  --ds-menu-surface: var(--mat-sys-surface-container-high);
+  --ds-menu-on-surface: var(--mat-sys-on-surface);
+  --ds-menu-divider: color-mix(in srgb, var(--mat-sys-outline) 20%, transparent);
+
+  --ds-nav-active-bg: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+}
+
+html.theme-light {
+  --ds-surface: var(--mat-sys-surface);
+  --ds-surface-container-lowest: var(--mat-sys-surface-container-lowest);
+  --ds-surface-container-low: var(--mat-sys-surface-container-low);
+  --ds-surface-container-high: var(--mat-sys-surface-container-high);
+  --ds-surface-container-highest: var(--mat-sys-surface-container-highest);
+  --ds-surface-bright: var(--mat-sys-surface-bright);
+
+  --ds-primary: var(--mat-sys-primary);
+  --ds-primary-container: var(--mat-sys-primary-container);
+  --ds-on-primary: var(--mat-sys-on-primary);
+
+  --ds-on-surface: var(--mat-sys-on-surface);
+  --ds-on-surface-variant: var(--mat-sys-on-surface-variant);
+  --ds-outline-variant: var(--mat-sys-outline-variant);
+
+  --ds-secondary-container: var(--mat-sys-secondary-container);
+  --ds-on-secondary-container: var(--mat-sys-on-secondary-container);
+
+  --ds-radius-default: 0.5rem;
+  --ds-radius-md: 0.75rem;
+
+  --ds-shadow-ambient: 0 12px 32px color-mix(in srgb, var(--mat-sys-outline) 18%, transparent);
+
+  --ds-toolbar-bg: var(--mat-sys-surface-container-lowest);
+  --ds-toolbar-fg: var(--mat-sys-on-surface);
+  --ds-toolbar-icon: var(--mat-sys-on-surface);
+  --ds-toolbar-muted: var(--mat-sys-on-surface-variant);
+  --ds-toolbar-border: color-mix(in srgb, var(--mat-sys-outline) 14%, transparent);
+
+  --ds-user-menu-header-bg: var(--mat-sys-tertiary-container);
+  --ds-user-menu-header-fg: var(--mat-sys-on-tertiary-container);
+
+  --ds-nav-inactive-label: color-mix(in srgb, var(--mat-sys-on-surface) 92%, transparent);
+  --ds-nav-inactive-icon: var(--mat-sys-on-surface-variant);
+  --ds-nav-inactive-hover-label: var(--mat-sys-on-surface);
+  --ds-nav-inactive-hover-icon: var(--mat-sys-on-surface);
+
+  --ds-menu-surface: var(--mat-sys-surface-container-lowest);
+  --ds-menu-on-surface: var(--mat-sys-on-surface);
+  --ds-menu-divider: color-mix(in srgb, var(--mat-sys-outline) 20%, transparent);
+
+  --ds-nav-active-bg: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family--apple-system);
+  background-color: var(--ds-surface);
+  color: var(--ds-on-surface);
+}
+
+/* Root app shell inherits body text color for Material and custom content */
+app-root {
+  display: block;
+  min-height: 100%;
+  color: var(--ds-on-surface);
+  font-family: inherit;
+}
+
+/* Toolbar user menu: MDC projects content into .mdc-button__label — flex keeps avatar, name/role, chevron aligned */
+button.app-header-actions__user.mat-mdc-button {
+  align-items: center;
+}
+
+button.app-header-actions__user.mat-mdc-button .mdc-button__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Optional: Helvetica-based stack for marketing or legacy blocks */
+.ds-font-sans {
+  font-family: var(--font-family--sans-serif);
+}
+
+/* Editorial type scale — letter-spacing -0.02em on display/headline */
+.ds-display-md {
+  font-size: 2.25rem;
+  line-height: 2.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ds-headline-lg {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ds-headline-md {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ds-headline-sm {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ds-body-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+
+.ds-body-md {
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+
+.ds-body-sm {
+  font-size: 0.8125rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+
+.ds-label-sm {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ds-on-surface-variant);
+}
+
+.ds-on-variant {
+  color: var(--ds-on-surface-variant);
+}
+
+.ds-section-pad {
+  padding: 2rem 1.5rem 1.25rem;
+}
+
+.ds-ghost-border {
+  border: 1px solid var(--ds-outline-variant);
+}
+
+/* Dark theme: menu items use on-surface token */
+html.theme-dark .mat-mdc-menu-item .mat-mdc-menu-item-text,
+html.theme-dark .mat-mdc-menu-item .mdc-list-item__primary-text {
+  color: var(--ds-on-surface) !important;
+}
+
+html.theme-dark .mat-mdc-menu-item .mat-icon {
+  color: var(--ds-on-surface) !important;
+}
+
+/* Material: no stroke between sidenav and content — tonal separation only */
+.mat-drawer-side.mat-sidenav {
+  border-right: none;
+}
+
+/* Sidenav: scroll works; scrollbars visually hidden */
+.mat-drawer.mat-sidenav .mat-drawer-inner-container {
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mat-drawer.mat-sidenav .mat-drawer-inner-container::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Nav list row colors (Material overrides label/icon) */
+a.layout-nav-item:not(.layout-nav-item--active) .mat-mdc-list-item-title,
+a.layout-nav-item:not(.layout-nav-item--active) .mdc-list-item__primary-text {
+  color: var(--ds-nav-inactive-label) !important;
+}
+
+a.layout-nav-item:not(.layout-nav-item--active) mat-icon {
+  color: var(--ds-nav-inactive-icon) !important;
+}
+
+a.layout-nav-item:not(.layout-nav-item--active):hover .mat-mdc-list-item-title,
+a.layout-nav-item:not(.layout-nav-item--active):hover .mdc-list-item__primary-text {
+  color: var(--ds-nav-inactive-hover-label) !important;
+}
+
+a.layout-nav-item:not(.layout-nav-item--active):hover mat-icon {
+  color: var(--ds-nav-inactive-hover-icon) !important;
+}
+
+a.layout-nav-item.layout-nav-item--active .mat-mdc-list-item-title,
+a.layout-nav-item.layout-nav-item--active .mdc-list-item__primary-text {
+  color: var(--ds-primary) !important;
+}
+
+a.layout-nav-item.layout-nav-item--active mat-icon {
+  color: var(--ds-primary) !important;
+}
+
+/* Super admin nav — mirror tenant nav token usage */
+a.sa-nav-item:not(.sa-nav-item--active) .mat-mdc-list-item-title,
+a.sa-nav-item:not(.sa-nav-item--active) .mdc-list-item__primary-text {
+  color: var(--ds-nav-inactive-label) !important;
+}
+
+a.sa-nav-item:not(.sa-nav-item--active) mat-icon {
+  color: var(--ds-nav-inactive-icon) !important;
+}
+
+a.sa-nav-item:not(.sa-nav-item--active):hover .mat-mdc-list-item-title,
+a.sa-nav-item:not(.sa-nav-item--active):hover .mdc-list-item__primary-text {
+  color: var(--ds-nav-inactive-hover-label) !important;
+}
+
+a.sa-nav-item:not(.sa-nav-item--active):hover mat-icon {
+  color: var(--ds-nav-inactive-hover-icon) !important;
+}
+
+a.sa-nav-item.sa-nav-item--active .mat-mdc-list-item-title,
+a.sa-nav-item.sa-nav-item--active .mdc-list-item__primary-text {
+  color: var(--ds-primary) !important;
+}
+
+a.sa-nav-item.sa-nav-item--active mat-icon {
+  color: var(--ds-primary) !important;
+}
+
+/* Header menus (overlays; styles global so they apply outside component host) */
+.app-notif-menu-panel.mat-mdc-menu-panel {
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+.app-notif-menu-panel .mat-mdc-menu-content {
+  box-sizing: border-box;
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 360px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-notif-menu-panel .mat-mdc-menu-content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.app-notif-menu__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--ds-menu-divider);
+  position: sticky;
+  top: 0;
+  background: var(--ds-menu-surface);
+  z-index: 1;
+}
+
+.app-notif-menu__title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--ds-menu-on-surface);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.app-notif-menu__mark-all {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  min-width: auto;
+  line-height: 1.2;
+}
+
+.app-notif-menu-panel .mat-mdc-menu-item {
+  min-width: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.app-notif-menu-panel .mat-mdc-menu-item .mat-mdc-menu-item-text,
+.app-notif-menu-panel .mat-mdc-menu-item .mdc-list-item__primary-text {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.app-notif-menu__item {
+  height: auto !important;
+  min-height: 56px;
+  padding: 0.625rem 1rem !important;
+  white-space: normal !important;
+  line-height: 1.35;
+}
+
+.app-notif-menu__item--unread {
+  background-color: color-mix(in srgb, var(--ds-primary) 10%, transparent);
+}
+
+.app-notif-menu__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.app-notif-menu__item-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--ds-menu-on-surface);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.app-notif-menu__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ds-primary);
+}
+
+.app-notif-menu__item-body {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 0.75rem;
+  color: var(--ds-on-surface-variant);
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.app-notif-menu__item-time {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--ds-on-surface-variant);
+  margin-top: 0.25rem;
+  opacity: 0.92;
+}
+
+.app-user-menu-panel .mat-mdc-menu-content {
+  padding: 0;
+  min-width: 220px;
+}
+
+.app-user-menu__header {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
+  background: var(--ds-user-menu-header-bg);
+  color: var(--ds-user-menu-header-fg);
+}
+
+/* Tenant branding (v1): chrome only — see BrandingService + html.tenant-branding-active */
+:root {
+  --primary-color: #1976d2;
+  --secondary-color: #ffffff;
+}
+
+html.tenant-branding-active {
+  .layout-toolbar.mat-toolbar {
+    background-color: color-mix(in srgb, var(--primary-color) 22%, var(--ds-toolbar-bg)) !important;
+    border-bottom-color: color-mix(in srgb, var(--primary-color) 28%, var(--ds-toolbar-border)) !important;
+  }
+
+  .layout-sidenav {
+    background-color: color-mix(in srgb, var(--primary-color) 14%, var(--ds-surface-container-low)) !important;
+  }
+
+  a.layout-nav-item.layout-nav-item--active .mat-mdc-list-item-title,
+  a.layout-nav-item.layout-nav-item--active .mdc-list-item__primary-text {
+    color: var(--secondary-color) !important;
+  }
+
+  a.layout-nav-item.layout-nav-item--active mat-icon {
+    color: var(--secondary-color) !important;
+  }
+
+  a.layout-nav-item.layout-nav-item--active::before {
+    background: var(--secondary-color) !important;
+  }
+
+  .mat-mdc-unelevated-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary {
+    --mdc-filled-button-container-color: var(--primary-color);
+    --mat-mdc-button-persistent-ripple-color: var(--primary-color);
+    --mdc-filled-button-label-text-color: #fff;
+  }
+
+  .mat-mdc-unelevated-button.mat-primary .mdc-button__label,
+  .mat-mdc-raised-button.mat-primary .mdc-button__label {
+    color: #fff !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary {
+    --mdc-outlined-button-outline-color: var(--secondary-color);
+    --mdc-outlined-button-label-text-color: var(--secondary-color);
+  }
+}

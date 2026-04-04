@@ -1,0 +1,139 @@
+.layout-container {
+  height: 100vh;
+  background-color: var(--ds-surface);
+}
+
+.layout-sidenav {
+  width: 264px;
+  background-color: var(--ds-surface-container-low);
+  border: none;
+  box-shadow: none;
+  overflow-x: hidden;
+}
+
+.layout-brand {
+  padding: 1.5rem 1.25rem 1.25rem;
+}
+
+.layout-brand__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.layout-brand__logo {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.layout-brand__text {
+  min-width: 0;
+}
+
+.layout-brand__title {
+  display: block;
+  color: var(--ds-on-surface);
+}
+
+.layout-brand__subtitle {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.layout-nav-list {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.5rem 0.75rem 1rem;
+  overflow-x: hidden;
+}
+
+.layout-nav-item {
+  margin: 0.25rem 0;
+  border-radius: 10px;
+  min-width: 0;
+  overflow: hidden;
+
+  &:not(.layout-nav-item--active):hover {
+    background-color: var(--ds-surface-container-highest) !important;
+  }
+}
+
+.layout-nav-item--active {
+  position: relative;
+  background-color: var(--ds-nav-active-bg) !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 55%;
+    min-height: 18px;
+    border-radius: 0 2px 2px 0;
+    background: var(--ds-primary);
+    pointer-events: none;
+  }
+}
+
+.layout-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--ds-surface);
+}
+
+.layout-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 0.75rem 0 0.5rem;
+  background-color: var(--ds-toolbar-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: none;
+  border-bottom: 1px solid var(--ds-toolbar-border);
+  box-shadow: none;
+  color: var(--ds-toolbar-fg);
+}
+
+.layout-toolbar__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ds-toolbar-fg);
+}
+
+.layout-toolbar__spacer {
+  flex: 1;
+}
+
+.layout-toolbar__menu {
+  color: var(--ds-toolbar-icon);
+}
+
+.layout-toolbar__link {
+  margin-right: 0.25rem;
+  color: var(--ds-primary);
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 1.75rem 1.5rem 1rem;
+  background-color: var(--ds-surface);
+}

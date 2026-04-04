@@ -1,0 +1,96 @@
+<div class="app-header-actions">
+  <button
+    mat-icon-button
+    type="button"
+    class="app-header-actions__icon"
+    [attr.aria-label]="theme.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+    (click)="toggleTheme()"
+  >
+    <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    type="button"
+    class="app-header-actions__icon"
+    aria-haspopup="menu"
+    aria-label="Notifications"
+    [matMenuTriggerFor]="notifMenu"
+    [matBadge]="unreadCount()"
+    matBadgeSize="small"
+    matBadgeColor="warn"
+    [matBadgeHidden]="unreadCount() === 0"
+  >
+    <mat-icon>notifications</mat-icon>
+  </button>
+
+  <mat-menu #notifMenu="matMenu" class="app-notif-menu-panel" xPosition="before">
+    <ng-template matMenuContent>
+      <div class="app-notif-menu__header">
+        <span class="app-notif-menu__title">Notifications</span>
+        @if (unreadCount() > 0) {
+          <button
+            mat-button
+            type="button"
+            class="app-notif-menu__mark-all"
+            (click)="markAllNotificationsRead()"
+          >
+            Mark all read
+          </button>
+        }
+      </div>
+      @for (n of notifications(); track n.id) {
+        <button
+          mat-menu-item
+          type="button"
+          class="app-notif-menu__item"
+          [class.app-notif-menu__item--unread]="!n.read"
+          (click)="markNotifRead(n)"
+        >
+          <div class="app-notif-menu__row">
+            <span class="app-notif-menu__item-title">{{ n.title }}</span>
+            @if (!n.read) {
+              <span class="app-notif-menu__dot" aria-hidden="true"></span>
+            }
+          </div>
+          <span class="app-notif-menu__item-body">{{ n.body }}</span>
+          <span class="app-notif-menu__item-time">{{ relativeTime(n.createdAt) }}</span>
+        </button>
+      }
+    </ng-template>
+  </mat-menu>
+
+  <button
+    mat-button
+    type="button"
+    class="app-header-actions__user"
+    aria-haspopup="menu"
+    [attr.aria-label]="'Account menu for ' + displayName()"
+    [matMenuTriggerFor]="userMenu"
+  >
+    <span class="app-header-actions__avatar" aria-hidden="true">{{ avatarInitials() }}</span>
+    <span class="app-header-actions__user-text">
+      <span class="app-header-actions__name">{{ displayName() }}</span>
+      <span class="app-header-actions__role">{{ displayRole() }}</span>
+    </span>
+    <mat-icon class="app-header-actions__chevron">expand_more</mat-icon>
+  </button>
+
+  <mat-menu #userMenu="matMenu" class="app-user-menu-panel" xPosition="before">
+    <ng-template matMenuContent>
+      <div class="app-user-menu__header">{{ displayName() }}</div>
+      <button mat-menu-item type="button" routerLink="/profile">
+        <mat-icon>person</mat-icon>
+        <span>My Profile</span>
+      </button>
+      <button mat-menu-item type="button" routerLink="/settings">
+        <mat-icon>settings</mat-icon>
+        <span>Account settings</span>
+      </button>
+      <button mat-menu-item type="button" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Log out</span>
+      </button>
+    </ng-template>
+  </mat-menu>
+</div>

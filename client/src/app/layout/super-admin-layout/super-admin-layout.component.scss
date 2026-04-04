@@ -1,0 +1,101 @@
+.sa-layout {
+  height: 100vh;
+  background-color: var(--ds-surface);
+}
+
+.sa-sidenav {
+  width: 240px;
+  background-color: var(--ds-surface-container-low);
+  border: none;
+}
+
+.sa-brand {
+  padding: 1.5rem 1.25rem 1rem;
+}
+
+.sa-brand__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.sa-brand__logo {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.sa-brand__text {
+  min-width: 0;
+}
+
+.sa-brand__title {
+  display: block;
+  color: var(--ds-on-surface);
+}
+
+.sa-brand__subtitle {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.sa-nav {
+  padding: 0.5rem 0.75rem 1rem;
+}
+
+.sa-nav-item {
+  margin: 0.25rem 0;
+  border-radius: 10px;
+
+  &:not(.sa-nav-item--active):hover {
+    background-color: var(--ds-surface-container-highest) !important;
+  }
+}
+
+.sa-nav-item--active {
+  position: relative;
+  background-color: var(--ds-nav-active-bg) !important;
+}
+
+.sa-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.sa-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 0.75rem 0 0.5rem;
+  background-color: var(--ds-toolbar-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--ds-toolbar-fg);
+  border: none;
+  border-bottom: 1px solid var(--ds-toolbar-border);
+}
+
+.sa-toolbar__title {
+  margin: 0;
+  color: var(--ds-toolbar-fg);
+}
+
+.sa-toolbar__spacer {
+  flex: 1;
+}
+
+.sa-content {
+  flex: 1;
+  padding: 1.75rem 1.5rem 1rem;
+}
+
+.mat-drawer-side.mat-sidenav {
+  border-right: none;
+}

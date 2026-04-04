@@ -1,0 +1,77 @@
+<div class="auth-shell">
+  <mat-card class="auth-card auth-card--wide">
+    <div class="auth-card__header">
+      <h1 class="ds-headline-md auth-card__title">Create your school</h1>
+      <p class="ds-body-md ds-on-variant">Register a workspace and become the admin.</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>School name</mat-label>
+        <input matInput formControlName="schoolName" autocomplete="organization" />
+        @if (form.controls.schoolName.touched && form.controls.schoolName.hasError('required')) {
+          <mat-error>Name is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>Subdomain</mat-label>
+        <input matInput formControlName="subdomain" autocomplete="off" />
+        <mat-hint class="ds-label-sm">Letters, numbers, and hyphens. Used in your sign-in URL.</mat-hint>
+        @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
+          <mat-error>Subdomain is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>Your name</mat-label>
+        <input matInput formControlName="adminName" autocomplete="name" />
+        @if (form.controls.adminName.touched && form.controls.adminName.hasError('required')) {
+          <mat-error>Name is required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <mat-error>Email is required</mat-error>
+        }
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <mat-error>Enter a valid email</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+        @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+          <mat-error>At least 6 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="auth-field">
+        <mat-label>Confirm password</mat-label>
+        <input matInput type="password" formControlName="confirmPassword" autocomplete="new-password" />
+        @if (form.touched && form.hasError('passwordsMismatch')) {
+          <mat-error>Passwords do not match</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="auth-submit"
+        type="submit"
+        [disabled]="submitting"
+      >
+        {{ submitting ? 'Creating…' : 'Create school' }}
+      </button>
+    </form>
+
+    <p class="ds-body-sm ds-on-variant auth-footer">
+      Already have an account?
+      <a routerLink="/login" class="auth-link">Sign in</a>
+    </p>
+  </mat-card>
+</div>

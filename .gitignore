@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Local env (never commit secrets)
+server/.env
+client/.env
+
+# Uploaded tenant logos (local dev)
+server/uploads/

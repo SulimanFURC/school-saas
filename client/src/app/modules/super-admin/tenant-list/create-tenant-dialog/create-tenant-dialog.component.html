@@ -1,0 +1,100 @@
+﻿<h2 mat-dialog-title>Add tenant</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="create-tenant-form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Organization name</mat-label>
+      <input matInput formControlName="name" autocomplete="organization" />
+      @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Subdomain</mat-label>
+      <input matInput formControlName="subdomain" autocomplete="off" />
+      @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
+        <mat-error>Subdomain is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Contact email</mat-label>
+      <input matInput type="email" formControlName="contact_email" autocomplete="email" />
+      @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('required')) {
+        <mat-error>Contact email is required</mat-error>
+      }
+      @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('email')) {
+        <mat-error>Enter a valid email</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" autocomplete="tel" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Address</mat-label>
+      <textarea matInput formControlName="address" rows="2"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="active">Active</mat-option>
+        <mat-option value="inactive">Inactive</mat-option>
+        <mat-option value="pending">Pending</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="create-tenant-form__divider" role="presentation">Admin user</div>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Admin name</mat-label>
+      <input matInput formControlName="adminName" autocomplete="name" />
+      @if (form.controls.adminName.touched && form.controls.adminName.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Admin email</mat-label>
+      <input matInput type="email" formControlName="adminEmail" autocomplete="email" />
+      @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      }
+      @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('email')) {
+        <mat-error>Enter a valid email</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Password</mat-label>
+      <input matInput type="password" formControlName="password" autocomplete="new-password" />
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <mat-error>Password is required</mat-error>
+      }
+      @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+        <mat-error>At least 6 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="create-tenant-form__field">
+      <mat-label>Confirm password</mat-label>
+      <input matInput type="password" formControlName="passwordConfirm" autocomplete="new-password" />
+      @if (form.controls.passwordConfirm.touched && form.controls.passwordConfirm.hasError('required')) {
+        <mat-error>Confirm password</mat-error>
+      }
+      @if (form.touched && form.hasError('passwordMismatch')) {
+        <mat-error>Passwords do not match</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="submitting">Cancel</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="submitting">
+    @if (submitting) { Creating... } @else { Create }
+  </button>
+</mat-dialog-actions>
+

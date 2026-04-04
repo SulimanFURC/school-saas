@@ -1,0 +1,59 @@
+<mat-sidenav-container class="layout-container">
+  <mat-sidenav
+    #drawer
+    class="layout-sidenav"
+    [mode]="isMobile() ? 'over' : 'side'"
+    [opened]="!isMobile()"
+  >
+    <div class="layout-brand">
+      <div class="layout-brand__row">
+        <img class="layout-brand__logo" [src]="tenantLogoSrc()" width="40" height="40" alt="" />
+        <div class="layout-brand__text">
+          <span class="ds-headline-sm layout-brand__title">School SaaS</span>
+          <span class="ds-label-sm layout-brand__subtitle">Admin workspace</span>
+        </div>
+      </div>
+    </div>
+
+    <mat-nav-list class="layout-nav-list">
+      @for (item of navItems(); track item.path) {
+        <a
+          mat-list-item
+          class="layout-nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="layout-nav-item--active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle class="ds-body-sm">{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="layout-main">
+    <mat-toolbar class="layout-toolbar">
+      <button
+        mat-icon-button
+        type="button"
+        class="layout-toolbar__menu"
+        aria-label="Toggle navigation"
+        (click)="drawer.toggle()"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+      <h1 class="ds-headline-sm layout-toolbar__title">{{ pageTitle() }}</h1>
+      <span class="layout-toolbar__spacer"></span>
+      @if (auth.userRole() === 'super_admin') {
+        <a mat-button type="button" class="layout-toolbar__link" routerLink="/super-admin/tenants">
+          Super admin
+        </a>
+      }
+      <app-header-actions />
+    </mat-toolbar>
+
+    <main class="layout-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

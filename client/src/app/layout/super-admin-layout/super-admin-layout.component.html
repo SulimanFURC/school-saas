@@ -1,0 +1,49 @@
+<mat-sidenav-container class="sa-layout">
+  <mat-sidenav class="sa-sidenav" mode="side" opened>
+    <div class="sa-brand">
+      <div class="sa-brand__row">
+        <img class="sa-brand__logo" src="assets/default-logo.png" width="40" height="40" alt="" />
+        <div class="sa-brand__text">
+          <span class="ds-headline-sm sa-brand__title">Platform</span>
+          <span class="ds-label-sm sa-brand__subtitle">Super admin</span>
+        </div>
+      </div>
+    </div>
+    <mat-nav-list class="sa-nav">
+      <a
+        mat-list-item
+        class="sa-nav-item"
+        routerLink="/super-admin/tenants"
+        routerLinkActive="sa-nav-item--active"
+        [routerLinkActiveOptions]="{ exact: false }"
+      >
+        <mat-icon matListItemIcon>apartment</mat-icon>
+        <span matListItemTitle class="ds-body-sm">Tenants</span>
+      </a>
+      <a
+        mat-list-item
+        class="sa-nav-item"
+        routerLink="/super-admin/settings"
+        routerLinkActive="sa-nav-item--active"
+      >
+        <mat-icon matListItemIcon>settings</mat-icon>
+        <span matListItemTitle class="ds-body-sm">Settings</span>
+      </a>
+      <a mat-list-item class="sa-nav-item" routerLink="/">
+        <mat-icon matListItemIcon>arrow_back</mat-icon>
+        <span matListItemTitle class="ds-body-sm">School app</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="sa-main">
+    <mat-toolbar class="sa-toolbar">
+      <h1 class="ds-headline-sm sa-toolbar__title">{{ pageTitle() }}</h1>
+      <span class="sa-toolbar__spacer"></span>
+      <app-header-actions />
+    </mat-toolbar>
+    <main class="sa-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

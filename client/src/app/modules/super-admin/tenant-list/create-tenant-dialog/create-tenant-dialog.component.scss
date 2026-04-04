@@ -1,0 +1,24 @@
+﻿.create-tenant-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: min(100%, 28rem);
+  padding-top: 0.25rem;
+}
+
+.create-tenant-form__field {
+  width: 100%;
+}
+
+.create-tenant-form__divider {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-on-surface-variant, rgba(0, 0, 0, 0.6));
+}
+
+mat-dialog-content {
+  max-height: 70vh;
+}
