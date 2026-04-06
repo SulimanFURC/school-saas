@@ -1,34 +1,14 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatIconModule } from '@angular/material/icon';
 
 import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
 import { StudentService } from '../../../services/student.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-student-register',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    MatStepperModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatSnackBarModule,
-    MatIconModule,
-  ],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink],
   templateUrl: './student-register.component.html',
   styleUrl: './student-register.component.scss',
 })
@@ -37,7 +17,10 @@ export class StudentRegisterComponent implements OnInit {
   private academic = inject(AcademicService);
   private students = inject(StudentService);
   private router = inject(Router);
-  private snack = inject(MatSnackBar);
+  private toast = inject(ToastService);
+
+  readonly step = signal(0);
+  readonly stepLabels = ['Personal', 'Guardian', 'Medical', 'Previous school', 'Address & enrollment'];
 
   classes: SchoolClassDto[] = [];
   sections: { id: number; name: string }[] = [];
@@ -102,11 +85,11 @@ export class StudentRegisterComponent implements OnInit {
   ngOnInit(): void {
     this.academic.listClasses().subscribe({
       next: (c) => (this.classes = c),
-      error: (e) => this.snack.open(e.error?.message || 'Failed to load classes', 'Dismiss', { duration: 4000 }),
+      error: (e) => this.toast.open(e.error?.message || 'Failed to load classes', 'Dismiss', { duration: 4000 }),
     });
     this.academic.listAcademicYears().subscribe({
       next: (y) => (this.years = y),
-      error: (e) => this.snack.open(e.error?.message || 'Failed to load years', 'Dismiss', { duration: 4000 }),
+      error: (e) => this.toast.open(e.error?.message || 'Failed to load years', 'Dismiss', { duration: 4000 }),
     });
 
     this.s5.get('class_id')?.valueChanges.subscribe((id) => {
@@ -120,6 +103,41 @@ export class StudentRegisterComponent implements OnInit {
         error: () => (this.sections = []),
       });
     });
+  }
+
+  private formForStep(i: number): FormGroup | null {
+    switch (i) {
+      case 0:
+        return this.s1;
+      case 1:
+        return this.s2;
+      case 2:
+        return this.s3;
+      case 3:
+        return this.s4;
+      case 4:
+        return this.s5;
+      default:
+        return null;
+    }
+  }
+
+  goNext(): void {
+    const i = this.step();
+    const fg = this.formForStep(i);
+    if (fg) {
+      fg.markAllAsTouched();
+      if (fg.invalid) return;
+    }
+    this.step.set(Math.min(4, i + 1));
+  }
+
+  goPrev(): void {
+    this.step.update((s) => Math.max(0, s - 1));
+  }
+
+  progressPercent(): number {
+    return ((this.step() + 1) / 5) * 100;
   }
 
   categoryOptions(): string[] {
@@ -138,7 +156,7 @@ export class StudentRegisterComponent implements OnInit {
     if (this.s1.invalid || this.s5.invalid) {
       this.s1.markAllAsTouched();
       this.s5.markAllAsTouched();
-      this.snack.open('Please complete required fields', 'Dismiss', { duration: 4000 });
+      this.toast.open('Please complete required fields', 'Dismiss', { duration: 4000 });
       return;
     }
 
@@ -202,13 +220,13 @@ export class StudentRegisterComponent implements OnInit {
           const msg = res.login?.username
             ? `Created. Student login: ${res.login.username} (inactive)`
             : 'Student registered';
-          this.snack.open(msg, 'Dismiss', { duration: 6000 });
+          this.toast.open(msg, 'Dismiss', { duration: 6000 });
           if (st?.id) void this.router.navigate(['/students', st.id]);
           else void this.router.navigate(['/students']);
         },
         error: (e) => {
           this.submitting = false;
-          this.snack.open(e.error?.message || 'Registration failed', 'Dismiss', { duration: 6000 });
+          this.toast.open(e.error?.message || 'Registration failed', 'Dismiss', { duration: 6000 });
         },
       });
   }

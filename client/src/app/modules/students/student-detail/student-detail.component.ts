@@ -1,36 +1,22 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
-import { DatePipe, JsonPipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
 
 import { StudentService } from '../../../services/student.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-student-detail',
-  imports: [
-    RouterLink,
-    JsonPipe,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-  ],
+  imports: [RouterLink, JsonPipe],
   templateUrl: './student-detail.component.html',
   styleUrl: './student-detail.component.scss',
 })
 export class StudentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private students = inject(StudentService);
-  private snack = inject(MatSnackBar);
+  private toast = inject(ToastService);
+
+  readonly activeTab = signal(0);
 
   loading = true;
   studentId = '';
@@ -48,13 +34,17 @@ export class StudentDetailComponent implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.snack.open(e.error?.message || 'Failed to load student', 'Dismiss', { duration: 5000 });
+        this.toast.open(e.error?.message || 'Failed to load student', 'Dismiss', { duration: 5000 });
       },
     });
     this.students.enrollments(id).subscribe({
       next: (rows) => (this.enrollments = rows),
       error: () => (this.enrollments = []),
     });
+  }
+
+  setTab(i: number): void {
+    this.activeTab.set(i);
   }
 
   displayName(s: Record<string, unknown>): string {
@@ -93,9 +83,9 @@ export class StudentDetailComponent implements OnInit {
         const msg = d.has_account
           ? `Username: ${d.username || '—'} · status: ${d.status || '—'}`
           : 'No student login account';
-        this.snack.open(msg, 'Dismiss', { duration: 6000 });
+        this.toast.open(msg, 'Dismiss', { duration: 6000 });
       },
-      error: (e) => this.snack.open(e.error?.message || 'Failed', 'Dismiss', { duration: 4000 }),
+      error: (e) => this.toast.open(e.error?.message || 'Failed', 'Dismiss', { duration: 4000 }),
     });
   }
 
@@ -104,11 +94,10 @@ export class StudentDetailComponent implements OnInit {
     if (!confirm('Mark this student as suspended?')) return;
     this.students.update(this.studentId, { status: 'suspended' }).subscribe({
       next: () => {
-        this.snack.open('Updated', 'Dismiss', { duration: 3000 });
+        this.toast.open('Updated', 'Dismiss', { duration: 3000 });
         this.student = { ...this.student!, status: 'suspended' };
       },
-      error: (e) => this.snack.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 }),
+      error: (e) => this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 }),
     });
   }
 }
-

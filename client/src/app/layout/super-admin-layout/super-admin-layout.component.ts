@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { afterNextRender, Component, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NavigationEnd,
@@ -7,14 +7,11 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { filter, map, startWith } from 'rxjs';
 
 import { AppHeaderActionsComponent } from '../app-header-actions/app-header-actions.component';
+
+const MOBILE_MQ = '(max-width: 991.98px)';
 
 @Component({
   selector: 'app-super-admin-layout',
@@ -22,11 +19,6 @@ import { AppHeaderActionsComponent } from '../app-header-actions/app-header-acti
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
     AppHeaderActionsComponent,
   ],
   templateUrl: './super-admin-layout.component.html',
@@ -34,6 +26,10 @@ import { AppHeaderActionsComponent } from '../app-header-actions/app-header-acti
 })
 export class SuperAdminLayoutComponent {
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+
+  readonly sidebarOpen = signal(true);
+  readonly isMobile = signal(false);
 
   readonly pageTitle = toSignal(
     this.router.events.pipe(
@@ -43,6 +39,34 @@ export class SuperAdminLayoutComponent {
     ),
     { initialValue: this.resolveTitle() }
   );
+
+  constructor() {
+    afterNextRender(() => {
+      const mq = window.matchMedia(MOBILE_MQ);
+      const sync = (): void => {
+        const mobile = mq.matches;
+        this.isMobile.set(mobile);
+        if (mobile) {
+          this.sidebarOpen.set(false);
+        } else {
+          this.sidebarOpen.set(true);
+        }
+      };
+      sync();
+      mq.addEventListener('change', sync);
+      this.destroyRef.onDestroy(() => mq.removeEventListener('change', sync));
+    });
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+  }
+
+  closeSidebarIfMobile(): void {
+    if (this.isMobile()) {
+      this.sidebarOpen.set(false);
+    }
+  }
 
   private resolveTitle(): string {
     let r = this.router.routerState.root;

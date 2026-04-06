@@ -1,11 +1,6 @@
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { Component, computed, inject } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { afterNextRender, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import {
   NavigationEnd,
   Router,
@@ -22,17 +17,27 @@ import { BrandingService } from '../../services/branding.service';
 import { FeatureService } from '../../services/feature.service';
 import { AppHeaderActionsComponent } from '../app-header-actions/app-header-actions.component';
 
+const NAV_ICON_MAP: Record<string, string> = {
+  dashboard: 'bi-speedometer2',
+  school: 'bi-mortarboard',
+  badge: 'bi-person-badge',
+  payments: 'bi-currency-dollar',
+  class: 'bi-collection',
+  event_available: 'bi-calendar-check',
+  assessment: 'bi-graph-up',
+  settings: 'bi-gear',
+};
+
+/** Matches Bootstrap `lg` breakpoint */
+const MOBILE_MQ = '(max-width: 991.98px)';
+
 @Component({
   selector: 'app-main-layout',
   imports: [
-    RouterOutlet,
+    NgClass,
     RouterLink,
     RouterLinkActive,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
+    RouterOutlet,
     AppHeaderActionsComponent,
   ],
   templateUrl: './main-layout.component.html',
@@ -40,10 +45,15 @@ import { AppHeaderActionsComponent } from '../app-header-actions/app-header-acti
 })
 export class MainLayoutComponent {
   private router = inject(Router);
-  private breakpoint = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
   private features = inject(FeatureService);
   readonly branding = inject(BrandingService);
+
+  /** Desktop: column width; mobile: overlay open */
+  readonly sidebarOpen = signal(true);
+
+  readonly isMobile = signal(false);
 
   readonly tenantLogoSrc = computed(() => {
     if (this.auth.userRole()?.toLowerCase() === 'super_admin') {
@@ -55,11 +65,6 @@ export class MainLayoutComponent {
     }
     return 'assets/default-logo.png';
   });
-
-  readonly isMobile = toSignal(
-    this.breakpoint.observe('(max-width: 959.98px)').pipe(map((r) => r.matches)),
-    { initialValue: false }
-  );
 
   readonly navItems = computed((): NavItemConfig[] => {
     const enabled = this.features.enabled();
@@ -76,6 +81,38 @@ export class MainLayoutComponent {
     ),
     { initialValue: this.resolveTitle() }
   );
+
+  constructor() {
+    afterNextRender(() => {
+      const mq = window.matchMedia(MOBILE_MQ);
+      const sync = (): void => {
+        const mobile = mq.matches;
+        this.isMobile.set(mobile);
+        if (mobile) {
+          this.sidebarOpen.set(false);
+        } else {
+          this.sidebarOpen.set(true);
+        }
+      };
+      sync();
+      mq.addEventListener('change', sync);
+      this.destroyRef.onDestroy(() => mq.removeEventListener('change', sync));
+    });
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+  }
+
+  closeSidebarIfMobile(): void {
+    if (this.isMobile()) {
+      this.sidebarOpen.set(false);
+    }
+  }
+
+  navIconClass(materialIcon: string): string {
+    return NAV_ICON_MAP[materialIcon] ?? 'bi-circle';
+  }
 
   private resolveTitle(): string {
     let r = this.router.routerState.root;

@@ -1,14 +1,67 @@
-.layout-container {
-  height: 100vh;
-  background-color: var(--ds-surface);
+:host {
+  display: block;
+  min-height: 100vh;
+  position: relative;
 }
 
-.layout-sidenav {
-  width: 264px;
+.layout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.layout-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.layout-sidebar {
+  flex-shrink: 0;
   background-color: var(--ds-surface-container-low);
-  border: none;
-  box-shadow: none;
-  overflow-x: hidden;
+  z-index: 1045;
+  display: flex;
+  flex-direction: column;
+  transition:
+    width 0.2s ease,
+    min-width 0.2s ease,
+    transform 0.2s ease;
+
+  @media (min-width: 992px) {
+    position: relative;
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+
+    &.layout-sidebar--open {
+      width: 264px;
+      min-width: 264px;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(264px, 88vw);
+    max-width: 100%;
+    box-shadow: var(--ds-shadow-ambient);
+    transform: translateX(-100%);
+
+    &.layout-sidebar--open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.layout-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 264px;
 }
 
 .layout-brand {
@@ -44,45 +97,12 @@
   margin-top: 0.25rem;
 }
 
-.layout-nav-list {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  padding: 0.5rem 0.75rem 1rem;
-  overflow-x: hidden;
-}
-
 .layout-nav-item {
   margin: 0.25rem 0;
-  border-radius: 10px;
-  min-width: 0;
-  overflow: hidden;
-
-  &:not(.layout-nav-item--active):hover {
-    background-color: var(--ds-surface-container-highest) !important;
-  }
-}
-
-.layout-nav-item--active {
-  position: relative;
-  background-color: var(--ds-nav-active-bg) !important;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 55%;
-    min-height: 18px;
-    border-radius: 0 2px 2px 0;
-    background: var(--ds-primary);
-    pointer-events: none;
-  }
 }
 
 .layout-main {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -92,7 +112,7 @@
 .layout-toolbar {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -136,4 +156,16 @@
   flex: 1;
   padding: 1.75rem 1.5rem 1rem;
   background-color: var(--ds-surface);
+}
+
+.layout-sidenav-inner {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }

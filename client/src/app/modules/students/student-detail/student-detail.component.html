@@ -1,5 +1,7 @@
-﻿@if (loading) {
-  <div class="center"><mat-spinner diameter="40" /></div>
+@if (loading) {
+  <div class="center">
+    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+  </div>
 } @else if (!student) {
   <p>Student not found.</p>
 } @else {
@@ -10,77 +12,92 @@
       </div>
       <div class="head-row">
         <h1 class="ds-display-md">Student details</h1>
-        <button mat-stroked-button type="button" (click)="loginInfo()">
-          <mat-icon>lock</mat-icon>
+        <button type="button" class="btn btn-outline-secondary" (click)="loginInfo()">
+          <i class="bi bi-lock me-1"></i>
           Login details
         </button>
       </div>
     </div>
 
-    <mat-card class="summary">
-      <div class="summary-grid">
-        <div class="avatar-block">
-          <div class="avatar">
-            @if (photoUrl(); as src) {
-              <img [src]="src" alt="" />
-            } @else {
-              <mat-icon>person</mat-icon>
+    <div class="card shadow-sm summary mb-3">
+      <div class="card-body">
+        <div class="summary-grid">
+          <div class="avatar-block">
+            <div class="avatar">
+              @if (photoUrl(); as src) {
+                <img [src]="src" alt="" />
+              } @else {
+                <i class="bi bi-person fs-1 text-secondary"></i>
+              }
+            </div>
+            <div class="name">{{ displayName(student) }}</div>
+            <div class="sub">Admission: <strong>{{ student['admission_no'] }}</strong></div>
+            @if (student['current_enrollment']; as ce) {
+              <div class="sub">Roll: {{ $any(ce)['roll_number'] ?? '—' }}</div>
             }
+            <div class="actions d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-danger" (click)="suspend()">Suspend</button>
+              <a class="btn btn-primary" routerLink="/students">Back to list</a>
+            </div>
           </div>
-          <div class="name">{{ displayName(student) }}</div>
-          <div class="sub">Admission: <strong>{{ student['admission_no'] }}</strong></div>
-          @if (student['current_enrollment']; as ce) {
-            <div class="sub">Roll: {{ $any(ce)['roll_number'] ?? '—' }}</div>
-          }
-          <div class="actions">
-            <button mat-stroked-button color="warn" type="button" (click)="suspend()">Suspend</button>
-            <a mat-flat-button color="primary" routerLink="/students">Back to list</a>
+          <div class="facts">
+            @if (student['current_enrollment']; as ce) {
+              <div class="fact"><span>Class</span><em>{{ $any(ce)['schoolClass']?.['name'] ?? '—' }}</em></div>
+              <div class="fact"><span>Section</span><em>{{ $any(ce)['section']?.['name'] ?? '—' }}</em></div>
+              <div class="fact"><span>Roll</span><em>{{ $any(ce)['roll_number'] ?? '—' }}</em></div>
+              <div class="fact"><span>Category</span><em>{{ $any(ce)['category'] ?? '—' }}</em></div>
+              <div class="fact"><span>Academic year</span><em>{{ $any(ce)['academicYear']?.['name'] ?? '—' }}</em></div>
+            }
+            <div class="fact"><span>Gender</span><em>{{ student['gender'] ?? '—' }}</em></div>
+            <div class="fact"><span>DOB</span><em>{{ dobDisplay(student['dob']) }}</em></div>
+            <div class="fact"><span>Phone</span><em>{{ student['phone'] ?? '—' }}</em></div>
+            <div class="fact"><span>Email</span><em>{{ student['email'] ?? '—' }}</em></div>
           </div>
-        </div>
-        <div class="facts">
-          @if (student['current_enrollment']; as ce) {
-            <div class="fact"><span>Class</span><em>{{ $any(ce)['schoolClass']?.['name'] ?? '—' }}</em></div>
-            <div class="fact"><span>Section</span><em>{{ $any(ce)['section']?.['name'] ?? '—' }}</em></div>
-            <div class="fact"><span>Roll</span><em>{{ $any(ce)['roll_number'] ?? '—' }}</em></div>
-            <div class="fact"><span>Category</span><em>{{ $any(ce)['category'] ?? '—' }}</em></div>
-            <div class="fact"><span>Academic year</span><em>{{ $any(ce)['academicYear']?.['name'] ?? '—' }}</em></div>
-          }
-          <div class="fact"><span>Gender</span><em>{{ student['gender'] ?? '—' }}</em></div>
-          <div class="fact"><span>DOB</span><em>{{ dobDisplay(student['dob']) }}</em></div>
-          <div class="fact"><span>Phone</span><em>{{ student['phone'] ?? '—' }}</em></div>
-          <div class="fact"><span>Email</span><em>{{ student['email'] ?? '—' }}</em></div>
-        </div>
-        <div class="status-col">
-          <mat-chip-set>
-            <mat-chip color="primary">{{ chipStatus(student) }}</mat-chip>
-          </mat-chip-set>
+          <div class="status-col">
+            <span class="badge rounded-pill text-bg-primary">{{ chipStatus(student) }}</span>
+          </div>
         </div>
       </div>
-    </mat-card>
+    </div>
 
-    <mat-tab-group class="tabs" animationDuration="200ms">
-      <mat-tab label="Basic info">
-        <div class="tab-pad grid">
-          <mat-card class="panel span-2">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="activeTab() === 0" (click)="setTab(0)">Basic info</button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="activeTab() === 1" (click)="setTab(1)">Guardian</button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="activeTab() === 2" (click)="setTab(2)">Academic history</button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" [class.active]="activeTab() === 3" (click)="setTab(3)">Fees</button>
+      </li>
+    </ul>
+
+    @if (activeTab() === 0) {
+      <div class="tab-pad grid">
+        <div class="card panel span-2">
+          <div class="card-body">
             <h3 class="panel-title">Parent / guardian</h3>
             @if (student['guardian']; as g) {
               <div class="guardian-rows">
                 <div class="g-row">
-                  <div class="g-avatar"><mat-icon>man</mat-icon></div>
+                  <div class="g-avatar"><i class="bi bi-person-standing"></i></div>
                   <div>
                     <div class="g-name">{{ $any(g)['father_name'] || '—' }}</div>
                     <div class="g-meta">Father · {{ $any(g)['father_phone'] || '—' }}</div>
                   </div>
                 </div>
                 <div class="g-row">
-                  <div class="g-avatar"><mat-icon>woman</mat-icon></div>
+                  <div class="g-avatar"><i class="bi bi-person"></i></div>
                   <div>
                     <div class="g-name">{{ $any(g)['mother_name'] || '—' }}</div>
                     <div class="g-meta">Mother · {{ $any(g)['mother_occupation'] || '—' }}</div>
                   </div>
                 </div>
                 <div class="g-row">
-                  <div class="g-avatar"><mat-icon>shield_person</mat-icon></div>
+                  <div class="g-avatar"><i class="bi bi-shield-check"></i></div>
                   <div>
                     <div class="g-name">{{ $any(g)['guardian_name'] || '—' }}</div>
                     <div class="g-meta">Guardian · {{ $any(g)['guardian_phone'] || '—' }}</div>
@@ -90,9 +107,11 @@
             } @else {
               <p class="muted">No guardian record.</p>
             }
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel">
+        <div class="card panel">
+          <div class="card-body">
             <h3 class="panel-title">Previous school</h3>
             @if (student['previousSchool']; as ps) {
               <div class="kv"><span>Previous</span><em>{{ $any(ps)['school_name'] ?? '—' }}</em></div>
@@ -100,105 +119,124 @@
             } @else {
               <p class="muted">No previous school.</p>
             }
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel">
+        <div class="card panel">
+          <div class="card-body">
             <h3 class="panel-title">Address</h3>
             <div class="kv"><span>Current</span><em>{{ student['current_address'] ?? '—' }}</em></div>
             <div class="kv"><span>Permanent</span><em>{{ student['permanent_address'] ?? '—' }}</em></div>
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel">
+        <div class="card panel">
+          <div class="card-body">
             <h3 class="panel-title">Bank</h3>
             <div class="kv"><span>Name</span><em>{{ student['bank_name'] ?? '—' }}</em></div>
             <div class="kv"><span>Branch</span><em>{{ student['bank_branch'] ?? '—' }}</em></div>
             <div class="kv"><span>IFSC</span><em>{{ student['bank_ifsc'] ?? '—' }}</em></div>
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel">
+        <div class="card panel">
+          <div class="card-body">
             <h3 class="panel-title">Medical</h3>
             <div class="kv"><span>Blood</span><em>{{ student['blood_group'] ?? '—' }}</em></div>
             <div class="kv"><span>Height</span><em>{{ student['height_cm'] ?? '—' }}</em></div>
             <div class="kv"><span>Weight</span><em>{{ student['weight_kg'] ?? '—' }}</em></div>
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel">
+        <div class="card panel">
+          <div class="card-body">
             <h3 class="panel-title">Hostel</h3>
             <div class="kv"><span>Hostel</span><em>{{ student['hostel_name'] ?? '—' }}</em></div>
             <div class="kv"><span>Room</span><em>{{ student['room_no'] ?? '—' }}</em></div>
             <div class="kv"><span>Type</span><em>{{ student['room_type'] ?? '—' }}</em></div>
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel span-2">
+        <div class="card panel span-2">
+          <div class="card-body">
             <h3 class="panel-title">Documents</h3>
             @if (asDocList(student['documents']).length === 0) {
               <p class="muted">No documents uploaded.</p>
             } @else {
-              <ul class="docs">
+              <ul class="docs list-unstyled mb-0">
                 @for (d of asDocList(student['documents']); track d.file_url) {
-                  <li>
-                    <mat-icon>description</mat-icon>
+                  <li class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-text"></i>
                     <a [href]="d.file_url" target="_blank" rel="noopener">{{ d.file_name }}</a>
                   </li>
                 }
               </ul>
             }
-          </mat-card>
+          </div>
+        </div>
 
-          <mat-card class="panel span-2">
+        <div class="card panel span-2">
+          <div class="card-body">
             <h3 class="panel-title">Description</h3>
-            <p class="desc">{{ student['extra_details'] || '—' }}</p>
-          </mat-card>
+            <p class="desc mb-0">{{ student['extra_details'] || '—' }}</p>
+          </div>
         </div>
-      </mat-tab>
+      </div>
+    }
 
-      <mat-tab label="Guardian">
-        <div class="tab-pad">
-          <mat-card class="panel">
-            <pre class="pre">{{ student['guardian'] | json }}</pre>
-          </mat-card>
+    @if (activeTab() === 1) {
+      <div class="tab-pad">
+        <div class="card panel">
+          <div class="card-body">
+            <pre class="pre mb-0">{{ student['guardian'] | json }}</pre>
+          </div>
         </div>
-      </mat-tab>
+      </div>
+    }
 
-      <mat-tab label="Academic history">
-        <div class="tab-pad">
-          <mat-card class="panel">
+    @if (activeTab() === 2) {
+      <div class="tab-pad">
+        <div class="card panel">
+          <div class="card-body">
             @if (enrollments.length === 0) {
               <p class="muted">No enrollments.</p>
             } @else {
-              <table class="hist">
-                <thead>
-                  <tr>
-                    <th>Year</th>
-                    <th>Class</th>
-                    <th>Section</th>
-                    <th>Roll</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (e of enrollments; track $index) {
+              <div class="table-responsive">
+                <table class="table table-sm hist">
+                  <thead>
                     <tr>
-                      <td>{{ $any(e)['academicYear']?.['name'] ?? '—' }}</td>
-                      <td>{{ $any(e)['schoolClass']?.['name'] ?? '—' }}</td>
-                      <td>{{ $any(e)['section']?.['name'] ?? '—' }}</td>
-                      <td>{{ $any(e)['roll_number'] ?? '—' }}</td>
-                      <td>{{ $any(e)['status'] ?? '—' }}</td>
+                      <th>Year</th>
+                      <th>Class</th>
+                      <th>Section</th>
+                      <th>Roll</th>
+                      <th>Status</th>
                     </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @for (e of enrollments; track $index) {
+                      <tr>
+                        <td>{{ $any(e)['academicYear']?.['name'] ?? '—' }}</td>
+                        <td>{{ $any(e)['schoolClass']?.['name'] ?? '—' }}</td>
+                        <td>{{ $any(e)['section']?.['name'] ?? '—' }}</td>
+                        <td>{{ $any(e)['roll_number'] ?? '—' }}</td>
+                        <td>{{ $any(e)['status'] ?? '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             }
-          </mat-card>
+          </div>
         </div>
-      </mat-tab>
+      </div>
+    }
 
-      <mat-tab label="Fees">
-        <div class="tab-pad">
-          <mat-card class="panel muted">Fees module coming soon.</mat-card>
+    @if (activeTab() === 3) {
+      <div class="tab-pad">
+        <div class="card panel muted">
+          <div class="card-body">Fees module coming soon.</div>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </div>
+    }
   </section>
 }
-

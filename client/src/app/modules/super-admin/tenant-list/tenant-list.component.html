@@ -1,12 +1,16 @@
-﻿<section class="tenant-list ds-section-pad">
+@if (showCreate()) {
+  <app-create-tenant-dialog (closed)="onCreateClosed($event)" />
+}
+
+<section class="tenant-list ds-section-pad">
   <div class="tenant-list__head">
     <h2 class="ds-headline-md tenant-list__title">Tenants</h2>
     <p class="ds-body-md ds-on-variant">Enable or disable product modules per school.</p>
   </div>
 
   <div class="tenant-list__toolbar">
-    <button mat-flat-button color="primary" type="button" (click)="openCreateTenant()">
-      <mat-icon>add</mat-icon>
+    <button type="button" class="btn btn-primary" (click)="openCreateTenant()">
+      <i class="bi bi-plus-lg me-1"></i>
       Add tenant
     </button>
   </div>
@@ -19,82 +23,125 @@
       <p>Create a tenant to get started.</p>
     </div>
   } @else {
-    <div class="tenant-list__table-wrap mat-elevation-z0">
-      <table mat-table [dataSource]="tenants()" class="tenant-table">
-        <ng-container matColumnDef="tenant">
-          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Tenant</th>
-          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--tenant">
-            <div class="tenant-table__tenant">
-              <span [class]="avatarToneClass(row.id)" aria-hidden="true">{{ initials(row.name) }}</span>
-              <div class="tenant-table__tenant-meta">
-                <span class="tenant-table__name">{{ row.name }}</span>
-                <span class="tenant-table__sub">ID: {{ row.subdomain }}</span>
-              </div>
-            </div>
-          </td>
-        </ng-container>
+    <div class="tenant-list__table-wrap">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 tenant-table">
+          <thead>
+            <tr>
+              <th class="tenant-table__th">Tenant</th>
+              <th class="tenant-table__th">Status</th>
+              <th class="tenant-table__th">Last updated</th>
+              <th class="tenant-table__th tenant-table__th--actions text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of tenants(); track row.id) {
+              <tr class="tenant-table__data-row">
+                <td class="tenant-table__cell tenant-table__cell--tenant">
+                  <div class="tenant-table__tenant">
+                    <span [class]="avatarToneClass(row.id)" aria-hidden="true">{{ initials(row.name) }}</span>
+                    <div class="tenant-table__tenant-meta">
+                      <span class="tenant-table__name">{{ row.name }}</span>
+                      <span class="tenant-table__sub">ID: {{ row.subdomain }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="tenant-table__cell">
+                  <span
+                    class="tenant-status"
+                    [class.tenant-status--active]="statusKind(row.status) === 'active'"
+                    [class.tenant-status--inactive]="statusKind(row.status) === 'inactive'"
+                    [class.tenant-status--pending]="statusKind(row.status) === 'pending' || statusKind(row.status) === 'unknown'"
+                  >
+                    {{ statusLabel(row.status) }}
+                  </span>
+                </td>
+                <td class="tenant-table__cell tenant-table__cell--updated">{{ relativeUpdated(row) }}</td>
+                <td class="tenant-table__cell tenant-table__cell--actions text-end">
+                  <div class="dropdown">
+                    <button
+                      type="button"
+                      class="btn btn-link btn-sm tenant-table__action-btn"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      aria-label="Open row actions"
+                    >
+                      <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <a class="dropdown-item" [routerLink]="['/super-admin/tenants', row.id, 'features']">
+                          <i class="bi bi-sliders me-2"></i>
+                          Manage features
+                        </a>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item" disabled>
+                          <i class="bi bi-pencil me-2"></i>
+                          Edit
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Status</th>
-          <td mat-cell *matCellDef="let row" class="tenant-table__cell">
-            <span
-              class="tenant-status"
-              [class.tenant-status--active]="statusKind(row.status) === 'active'"
-              [class.tenant-status--inactive]="statusKind(row.status) === 'inactive'"
-              [class.tenant-status--pending]="statusKind(row.status) === 'pending' || statusKind(row.status) === 'unknown'"
-            >
-              {{ statusLabel(row.status) }}
-            </span>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="lastUpdated">
-          <th mat-header-cell *matHeaderCellDef class="tenant-table__th">Last updated</th>
-          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--updated">
-            {{ relativeUpdated(row) }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="tenant-table__th tenant-table__th--actions">Actions</th>
-          <td mat-cell *matCellDef="let row" class="tenant-table__cell tenant-table__cell--actions">
-            <button
-              mat-icon-button
-              type="button"
-              class="tenant-table__action-btn"
-              aria-label="Open row actions"
-              [matMenuTriggerFor]="tenantRowMenu"
-              (click)="menuRow.set(row)"
-            >
-              <mat-icon>more_vert</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="tenant-table__header-row"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="tenant-table__data-row"></tr>
-      </table>
-
-      <mat-paginator
-        class="tenant-list__paginator"
-        [length]="total()"
-        [pageIndex]="pageIndex()"
-        [pageSize]="pageSize()"
-        [pageSizeOptions]="[5, 10, 25, 50]"
-        showFirstLastButtons
-        (page)="onPage($event)"
-      />
-
-      <mat-menu #tenantRowMenu="matMenu" class="tenant-table__row-menu" (closed)="menuRow.set(null)">
-        <a mat-menu-item [routerLink]="['/super-admin/tenants', menuRow()?.id, 'features']">
-          <mat-icon>tune</mat-icon>
-          <span>Manage features</span>
-        </a>
-        <button mat-menu-item type="button" disabled>
-          <mat-icon>edit</mat-icon>
-          <span>Edit</span>
-        </button>
-      </mat-menu>
+      <div class="tenant-list__paginator d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 border-top">
+        <div class="d-flex align-items-center gap-2">
+          <label class="mb-0 small text-secondary" for="tenantPageSize">Rows per page</label>
+          <select
+            id="tenantPageSize"
+            class="form-select form-select-sm"
+            style="width: auto"
+            [value]="pageSize()"
+            (change)="onPageSizeChange(+$any($event.target).value)"
+          >
+            @for (opt of pageSizeOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        </div>
+        <nav aria-label="Tenant pagination">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="pageIndex() === 0">
+              <button type="button" class="page-link" (click)="onPageIndexChange(0)" [disabled]="pageIndex() === 0">«</button>
+            </li>
+            <li class="page-item" [class.disabled]="pageIndex() === 0">
+              <button type="button" class="page-link" (click)="onPageIndexChange(pageIndex() - 1)" [disabled]="pageIndex() === 0">‹</button>
+            </li>
+            @for (p of pageNumbers(); track p) {
+              <li class="page-item" [class.active]="p === pageIndex()">
+                <button type="button" class="page-link" (click)="onPageIndexChange(p)">{{ p + 1 }}</button>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
+              <button
+                type="button"
+                class="page-link"
+                (click)="onPageIndexChange(pageIndex() + 1)"
+                [disabled]="pageIndex() >= totalPages() - 1"
+              >
+                ›
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
+              <button
+                type="button"
+                class="page-link"
+                (click)="onPageIndexChange(totalPages() - 1)"
+                [disabled]="pageIndex() >= totalPages() - 1"
+              >
+                »
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <span class="small text-secondary"> {{ total() }} total </span>
+      </div>
     </div>
   }
 </section>

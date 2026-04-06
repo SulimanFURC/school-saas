@@ -11,13 +11,13 @@
 
     <div class="fm__groups">
       @for (g of grouped(); track g.key) {
-        <mat-card class="fm-card">
-          <mat-card-header>
-            <mat-card-title class="ds-headline-sm">{{ g.label }}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
+        <div class="card shadow-sm mb-3 fm-card">
+          <div class="card-header">
+            <h3 class="ds-headline-sm mb-0">{{ g.label }}</h3>
+          </div>
+          <div class="card-body">
             @for (m of g.items; track m.module_key) {
-              <div class="fm-row">
+              <div class="fm-row d-flex align-items-center justify-content-between gap-3 py-2 border-bottom">
                 <div class="fm-row__meta">
                   <span class="ds-body-md">{{ m.name }}</span>
                   <span
@@ -28,22 +28,26 @@
                     {{ m.is_enabled ? 'Enabled' : 'Disabled' }}
                   </span>
                 </div>
-                <mat-slide-toggle
-                  [ngModel]="m.is_enabled"
-                  (ngModelChange)="onToggle(m.module_key, $event)"
-                  color="primary"
-                />
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [id]="'mod-' + m.module_key"
+                    [ngModel]="m.is_enabled"
+                    (ngModelChange)="onToggle(m.module_key, $event)"
+                  />
+                </div>
               </div>
             }
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
       }
     </div>
 
     <div class="fm__actions">
       <button
-        mat-flat-button
-        color="primary"
+        class="btn btn-primary"
         type="button"
         [disabled]="!hasChanges() || saving"
         (click)="save()"
