@@ -19,7 +19,7 @@
 
 .fm-card {
   background-color: var(--ds-surface-container-low);
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bs-border-color) 80%, transparent);
 }
 
 .fm-row {
@@ -28,7 +28,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.65rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline) 14%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--bs-border-color) 50%, transparent);
 
   &:last-child {
     border-bottom: none;

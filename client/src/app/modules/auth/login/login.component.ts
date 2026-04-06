@@ -1,28 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, from, map, of, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
 import { BrandingService } from '../../../services/branding.service';
 import { FeatureService } from '../../../services/feature.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-login',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSnackBarModule,
-  ],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -31,7 +19,7 @@ export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private snackBar = inject(MatSnackBar);
+  private toast = inject(ToastService);
   private features = inject(FeatureService);
   private branding = inject(BrandingService);
 
@@ -88,7 +76,7 @@ export class LoginComponent {
       .subscribe({
         error: (err: { error?: { message?: string } }) => {
           const msg = err?.error?.message ?? 'Sign in failed';
-          this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
+          this.toast.open(msg, 'Dismiss', { duration: 5000 });
         },
       });
   }

@@ -1,9 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, type AppNotification } from '../../services/notification.service';
@@ -36,13 +32,7 @@ function formatRelativeTime(iso: string): string {
 
 @Component({
   selector: 'app-header-actions',
-  imports: [
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatBadgeModule,
-    RouterLink,
-  ],
+  imports: [RouterLink],
   templateUrl: './app-header-actions.component.html',
   styleUrl: './app-header-actions.component.scss',
 })

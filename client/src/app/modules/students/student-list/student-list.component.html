@@ -4,60 +4,55 @@
       <h1 class="ds-display-md">Students</h1>
       <p class="ds-body-sm ds-on-variant">Admission list for your school</p>
     </div>
-    <a mat-flat-button color="primary" routerLink="/students/register">
-      <mat-icon>person_add</mat-icon>
+    <a class="btn btn-primary" routerLink="/students/register">
+      <i class="bi bi-person-plus me-1"></i>
       Register student
     </a>
   </div>
 
-  <mat-card class="card">
+  <div class="card shadow-sm border-0">
     @if (loading) {
-      <div class="center">
-        <mat-spinner diameter="40" />
+      <div class="center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
     } @else if (rows.length === 0) {
-      <p class="empty">No students yet. Register your first student.</p>
+      <p class="empty mb-0">No students yet. Register your first student.</p>
     } @else {
-      <table mat-table [dataSource]="rows" class="mat-elevation-z0 table">
-        <ng-container matColumnDef="admission_no">
-          <th mat-header-cell *matHeaderCellDef>Admission No</th>
-          <td mat-cell *matCellDef="let row">{{ row.admission_no }}</td>
-        </ng-container>
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let row">{{ displayName(row) }}</td>
-        </ng-container>
-        <ng-container matColumnDef="class">
-          <th mat-header-cell *matHeaderCellDef>Class</th>
-          <td mat-cell *matCellDef="let row">{{ row.class_name || '—' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="dob">
-          <th mat-header-cell *matHeaderCellDef>DOB</th>
-          <td mat-cell *matCellDef="let row">{{ row.dob ? (row.dob | date: 'mediumDate') : '—' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="gender">
-          <th mat-header-cell *matHeaderCellDef>Gender</th>
-          <td mat-cell *matCellDef="let row">{{ row.gender || '—' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="phone">
-          <th mat-header-cell *matHeaderCellDef>Phone</th>
-          <td mat-cell *matCellDef="let row">{{ row.phone || '—' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let row" class="actions">
-            <button mat-button type="button" (click)="openProfile(row); $event.stopPropagation()">View</button>
-            <button mat-button color="warn" type="button" (click)="deleteRow(row, $event)">Delete</button>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumns"
-          class="row-link"
-          (click)="openProfile(row)"
-        ></tr>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Admission No</th>
+              <th>Name</th>
+              <th>Class</th>
+              <th>DOB</th>
+              <th>Gender</th>
+              <th>Phone</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id) {
+              <tr class="row-link" (click)="openProfile(row)">
+                <td>{{ row.admission_no }}</td>
+                <td>{{ displayName(row) }}</td>
+                <td>{{ row.class_name || '—' }}</td>
+                <td>{{ row.dob ? (row.dob | date: 'mediumDate') : '—' }}</td>
+                <td>{{ row.gender || '—' }}</td>
+                <td>{{ row.phone || '—' }}</td>
+                <td class="actions text-end" (click)="$event.stopPropagation()">
+                  <button type="button" class="btn btn-link btn-sm py-0" (click)="openProfile(row)">View</button>
+                  <button type="button" class="btn btn-link btn-sm text-danger py-0" (click)="deleteRow(row, $event)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
-  </mat-card>
+  </div>
 </section>

@@ -1,100 +1,113 @@
-﻿<h2 mat-dialog-title>Add tenant</h2>
-<mat-dialog-content>
-  <form [formGroup]="form" class="create-tenant-form" (ngSubmit)="submit()">
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Organization name</mat-label>
-      <input matInput formControlName="name" autocomplete="organization" />
-      @if (form.controls.name.touched && form.controls.name.hasError('required')) {
-        <mat-error>Name is required</mat-error>
-      }
-    </mat-form-field>
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="createTenantModalTitle">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="createTenantModalTitle">Add tenant</h2>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" class="create-tenant-form" (ngSubmit)="submit()">
+          <div class="mb-3">
+            <label class="form-label" for="ct-name">Organization name</label>
+            <input id="ct-name" class="form-control" formControlName="name" autocomplete="organization" />
+            @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+              <div class="invalid-feedback d-block">Name is required</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Subdomain</mat-label>
-      <input matInput formControlName="subdomain" autocomplete="off" />
-      @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
-        <mat-error>Subdomain is required</mat-error>
-      }
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-sub">Subdomain</label>
+            <input id="ct-sub" class="form-control" formControlName="subdomain" autocomplete="off" />
+            @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
+              <div class="invalid-feedback d-block">Subdomain is required</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Contact email</mat-label>
-      <input matInput type="email" formControlName="contact_email" autocomplete="email" />
-      @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('required')) {
-        <mat-error>Contact email is required</mat-error>
-      }
-      @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('email')) {
-        <mat-error>Enter a valid email</mat-error>
-      }
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-email">Contact email</label>
+            <input id="ct-email" class="form-control" type="email" formControlName="contact_email" autocomplete="email" />
+            @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('required')) {
+              <div class="invalid-feedback d-block">Contact email is required</div>
+            }
+            @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('email')) {
+              <div class="invalid-feedback d-block">Enter a valid email</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Phone</mat-label>
-      <input matInput formControlName="phone" autocomplete="tel" />
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-phone">Phone</label>
+            <input id="ct-phone" class="form-control" formControlName="phone" autocomplete="tel" />
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Address</mat-label>
-      <textarea matInput formControlName="address" rows="2"></textarea>
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-addr">Address</label>
+            <textarea id="ct-addr" class="form-control" rows="2" formControlName="address"></textarea>
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Status</mat-label>
-      <mat-select formControlName="status">
-        <mat-option value="active">Active</mat-option>
-        <mat-option value="inactive">Inactive</mat-option>
-        <mat-option value="pending">Pending</mat-option>
-      </mat-select>
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-status">Status</label>
+            <select id="ct-status" class="form-select" formControlName="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
 
-    <div class="create-tenant-form__divider" role="presentation">Admin user</div>
+          <div class="create-tenant-form__divider text-secondary small mb-3" role="presentation">Admin user</div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Admin name</mat-label>
-      <input matInput formControlName="adminName" autocomplete="name" />
-      @if (form.controls.adminName.touched && form.controls.adminName.hasError('required')) {
-        <mat-error>Name is required</mat-error>
-      }
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-admin-name">Admin name</label>
+            <input id="ct-admin-name" class="form-control" formControlName="adminName" autocomplete="name" />
+            @if (form.controls.adminName.touched && form.controls.adminName.hasError('required')) {
+              <div class="invalid-feedback d-block">Name is required</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Admin email</mat-label>
-      <input matInput type="email" formControlName="adminEmail" autocomplete="email" />
-      @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('required')) {
-        <mat-error>Email is required</mat-error>
-      }
-      @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('email')) {
-        <mat-error>Enter a valid email</mat-error>
-      }
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-admin-email">Admin email</label>
+            <input id="ct-admin-email" class="form-control" type="email" formControlName="adminEmail" autocomplete="email" />
+            @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('required')) {
+              <div class="invalid-feedback d-block">Email is required</div>
+            }
+            @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('email')) {
+              <div class="invalid-feedback d-block">Enter a valid email</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Password</mat-label>
-      <input matInput type="password" formControlName="password" autocomplete="new-password" />
-      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-        <mat-error>Password is required</mat-error>
-      }
-      @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
-        <mat-error>At least 6 characters</mat-error>
-      }
-    </mat-form-field>
+          <div class="mb-3">
+            <label class="form-label" for="ct-pw">Password</label>
+            <input id="ct-pw" class="form-control" type="password" formControlName="password" autocomplete="new-password" />
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+              <div class="invalid-feedback d-block">Password is required</div>
+            }
+            @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+              <div class="invalid-feedback d-block">At least 6 characters</div>
+            }
+          </div>
 
-    <mat-form-field appearance="outline" class="create-tenant-form__field">
-      <mat-label>Confirm password</mat-label>
-      <input matInput type="password" formControlName="passwordConfirm" autocomplete="new-password" />
-      @if (form.controls.passwordConfirm.touched && form.controls.passwordConfirm.hasError('required')) {
-        <mat-error>Confirm password</mat-error>
-      }
-      @if (form.touched && form.hasError('passwordMismatch')) {
-        <mat-error>Passwords do not match</mat-error>
-      }
-    </mat-form-field>
-  </form>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button type="button" (click)="cancel()" [disabled]="submitting">Cancel</button>
-  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="submitting">
-    @if (submitting) { Creating... } @else { Create }
-  </button>
-</mat-dialog-actions>
-
+          <div class="mb-3">
+            <label class="form-label" for="ct-pw2">Confirm password</label>
+            <input id="ct-pw2" class="form-control" type="password" formControlName="passwordConfirm" autocomplete="new-password" />
+            @if (form.controls.passwordConfirm.touched && form.controls.passwordConfirm.hasError('required')) {
+              <div class="invalid-feedback d-block">Confirm password</div>
+            }
+            @if (form.touched && form.hasError('passwordMismatch')) {
+              <div class="invalid-feedback d-block">Passwords do not match</div>
+            }
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancel()" [disabled]="submitting">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting">
+          @if (submitting) {
+            Creating...
+          } @else {
+            Create
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show"></div>

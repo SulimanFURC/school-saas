@@ -1,11 +1,75 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  position: relative;
+}
+
+.layout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
 .sa-layout {
-  height: 100vh;
+  min-height: 100vh;
   background-color: var(--ds-surface);
 }
 
-.sa-sidenav {
-  width: 240px;
+.layout-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.layout-sidebar {
+  flex-shrink: 0;
   background-color: var(--ds-surface-container-low);
+  z-index: 1045;
+  display: flex;
+  flex-direction: column;
+  transition:
+    width 0.2s ease,
+    min-width 0.2s ease,
+    transform 0.2s ease;
+
+  @media (min-width: 992px) {
+    position: relative;
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+
+    &.layout-sidebar--open {
+      width: 264px;
+      min-width: 264px;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(264px, 88vw);
+    max-width: 100%;
+    box-shadow: var(--ds-shadow-ambient);
+    transform: translateX(-100%);
+
+    &.layout-sidebar--open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.layout-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  width: 264px;
+}
+
+.sa-sidenav {
   border: none;
 }
 
@@ -42,10 +106,6 @@
   margin-top: 0.25rem;
 }
 
-.sa-nav {
-  padding: 0.5rem 0.75rem 1rem;
-}
-
 .sa-nav-item {
   margin: 0.25rem 0;
   border-radius: 10px;
@@ -60,6 +120,10 @@
   background-color: var(--ds-nav-active-bg) !important;
 }
 
+.layout-main {
+  min-width: 0;
+}
+
 .sa-main {
   display: flex;
   flex-direction: column;
@@ -69,7 +133,7 @@
 .sa-toolbar {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   align-items: center;
   min-height: 56px;
@@ -96,6 +160,14 @@
   padding: 1.75rem 1.5rem 1rem;
 }
 
-.mat-drawer-side.mat-sidenav {
-  border-right: none;
+.layout-sidenav-inner {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }

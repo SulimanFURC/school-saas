@@ -1,34 +1,25 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import type { TenantBrandingResponse } from '../../../services/branding.service';
 import type { TenantListResponse, TenantRow } from '../tenant-list/tenant-list.component';
+import { ToastService } from '../../../services/toast.service';
 
 const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
 
 @Component({
   selector: 'app-tenant-branding-settings',
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatSnackBarModule,
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './tenant-branding-settings.component.html',
   styleUrl: './tenant-branding-settings.component.scss',
 })
 export class TenantBrandingSettingsComponent implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
-  private snackBar = inject(MatSnackBar);
+  private toast = inject(ToastService);
 
   readonly tenants = signal<TenantRow[]>([]);
   readonly loadingList = signal(true);
@@ -51,7 +42,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
       },
       error: () => {
         this.loadingList.set(false);
-        this.snackBar.open('Could not load tenants', 'Dismiss', { duration: 5000 });
+        this.toast.open('Could not load tenants', 'Dismiss', { duration: 5000 });
       },
     });
   }
@@ -76,7 +67,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
           }
         },
         error: () => {
-          this.snackBar.open('Could not load branding', 'Dismiss', { duration: 5000 });
+          this.toast.open('Could not load branding', 'Dismiss', { duration: 5000 });
         },
       });
   }
@@ -87,11 +78,11 @@ export class TenantBrandingSettingsComponent implements OnInit {
     input.value = '';
     if (!file) return;
     if (file.type !== 'image/png' || !file.name.toLowerCase().endsWith('.png')) {
-      this.snackBar.open('Only PNG files are allowed', 'Dismiss', { duration: 5000 });
+      this.toast.open('Only PNG files are allowed', 'Dismiss', { duration: 5000 });
       return;
     }
     if (file.size > 1024 * 1024) {
-      this.snackBar.open('File must be 1MB or smaller', 'Dismiss', { duration: 5000 });
+      this.toast.open('File must be 1MB or smaller', 'Dismiss', { duration: 5000 });
       return;
     }
     this.pendingFile = file;
@@ -131,13 +122,13 @@ export class TenantBrandingSettingsComponent implements OnInit {
       if (b.logoUrl) {
         this.logoPreview.set(`${environment.apiBaseUrl}/${b.logoUrl.replace(/^\//, '')}?t=${Date.now()}`);
       }
-      this.snackBar.open('Branding saved', 'Dismiss', { duration: 4000 });
+      this.toast.open('Branding saved', 'Dismiss', { duration: 4000 });
     } catch (err: unknown) {
       const msg =
         typeof err === 'object' && err !== null && 'error' in err
           ? (err as { error?: { message?: string } }).error?.message
           : undefined;
-      this.snackBar.open(msg ?? 'Save failed', 'Dismiss', { duration: 5000 });
+      this.toast.open(msg ?? 'Save failed', 'Dismiss', { duration: 5000 });
     } finally {
       this.saving.set(false);
     }

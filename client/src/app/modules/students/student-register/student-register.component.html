@@ -1,235 +1,250 @@
-﻿<section class="page">
+<section class="page">
   <div class="page-head">
-    <a mat-button routerLink="/students"><mat-icon>arrow_back</mat-icon> Back</a>
+    <a class="btn btn-link px-0" routerLink="/students"><i class="bi bi-arrow-left me-1"></i> Back</a>
     <div>
       <h1 class="ds-display-md">Register student</h1>
       <p class="ds-body-sm ds-on-variant">Multi-step admission form</p>
     </div>
   </div>
 
-  <mat-card class="card">
-    <mat-stepper linear>
-      <mat-step [stepControl]="s1" label="Personal">
-        <form [formGroup]="s1" class="grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Admission No</mat-label>
-            <input matInput formControlName="admission_no" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>First name</mat-label>
-            <input matInput formControlName="first_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Last name</mat-label>
-            <input matInput formControlName="last_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Gender</mat-label>
-            <mat-select formControlName="gender">
-              <mat-option value="">—</mat-option>
-              <mat-option value="male">Male</mat-option>
-              <mat-option value="female">Female</mat-option>
-              <mat-option value="other">Other</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Date of birth</mat-label>
-            <input matInput type="date" formControlName="dob" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Phone</mat-label>
-            <input matInput formControlName="phone" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Email</mat-label>
-            <input matInput type="email" formControlName="email" />
-          </mat-form-field>
-        </form>
-        <div class="actions">
-          <button mat-button matStepperNext type="button" color="primary">Next</button>
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="mb-3">
+        <div class="progress" style="height: 6px">
+          <div class="progress-bar" role="progressbar" [style.width.%]="progressPercent()"></div>
         </div>
-      </mat-step>
-
-      <mat-step [stepControl]="s2" label="Guardian">
-        <form [formGroup]="s2" class="grid">
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Guardian focus</mat-label>
-            <mat-select formControlName="guardian_type">
-              <mat-option value="father">Father</mat-option>
-              <mat-option value="mother">Mother</mat-option>
-              <mat-option value="other">Other</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Father name</mat-label>
-            <input matInput formControlName="father_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Father phone</mat-label>
-            <input matInput formControlName="father_phone" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Father occupation</mat-label>
-            <input matInput formControlName="father_occupation" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Mother name</mat-label>
-            <input matInput formControlName="mother_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Mother occupation</mat-label>
-            <input matInput formControlName="mother_occupation" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Guardian name</mat-label>
-            <input matInput formControlName="guardian_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Guardian phone</mat-label>
-            <input matInput formControlName="guardian_phone" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Guardian address</mat-label>
-            <textarea matInput rows="2" formControlName="guardian_address"></textarea>
-          </mat-form-field>
-        </form>
-        <div class="actions">
-          <button mat-button matStepperPrevious type="button">Back</button>
-          <button mat-button matStepperNext type="button" color="primary">Next</button>
-        </div>
-      </mat-step>
-
-      <mat-step [stepControl]="s3" label="Medical">
-        <form [formGroup]="s3" class="grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Blood group</mat-label>
-            <input matInput formControlName="blood_group" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Height (cm)</mat-label>
-            <input matInput formControlName="height_cm" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Weight (kg)</mat-label>
-            <input matInput formControlName="weight_kg" />
-          </mat-form-field>
-        </form>
-        <div class="actions">
-          <button mat-button matStepperPrevious type="button">Back</button>
-          <button mat-button matStepperNext type="button" color="primary">Next</button>
-        </div>
-      </mat-step>
-
-      <mat-step [stepControl]="s4" label="Previous school">
-        <form [formGroup]="s4" class="grid">
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Previous school name</mat-label>
-            <input matInput formControlName="school_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Previous school address</mat-label>
-            <textarea matInput rows="2" formControlName="school_address"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Current school name (if transferring)</mat-label>
-            <input matInput formControlName="current_school_name" />
-          </mat-form-field>
-        </form>
-        <div class="actions">
-          <button mat-button matStepperPrevious type="button">Back</button>
-          <button mat-button matStepperNext type="button" color="primary">Next</button>
-        </div>
-      </mat-step>
-
-      <mat-step [stepControl]="s5" label="Address & enrollment">
-        <form [formGroup]="s5" class="grid">
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Current address</mat-label>
-            <textarea matInput rows="2" formControlName="current_address"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Permanent address</mat-label>
-            <textarea matInput rows="2" formControlName="permanent_address"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Description / notes</mat-label>
-            <textarea matInput rows="2" formControlName="extra_details"></textarea>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Bank name</mat-label>
-            <input matInput formControlName="bank_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Branch</mat-label>
-            <input matInput formControlName="bank_branch" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>IFSC</mat-label>
-            <input matInput formControlName="bank_ifsc" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Hostel</mat-label>
-            <input matInput formControlName="hostel_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Room no.</mat-label>
-            <input matInput formControlName="room_no" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Room type</mat-label>
-            <input matInput formControlName="room_type" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Academic year</mat-label>
-            <mat-select formControlName="academic_year_id">
-              @for (y of years; track y.id) {
-                <mat-option [value]="y.id">{{ y.name || ('Year ' + y.id) }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Class</mat-label>
-            <mat-select formControlName="class_id">
-              @for (c of classes; track c.id) {
-                <mat-option [value]="c.id">{{ c.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Section</mat-label>
-            <mat-select formControlName="section_id">
-              @for (s of sections; track s.id) {
-                <mat-option [value]="s.id">{{ s.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Roll number</mat-label>
-            <input matInput type="number" formControlName="roll_number" />
-          </mat-form-field>
-          @if (categoryOptions().length) {
-            <mat-form-field appearance="outline" class="span-2">
-              <mat-label>Category</mat-label>
-              <mat-select formControlName="category">
-                <mat-option value="">—</mat-option>
-                @for (opt of categoryOptions(); track opt) {
-                  <mat-option [value]="opt">{{ opt }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+        <div class="d-flex justify-content-between small text-secondary mt-2 flex-wrap gap-1">
+          @for (label of stepLabels; track label; let i = $index) {
+            <span [class.fw-bold]="step() === i" [class.text-primary]="step() === i">{{ i + 1 }}. {{ label }}</span>
           }
-          <mat-checkbox formControlName="create_student_login" class="span-2">
-            Create student login (username: subdomain-admission, default password, inactive)
-          </mat-checkbox>
+        </div>
+      </div>
+
+      @if (step() === 0) {
+        <form [formGroup]="s1" class="grid">
+          <div class="mb-3">
+            <label class="form-label" for="sr-adm">Admission No</label>
+            <input id="sr-adm" class="form-control" formControlName="admission_no" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-fn">First name</label>
+            <input id="sr-fn" class="form-control" formControlName="first_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-ln">Last name</label>
+            <input id="sr-ln" class="form-control" formControlName="last_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-gender">Gender</label>
+            <select id="sr-gender" class="form-select" formControlName="gender">
+              <option value="">—</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-dob">Date of birth</label>
+            <input id="sr-dob" class="form-control" type="date" formControlName="dob" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-phone">Phone</label>
+            <input id="sr-phone" class="form-control" formControlName="phone" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-email">Email</label>
+            <input id="sr-email" class="form-control" type="email" formControlName="email" />
+          </div>
         </form>
         <div class="actions">
-          <button mat-button matStepperPrevious type="button">Back</button>
-          <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="submitting">
-            Submit
-          </button>
+          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
         </div>
-      </mat-step>
-    </mat-stepper>
-  </mat-card>
+      }
+
+      @if (step() === 1) {
+        <form [formGroup]="s2" class="grid">
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-gt">Guardian focus</label>
+            <select id="sr-gt" class="form-select" formControlName="guardian_type">
+              <option value="father">Father</option>
+              <option value="mother">Mother</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-father">Father name</label>
+            <input id="sr-father" class="form-control" formControlName="father_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-fphone">Father phone</label>
+            <input id="sr-fphone" class="form-control" formControlName="father_phone" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-focc">Father occupation</label>
+            <input id="sr-focc" class="form-control" formControlName="father_occupation" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-mother">Mother name</label>
+            <input id="sr-mother" class="form-control" formControlName="mother_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-mocc">Mother occupation</label>
+            <input id="sr-mocc" class="form-control" formControlName="mother_occupation" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-gname">Guardian name</label>
+            <input id="sr-gname" class="form-control" formControlName="guardian_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-gphone">Guardian phone</label>
+            <input id="sr-gphone" class="form-control" formControlName="guardian_phone" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-gaddr">Guardian address</label>
+            <textarea id="sr-gaddr" class="form-control" rows="2" formControlName="guardian_address"></textarea>
+          </div>
+        </form>
+        <div class="actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+        </div>
+      }
+
+      @if (step() === 2) {
+        <form [formGroup]="s3" class="grid">
+          <div class="mb-3">
+            <label class="form-label" for="sr-blood">Blood group</label>
+            <input id="sr-blood" class="form-control" formControlName="blood_group" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-h">Height (cm)</label>
+            <input id="sr-h" class="form-control" formControlName="height_cm" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-w">Weight (kg)</label>
+            <input id="sr-w" class="form-control" formControlName="weight_kg" />
+          </div>
+        </form>
+        <div class="actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+        </div>
+      }
+
+      @if (step() === 3) {
+        <form [formGroup]="s4" class="grid">
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-pschool">Previous school name</label>
+            <input id="sr-pschool" class="form-control" formControlName="school_name" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-paddr">Previous school address</label>
+            <textarea id="sr-paddr" class="form-control" rows="2" formControlName="school_address"></textarea>
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-curr">Current school name (if transferring)</label>
+            <input id="sr-curr" class="form-control" formControlName="current_school_name" />
+          </div>
+        </form>
+        <div class="actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+        </div>
+      }
+
+      @if (step() === 4) {
+        <form [formGroup]="s5" class="grid">
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-caddr">Current address</label>
+            <textarea id="sr-caddr" class="form-control" rows="2" formControlName="current_address"></textarea>
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-paddr2">Permanent address</label>
+            <textarea id="sr-paddr2" class="form-control" rows="2" formControlName="permanent_address"></textarea>
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-extra">Description / notes</label>
+            <textarea id="sr-extra" class="form-control" rows="2" formControlName="extra_details"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-bank">Bank name</label>
+            <input id="sr-bank" class="form-control" formControlName="bank_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-branch">Branch</label>
+            <input id="sr-branch" class="form-control" formControlName="bank_branch" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-ifsc">IFSC</label>
+            <input id="sr-ifsc" class="form-control" formControlName="bank_ifsc" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-hostel">Hostel</label>
+            <input id="sr-hostel" class="form-control" formControlName="hostel_name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-room">Room no.</label>
+            <input id="sr-room" class="form-control" formControlName="room_no" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-rtype">Room type</label>
+            <input id="sr-rtype" class="form-control" formControlName="room_type" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="sr-year">Academic year</label>
+            <select id="sr-year" class="form-select" formControlName="academic_year_id">
+              <option [ngValue]="null">—</option>
+              @for (y of years; track y.id) {
+                <option [ngValue]="y.id">{{ y.name || ('Year ' + y.id) }}</option>
+              }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-class">Class</label>
+            <select id="sr-class" class="form-select" formControlName="class_id">
+              <option [ngValue]="null">—</option>
+              @for (c of classes; track c.id) {
+                <option [ngValue]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-sec">Section</label>
+            <select id="sr-sec" class="form-select" formControlName="section_id">
+              <option [ngValue]="null">—</option>
+              @for (s of sections; track s.id) {
+                <option [ngValue]="s.id">{{ s.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-roll">Roll number</label>
+            <input id="sr-roll" class="form-control" type="number" formControlName="roll_number" />
+          </div>
+          @if (categoryOptions().length) {
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-cat">Category</label>
+              <select id="sr-cat" class="form-select" formControlName="category">
+                <option value="">—</option>
+                @for (opt of categoryOptions(); track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+          }
+          <div class="form-check span-2 mb-0">
+            <input class="form-check-input" type="checkbox" id="sr-login" formControlName="create_student_login" />
+            <label class="form-check-label" for="sr-login">
+              Create student login (username: subdomain-admission, default password, inactive)
+            </label>
+          </div>
+        </form>
+        <div class="actions">
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting">Submit</button>
+        </div>
+      }
+    </div>
+  </div>
 </section>

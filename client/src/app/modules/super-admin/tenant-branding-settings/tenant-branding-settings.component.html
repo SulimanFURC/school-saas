@@ -7,37 +7,43 @@
     <p class="ds-body-sm ds-on-variant">Loading tenants…</p>
   } @else {
     <form class="branding-settings__form" [formGroup]="form" (ngSubmit)="save()">
-      <mat-form-field appearance="outline" class="branding-settings__field branding-settings__field--tenant">
-        <mat-label>Tenant</mat-label>
-        <mat-select formControlName="tenantId" (selectionChange)="onTenantChange($event.value)">
+      <div class="mb-3 branding-settings__field branding-settings__field--tenant">
+        <label class="form-label" for="br-tenant">Tenant</label>
+        <select
+          id="br-tenant"
+          class="form-select"
+          formControlName="tenantId"
+          (change)="onTenantChange($any($event.target).value)"
+        >
+          <option value="">— Select —</option>
           @for (t of tenants(); track t.id) {
-            <mat-option [value]="t.id">{{ t.name }} ({{ t.subdomain }})</mat-option>
+            <option [value]="t.id">{{ t.name }} ({{ t.subdomain }})</option>
           }
-        </mat-select>
-      </mat-form-field>
+        </select>
+      </div>
 
       <div class="branding-settings__colors">
         <label class="branding-settings__color-field">
           <span class="ds-label-sm">Primary color</span>
-          <input type="color" formControlName="primaryColor" />
+          <input type="color" class="form-control form-control-color" formControlName="primaryColor" />
         </label>
         <label class="branding-settings__color-field">
           <span class="ds-label-sm">Secondary color</span>
-          <input type="color" formControlName="secondaryColor" />
+          <input type="color" class="form-control form-control-color" formControlName="secondaryColor" />
         </label>
       </div>
 
-      <div class="branding-settings__logo">
-        <span class="ds-label-sm">Logo (PNG only)</span>
-        <input type="file" accept=".png,image/png" (change)="onFileSelected($event)" />
+      <div class="branding-settings__logo mb-3">
+        <span class="ds-label-sm d-block mb-1">Logo (PNG only)</span>
+        <input type="file" class="form-control" accept=".png,image/png" (change)="onFileSelected($event)" />
         @if (logoPreview()) {
-          <div class="branding-settings__preview">
+          <div class="branding-settings__preview mt-2">
             <img [src]="logoPreview()!" alt="Logo preview" />
           </div>
         }
       </div>
 
-      <button mat-flat-button color="primary" type="submit" [disabled]="saving() || form.invalid">
+      <button class="btn btn-primary" type="submit" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving…' : 'Save changes' }}
       </button>
     </form>

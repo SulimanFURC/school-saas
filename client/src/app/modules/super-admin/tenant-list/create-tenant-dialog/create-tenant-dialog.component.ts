@@ -1,4 +1,4 @@
-﻿import { Component, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,14 +7,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { environment } from '../../../../../environments/environment';
+import { ToastService } from '../../../../services/toast.service';
 
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   const p = group.get('password')?.value;
@@ -26,23 +21,16 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-create-tenant-dialog',
-  imports: [
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSnackBarModule,
-  ],
+  imports: [ReactiveFormsModule],
   templateUrl: './create-tenant-dialog.component.html',
   styleUrl: './create-tenant-dialog.component.scss',
 })
 export class CreateTenantDialogComponent {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
-  private dialogRef = inject(MatDialogRef<CreateTenantDialogComponent, boolean>);
-  private snackBar = inject(MatSnackBar);
+  private toast = inject(ToastService);
+
+  readonly closed = output<boolean>();
 
   submitting = false;
 
@@ -63,7 +51,7 @@ export class CreateTenantDialogComponent {
   );
 
   cancel(): void {
-    this.dialogRef.close(false);
+    this.closed.emit(false);
   }
 
   submit(): void {
@@ -88,8 +76,8 @@ export class CreateTenantDialogComponent {
       .subscribe({
         next: () => {
           this.submitting = false;
-          this.snackBar.open('Tenant created', 'Dismiss', { duration: 4000 });
-          this.dialogRef.close(true);
+          this.toast.open('Tenant created', 'Dismiss', { duration: 4000 });
+          this.closed.emit(true);
         },
         error: (err) => {
           this.submitting = false;
@@ -97,9 +85,8 @@ export class CreateTenantDialogComponent {
             err?.error?.message ||
             (typeof err?.error === 'string' ? err.error : null) ||
             'Could not create tenant';
-          this.snackBar.open(msg, 'Dismiss', { duration: 6000 });
+          this.toast.open(msg, 'Dismiss', { duration: 6000 });
         },
       });
   }
 }
-

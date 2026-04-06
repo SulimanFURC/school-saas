@@ -36,6 +36,7 @@ export class ThemeService {
     const root = document.documentElement;
     root.classList.remove('theme-light', 'theme-dark');
     root.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
+    root.setAttribute('data-bs-theme', theme === 'light' ? 'light' : 'dark');
   }
 }
 

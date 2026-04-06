@@ -1,16 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, from, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
 import { BrandingService } from '../../../services/branding.service';
 import { FeatureService } from '../../../services/feature.service';
+import { ToastService } from '../../../services/toast.service';
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -23,15 +19,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-signup',
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSnackBarModule,
-  ],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })
@@ -39,7 +27,7 @@ export class SignupComponent {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private toast = inject(ToastService);
   private features = inject(FeatureService);
   private branding = inject(BrandingService);
 
@@ -88,7 +76,7 @@ export class SignupComponent {
       .subscribe({
         error: (err: { error?: { message?: string } }) => {
           const msg = err?.error?.message ?? 'Sign up failed';
-          this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
+          this.toast.open(msg, 'Dismiss', { duration: 5000 });
         },
       });
   }

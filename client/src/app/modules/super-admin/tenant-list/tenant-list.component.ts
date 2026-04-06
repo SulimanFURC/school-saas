@@ -1,17 +1,11 @@
-﻿import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTableModule } from '@angular/material/table';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { environment } from '../../../../environments/environment';
 import { formatRelativeTime } from '../../../utils/relative-time';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
+import { ToastService } from '../../../services/toast.service';
 
 export interface TenantRow {
   id: string;
@@ -33,30 +27,22 @@ export type TenantStatusKind = 'active' | 'inactive' | 'pending' | 'unknown';
 
 @Component({
   selector: 'app-tenant-list',
-  imports: [
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatSnackBarModule,
-    MatPaginatorModule,
-    MatDialogModule,
-    RouterLink,
-  ],
+  imports: [RouterLink, CreateTenantDialogComponent],
   templateUrl: './tenant-list.component.html',
   styleUrl: './tenant-list.component.scss',
 })
 export class TenantListComponent implements OnInit {
   private http = inject(HttpClient);
-  private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
+  private toast = inject(ToastService);
 
-  readonly displayedColumns: string[] = ['tenant', 'status', 'lastUpdated', 'actions'];
   readonly tenants = signal<TenantRow[]>([]);
-  readonly menuRow = signal<TenantRow | null>(null);
   readonly total = signal(0);
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
+  readonly showCreate = signal(false);
+
+  readonly pageSizeOptions = [5, 10, 25, 50];
+
   loading = true;
 
   ngOnInit(): void {
@@ -76,30 +62,52 @@ export class TenantListComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.snackBar.open('Could not load tenants', 'Dismiss', { duration: 5000 });
+        this.toast.open('Could not load tenants', 'Dismiss', { duration: 5000 });
       },
     });
   }
 
-  onPage(ev: PageEvent): void {
-    this.pageIndex.set(ev.pageIndex);
-    this.pageSize.set(ev.pageSize);
+  onPageIndexChange(index: number): void {
+    this.pageIndex.set(index);
     this.loadTenants();
   }
 
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.pageIndex.set(0);
+    this.loadTenants();
+  }
+
+  totalPages(): number {
+    const t = this.total();
+    const ps = this.pageSize();
+    if (ps <= 0) return 0;
+    return Math.max(1, Math.ceil(t / ps));
+  }
+
+  pageNumbers(): number[] {
+    const totalP = this.totalPages();
+    const cur = this.pageIndex();
+    const window = 5;
+    const start = Math.max(0, Math.min(cur - 2, totalP - window));
+    const end = Math.min(totalP, start + window);
+    const arr: number[] = [];
+    for (let i = start; i < end; i++) {
+      arr.push(i);
+    }
+    return arr;
+  }
+
   openCreateTenant(): void {
-    this.dialog
-      .open(CreateTenantDialogComponent, {
-        width: 'min(96vw, 36rem)',
-        autoFocus: 'first-tabbable',
-      })
-      .afterClosed()
-      .subscribe((created) => {
-        if (created) {
-          this.pageIndex.set(0);
-          this.loadTenants();
-        }
-      });
+    this.showCreate.set(true);
+  }
+
+  onCreateClosed(created: boolean): void {
+    this.showCreate.set(false);
+    if (created) {
+      this.pageIndex.set(0);
+      this.loadTenants();
+    }
   }
 
   relativeUpdated(row: TenantRow): string {

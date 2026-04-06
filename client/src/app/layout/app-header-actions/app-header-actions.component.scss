@@ -3,12 +3,28 @@
   align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Keep badge inside the hit target so sticky toolbar / parents do not clip it */
+.app-header-actions__notif-badge {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.15rem;
+  left: auto;
+  transform: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.2em 0.45em;
+  min-width: 1.1rem;
 }
 
 .app-header-actions__icon {
   color: var(--ds-toolbar-icon);
 
-  .mat-icon {
+  .bi {
+    font-size: 1.25rem;
     color: inherit;
   }
 }
