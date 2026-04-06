@@ -69,8 +69,20 @@
       </span>
       <i class="bi bi-chevron-down app-header-actions__chevron"></i>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end p-0 shadow">
-      <li class="app-user-menu__header list-unstyled">{{ displayName() }}</li>
+    <ul class="dropdown-menu dropdown-menu-end p-0 app-account-menu">
+      <li class="list-unstyled" role="presentation">
+        <div class="app-account-menu__header">
+          <div class="app-account-menu__avatar-wrap">
+            <span class="app-account-menu__avatar" aria-hidden="true">{{ avatarInitials() }}</span>
+            <span class="app-account-menu__online" aria-hidden="true"></span>
+          </div>
+          <div class="app-account-menu__identity">
+            <span class="app-account-menu__name">{{ displayName() }}</span>
+            <span class="app-account-menu__secondary">{{ displayRole() }}</span>
+          </div>
+        </div>
+      </li>
+      <li><hr class="dropdown-divider app-account-menu__divider" role="presentation" /></li>
       <li>
         <a class="dropdown-item" routerLink="/profile">
           <i class="bi bi-person me-2"></i>
@@ -83,7 +95,7 @@
           Account settings
         </a>
       </li>
-      <li><hr class="dropdown-divider m-0" /></li>
+      <li><hr class="dropdown-divider app-account-menu__divider" role="presentation" /></li>
       <li>
         <button type="button" class="dropdown-item" (click)="logout()">
           <i class="bi bi-box-arrow-right me-2"></i>

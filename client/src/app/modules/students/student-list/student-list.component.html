@@ -1,58 +1,133 @@
 <section class="page">
-  <div class="page-head">
-    <div>
-      <h1 class="ds-display-md">Students</h1>
-      <p class="ds-body-sm ds-on-variant">Admission list for your school</p>
+  <header class="content-area-header" aria-labelledby="students-page-title">
+    <div class="content-area-header__main">
+      <h1 id="students-page-title" class="content-area-header__title">All Students</h1>
+      <p class="content-area-header__subtitle">Admission list for your school</p>
     </div>
-    <a class="btn btn-primary" routerLink="/students/register">
-      <i class="bi bi-person-plus me-1"></i>
-      Register student
-    </a>
-  </div>
+    <div class="content-area-header__end">
+      <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/students" class="content-area-header__crumb content-area-header__crumb--parent">Students</a>
+        <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        <span class="content-area-header__crumb content-area-header__crumb--current">All Students</span>
+      </nav>
+    </div>
+  </header>
 
   <div class="card shadow-sm border-0">
-    @if (loading) {
+    @if (loading()) {
       <div class="center py-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-    } @else if (rows.length === 0) {
-      <p class="empty mb-0">No students yet. Register your first student.</p>
+    } @else if (rows().length === 0) {
+      <div class="empty text-center py-5">
+        <p class="mb-2 fw-medium">No students found</p>
+        <p class="small text-secondary mb-0">There are no students to show yet. Register a student to get started.</p>
+      </div>
     } @else {
       <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead class="table-light">
+        <table class="table app-data-table mb-0 align-middle">
+          <thead>
             <tr>
-              <th>Admission No</th>
-              <th>Name</th>
-              <th>Class</th>
-              <th>DOB</th>
-              <th>Gender</th>
-              <th>Phone</th>
-              <th></th>
+              <th scope="col" [attr.aria-sort]="sortAria('admission_no')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('admission_no')">
+                  Admission No
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('admission_no')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('name')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+                  Name
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('class')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('class')">
+                  Class
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('class')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('dob')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('dob')">
+                  DOB
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('dob')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('gender')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('gender')">
+                  Gender
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('gender')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('phone')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('phone')">
+                  Phone
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('phone')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" class="text-end">Action</th>
             </tr>
           </thead>
           <tbody>
-            @for (row of rows; track row.id) {
+            @for (row of sortedRows(); track trackRow(row, $index)) {
               <tr class="row-link" (click)="openProfile(row)">
                 <td>{{ row.admission_no }}</td>
                 <td>{{ displayName(row) }}</td>
                 <td>{{ row.class_name || '—' }}</td>
-                <td>{{ row.dob ? (row.dob | date: 'mediumDate') : '—' }}</td>
+                <td>{{ formatDob(row.dob) }}</td>
                 <td>{{ row.gender || '—' }}</td>
                 <td>{{ row.phone || '—' }}</td>
-                <td class="actions text-end" (click)="$event.stopPropagation()">
-                  <button type="button" class="btn btn-link btn-sm py-0" (click)="openProfile(row)">View</button>
-                  <button type="button" class="btn btn-link btn-sm text-danger py-0" (click)="deleteRow(row, $event)">
-                    Delete
-                  </button>
+                <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+                  <div class="dropdown d-inline-block">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      aria-label="More actions"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <button type="button" class="dropdown-item"  (click)="editStudent(row, $event)">
+                          Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item"  (click)="deleteRow(row, $event)">
+                          Delete
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item" (click)="openProfileFromMenu(row, $event)">
+                          View profile
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" class="dropdown-item text-secondary" disabled title="Coming soon">
+                          Collect fee
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+      <app-table-pagination-footer
+        [total]="total()"
+        [page]="page()"
+        [pageSize]="pageSize()"
+        [totalPages]="totalPages()"
+        entryLabel="students"
+        ariaLabel="Students pagination"
+        (pageChange)="setPage($event)"
+      />
     }
   </div>
 </section>

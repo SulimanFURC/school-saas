@@ -20,23 +20,47 @@
       </div>
 
       <nav class="d-flex flex-column gap-1 px-2 pb-3 pt-3 layout-sidenav-inner flex-grow-1">
-        @for (item of navItems(); track item.path) {
-          <a
-            class="layout-nav-item"
-            [routerLink]="item.path"
-            routerLinkActive="layout-nav-item--active"
-            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-            (click)="closeSidebarIfMobile()"
-          >
-            <i class="bi" [ngClass]="navIconClass(item.icon)"></i>
-            <span class="ds-body-sm">{{ item.label }}</span>
-          </a>
+        @for (entry of navEntries(); track entry) {
+          @if (isNavGroupEntry(entry)) {
+            <div class="nav-group">
+              <div
+                class="layout-nav-item layout-nav-item--parent text-secondary small text-uppercase px-2 py-1 mb-1"
+              >
+                <i class="bi" [ngClass]="navIconClass(entry.icon)"></i>
+                <span class="ds-body-sm">{{ entry.label }}</span>
+              </div>
+              <div class="nav-group__children d-flex flex-column gap-1 ps-2 border-start ms-2">
+                @for (item of entry.children; track item.path) {
+                  <a
+                    class="layout-nav-item layout-nav-item--sub"
+                    [routerLink]="item.path"
+                    routerLinkActive="layout-nav-item--active"
+                    [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                    (click)="closeSidebarIfMobile()"
+                  >
+                    <span class="ds-body-sm">{{ item.label }}</span>
+                  </a>
+                }
+              </div>
+            </div>
+          } @else {
+            <a
+              class="layout-nav-item"
+              [routerLink]="entry.path"
+              routerLinkActive="layout-nav-item--active"
+              [routerLinkActiveOptions]="{ exact: entry.exact ?? false }"
+              (click)="closeSidebarIfMobile()"
+            >
+              <i class="bi" [ngClass]="navIconClass(entry.icon)"></i>
+              <span class="ds-body-sm">{{ entry.label }}</span>
+            </a>
+          }
         }
       </nav>
     </div>
   </aside>
 
-  <div class="layout-main d-flex flex-column min-vh-100 flex-grow-1">
+  <div class="layout-main d-flex flex-column flex-grow-1">
     <header class="layout-toolbar navbar border-bottom layout-toolbar">
       <div class="container-fluid px-2 py-0 d-flex align-items-center">
         <button

@@ -18,9 +18,13 @@
 }
 
 .tenant-list__paginator {
-  margin-top: 1rem;
-  border-top: 1px solid var(--ds-outline-variant);
+  margin-top: 0;
   background: transparent;
+}
+
+.tenant-list__paginator .app-data-table__footer {
+  border-top: none;
+  padding-top: 0.25rem;
 }
 
 .tenant-list__empty {

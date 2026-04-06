@@ -1,4 +1,4 @@
-﻿const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 
 const SchoolClass = sequelize.define(
@@ -22,6 +22,15 @@ const SchoolClass = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    code: {
+      type: DataTypes.STRING(32),
+      allowNull: true,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
   },
   {
     tableName: 'classes',
@@ -32,6 +41,11 @@ const SchoolClass = sequelize.define(
         unique: true,
         fields: ['tenant_id', 'name'],
         name: 'classes_tenant_id_name_unique',
+      },
+      {
+        unique: true,
+        fields: ['tenant_id', 'code'],
+        name: 'classes_tenant_id_code_unique',
       },
     ],
   }

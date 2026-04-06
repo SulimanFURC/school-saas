@@ -1,7 +1,16 @@
 :host {
   display: block;
-  min-height: 100vh;
   position: relative;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  :host {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
 }
 
 .layout-backdrop {
@@ -13,8 +22,10 @@
 
 .layout-shell {
   display: flex;
-  min-height: 100vh;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .layout-sidebar {
@@ -37,7 +48,9 @@
     &.layout-sidebar--open {
       width: 264px;
       min-width: 264px;
-      overflow: visible;
+      align-self: stretch;
+      height: 100%;
+      overflow: hidden;
     }
   }
 
@@ -60,8 +73,11 @@
 .layout-sidebar__inner {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
   width: 264px;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .layout-brand {
@@ -102,16 +118,17 @@
 }
 
 .layout-main {
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  overflow: hidden;
   background-color: var(--ds-surface);
 }
 
 .layout-toolbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 3;
   flex-shrink: 0;
   display: flex;
@@ -153,12 +170,17 @@
 }
 
 .layout-content {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 1.75rem 1.5rem 1rem;
-  background-color: var(--ds-surface);
+  background-color: var(--ds-layout-content-bg, var(--ds-surface));
 }
 
 .layout-sidenav-inner {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;

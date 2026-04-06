@@ -9,6 +9,17 @@ const tenantMiddleware = async (req, res, next) => {
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const targetSub = req.headers['x-tenant-id']
+          ? String(req.headers['x-tenant-id']).trim().toLowerCase()
+          : null;
+        if (decoded.role === 'super_admin' && targetSub) {
+          const tenant = await Tenant.findOne({ where: { subdomain: targetSub } });
+          if (!tenant) {
+            return res.status(404).json({ message: 'Tenant not found' });
+          }
+          req.tenant = tenant;
+          return next();
+        }
         if (decoded.tenant_id) {
           const tenant = await Tenant.findByPk(decoded.tenant_id);
           if (!tenant) {
@@ -21,7 +32,6 @@ const tenantMiddleware = async (req, res, next) => {
         if (!req.headers['x-tenant-id']) {
           return res.status(401).json({ message: 'Invalid token' });
         }
-        // Fall through: allow x-tenant-id (e.g. login after stale Bearer)
       }
     }
 

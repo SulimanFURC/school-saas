@@ -1,4 +1,4 @@
-﻿const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 const Student = require('./student.model');
 
@@ -22,7 +22,6 @@ const StudentPreviousSchool = sequelize.define(
     },
     school_name: { type: DataTypes.STRING(255), allowNull: true },
     school_address: { type: DataTypes.TEXT, allowNull: true },
-    current_school_name: { type: DataTypes.STRING(255), allowNull: true },
   },
   {
     tableName: 'student_previous_schools',

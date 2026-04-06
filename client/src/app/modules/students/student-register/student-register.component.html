@@ -1,13 +1,39 @@
 <section class="page">
-  <div class="page-head">
-    <a class="btn btn-link px-0" routerLink="/students"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    <div>
-      <h1 class="ds-display-md">Register student</h1>
-      <p class="ds-body-sm ds-on-variant">Multi-step admission form</p>
+  <header class="content-area-header" aria-labelledby="register-page-title">
+    <div class="content-area-header__main">
+      <h1 id="register-page-title" class="content-area-header__title">{{ pageTitle() }}</h1>
+      <p class="content-area-header__subtitle">
+        @if (editStudentId()) {
+          Update student records and enrollment
+        } @else {
+          Multi-step admission form
+        }
+      </p>
     </div>
-  </div>
+    <div class="content-area-header__end">
+      <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/students" class="content-area-header__crumb content-area-header__crumb--parent">Students</a>
+        <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        @if (editStudentId()) {
+          <span class="content-area-header__crumb content-area-header__crumb--current">Edit student</span>
+        } @else {
+          <span class="content-area-header__crumb content-area-header__crumb--current">Register student</span>
+        }
+      </nav>
+    </div>
+  </header>
 
-  <div class="card shadow-sm border-0">
+  <div class="card shadow-sm border-0 position-relative">
+    @if (loadingEdit()) {
+      <div
+        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-body rounded z-2"
+        style="--bs-bg-opacity: 0.85"
+      >
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }
     <div class="card-body">
       <div class="mb-3">
         <div class="progress" style="height: 6px">
@@ -23,16 +49,49 @@
       @if (step() === 0) {
         <form [formGroup]="s1" class="grid">
           <div class="mb-3">
-            <label class="form-label" for="sr-adm">Admission No</label>
-            <input id="sr-adm" class="form-control" formControlName="admission_no" />
+            <label class="form-label" for="sr-adm">
+              Admission No <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-adm"
+              class="form-control"
+              formControlName="admission_no"
+              [class.is-invalid]="showErr(s1, 'admission_no')"
+              autocomplete="off"
+              aria-required="true"
+            />
+            @if (showErr(s1, 'admission_no')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s1, 'admission_no') }}</div>
+            }
           </div>
           <div class="mb-3">
-            <label class="form-label" for="sr-fn">First name</label>
-            <input id="sr-fn" class="form-control" formControlName="first_name" />
+            <label class="form-label" for="sr-first">
+              First name <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-first"
+              class="form-control"
+              formControlName="first_name"
+              [class.is-invalid]="showErr(s1, 'first_name')"
+              autocomplete="given-name"
+              aria-required="true"
+            />
+            @if (showErr(s1, 'first_name')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s1, 'first_name') }}</div>
+            }
           </div>
           <div class="mb-3">
-            <label class="form-label" for="sr-ln">Last name</label>
-            <input id="sr-ln" class="form-control" formControlName="last_name" />
+            <label class="form-label" for="sr-last">Last name</label>
+            <input
+              id="sr-last"
+              class="form-control"
+              formControlName="last_name"
+              [class.is-invalid]="showErr(s1, 'last_name')"
+              autocomplete="family-name"
+            />
+            @if (showErr(s1, 'last_name')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s1, 'last_name') }}</div>
+            }
           </div>
           <div class="mb-3">
             <label class="form-label" for="sr-gender">Gender</label>
@@ -49,64 +108,217 @@
           </div>
           <div class="mb-3">
             <label class="form-label" for="sr-phone">Phone</label>
-            <input id="sr-phone" class="form-control" formControlName="phone" />
+            <input
+              id="sr-phone"
+              class="form-control"
+              formControlName="phone"
+              [class.is-invalid]="showErr(s1, 'phone')"
+            />
+            @if (showErr(s1, 'phone')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s1, 'phone') }}</div>
+            }
           </div>
           <div class="mb-3 span-2">
             <label class="form-label" for="sr-email">Email</label>
-            <input id="sr-email" class="form-control" type="email" formControlName="email" />
+            <input
+              id="sr-email"
+              class="form-control"
+              type="email"
+              formControlName="email"
+              [class.is-invalid]="showErr(s1, 'email')"
+            />
+            @if (showErr(s1, 'email')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s1, 'email') }}</div>
+            }
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-photo">Student photo</label>
+            <input
+              id="sr-photo"
+              class="form-control"
+              type="file"
+              [accept]="photoInputAccept"
+              (change)="onPhotoFileChange($event)"
+            />
+            <div class="form-text">PNG or JPEG, up to 5 MB. Stored securely and optimized for display.</div>
+            @if (photoPreviewDisplay(); as prev) {
+              <div class="student-reg-photo-preview mt-2">
+                <img [src]="prev" alt="" />
+              </div>
+            }
+            @if (photoFile) {
+              <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhotoFile()">
+                Clear selected file
+              </button>
+            }
+            @if (editStudentId() && photoPreviewDisplay() && !removeExistingPhoto && !photoFile) {
+              <button type="button" class="btn btn-link btn-sm text-danger px-0 d-block mt-1" (click)="removeSavedPhoto()">
+                Remove saved photo
+              </button>
+            }
+            @if (editStudentId() && removeExistingPhoto && !photoFile) {
+              <p class="small text-secondary mb-0 mt-1">Saved photo will be removed when you save.</p>
+            }
           </div>
         </form>
         <div class="actions">
-          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
       }
 
       @if (step() === 1) {
         <form [formGroup]="s2" class="grid">
           <div class="mb-3 span-2">
-            <label class="form-label" for="sr-gt">Guardian focus</label>
+            <label class="form-label" for="sr-gt">Guardian</label>
             <select id="sr-gt" class="form-select" formControlName="guardian_type">
               <option value="father">Father</option>
               <option value="mother">Mother</option>
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-father">Father name</label>
-            <input id="sr-father" class="form-control" formControlName="father_name" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-fphone">Father phone</label>
-            <input id="sr-fphone" class="form-control" formControlName="father_phone" />
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-focc">Father occupation</label>
-            <input id="sr-focc" class="form-control" formControlName="father_occupation" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-mother">Mother name</label>
-            <input id="sr-mother" class="form-control" formControlName="mother_name" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-mocc">Mother occupation</label>
-            <input id="sr-mocc" class="form-control" formControlName="mother_occupation" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-gname">Guardian name</label>
-            <input id="sr-gname" class="form-control" formControlName="guardian_name" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-gphone">Guardian phone</label>
-            <input id="sr-gphone" class="form-control" formControlName="guardian_phone" />
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-gaddr">Guardian address</label>
-            <textarea id="sr-gaddr" class="form-control" rows="2" formControlName="guardian_address"></textarea>
-          </div>
+          @if (guardianType() === 'father') {
+            <div class="mb-3">
+              <label class="form-label" for="sr-father">
+                Father name <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-father"
+                class="form-control"
+                formControlName="father_name"
+                [class.is-invalid]="showErr(s2, 'father_name')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'father_name')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'father_name') }}</div>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="sr-fphone">
+                Father phone <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-fphone"
+                class="form-control"
+                formControlName="father_phone"
+                [class.is-invalid]="showErr(s2, 'father_phone')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'father_phone')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'father_phone') }}</div>
+              }
+            </div>
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-focc">Father occupation</label>
+              <input id="sr-focc" class="form-control" formControlName="father_occupation" />
+            </div>
+          }
+          @if (guardianType() === 'mother') {
+            <div class="mb-3">
+              <label class="form-label" for="sr-mother">
+                Mother name <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-mother"
+                class="form-control"
+                formControlName="mother_name"
+                [class.is-invalid]="showErr(s2, 'mother_name')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'mother_name')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'mother_name') }}</div>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="sr-mphone">
+                Mother phone <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-mphone"
+                class="form-control"
+                formControlName="mother_phone"
+                [class.is-invalid]="showErr(s2, 'mother_phone')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'mother_phone')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'mother_phone') }}</div>
+              }
+            </div>
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-mocc">Mother occupation</label>
+              <input id="sr-mocc" class="form-control" formControlName="mother_occupation" />
+            </div>
+          }
+          @if (guardianType() === 'other') {
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-gname">
+                Guardian name <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-gname"
+                class="form-control"
+                formControlName="guardian_name"
+                [class.is-invalid]="showErr(s2, 'guardian_name')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'guardian_name')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_name') }}</div>
+              }
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="sr-gphone">
+                Guardian phone <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-gphone"
+                class="form-control"
+                formControlName="guardian_phone"
+                [class.is-invalid]="showErr(s2, 'guardian_phone')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'guardian_phone')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_phone') }}</div>
+              }
+            </div>
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-gocc">Guardian occupation</label>
+              <input id="sr-gocc" class="form-control" formControlName="guardian_occupation" />
+            </div>
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-grel">
+                Relation <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <input
+                id="sr-grel"
+                class="form-control"
+                formControlName="guardian_relation"
+                [class.is-invalid]="showErr(s2, 'guardian_relation')"
+                aria-required="true"
+              />
+              @if (showErr(s2, 'guardian_relation')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_relation') }}</div>
+              }
+            </div>
+            <div class="mb-3 span-2">
+              <label class="form-label" for="sr-gaddr">
+                Guardian address <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="sr-gaddr"
+                class="form-control"
+                rows="2"
+                formControlName="guardian_address"
+                [class.is-invalid]="showErr(s2, 'guardian_address')"
+                aria-required="true"
+              ></textarea>
+              @if (showErr(s2, 'guardian_address')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_address') }}</div>
+              }
+            </div>
+          }
         </form>
         <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
       }
 
@@ -114,20 +326,17 @@
         <form [formGroup]="s3" class="grid">
           <div class="mb-3">
             <label class="form-label" for="sr-blood">Blood group</label>
-            <input id="sr-blood" class="form-control" formControlName="blood_group" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-h">Height (cm)</label>
-            <input id="sr-h" class="form-control" formControlName="height_cm" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-w">Weight (kg)</label>
-            <input id="sr-w" class="form-control" formControlName="weight_kg" />
+            <select id="sr-blood" class="form-select" formControlName="blood_group">
+              <option value="">—</option>
+              @for (b of bloodOptions; track b) {
+                <option [value]="b">{{ b }}</option>
+              }
+            </select>
           </div>
         </form>
         <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
       }
 
@@ -141,14 +350,10 @@
             <label class="form-label" for="sr-paddr">Previous school address</label>
             <textarea id="sr-paddr" class="form-control" rows="2" formControlName="school_address"></textarea>
           </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-curr">Current school name (if transferring)</label>
-            <input id="sr-curr" class="form-control" formControlName="current_school_name" />
-          </div>
         </form>
         <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()">Next</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
       }
 
@@ -163,28 +368,8 @@
             <textarea id="sr-paddr2" class="form-control" rows="2" formControlName="permanent_address"></textarea>
           </div>
           <div class="mb-3 span-2">
-            <label class="form-label" for="sr-extra">Description / notes</label>
+            <label class="form-label" for="sr-extra">Details / notes</label>
             <textarea id="sr-extra" class="form-control" rows="2" formControlName="extra_details"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-bank">Bank name</label>
-            <input id="sr-bank" class="form-control" formControlName="bank_name" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-branch">Branch</label>
-            <input id="sr-branch" class="form-control" formControlName="bank_branch" />
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-ifsc">IFSC</label>
-            <input id="sr-ifsc" class="form-control" formControlName="bank_ifsc" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-hostel">Hostel</label>
-            <input id="sr-hostel" class="form-control" formControlName="hostel_name" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-room">Room no.</label>
-            <input id="sr-room" class="form-control" formControlName="room_no" />
           </div>
           <div class="mb-3">
             <label class="form-label" for="sr-rtype">Room type</label>
@@ -192,31 +377,64 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label" for="sr-year">Academic year</label>
-            <select id="sr-year" class="form-select" formControlName="academic_year_id">
+            <label class="form-label" for="sr-year">
+              Academic year <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="sr-year"
+              class="form-select"
+              formControlName="academic_year_id"
+              [class.is-invalid]="showErr(s5, 'academic_year_id')"
+              aria-required="true"
+            >
               <option [ngValue]="null">—</option>
               @for (y of years; track y.id) {
                 <option [ngValue]="y.id">{{ y.name || ('Year ' + y.id) }}</option>
               }
             </select>
+            @if (showErr(s5, 'academic_year_id')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s5, 'academic_year_id') }}</div>
+            }
           </div>
           <div class="mb-3">
-            <label class="form-label" for="sr-class">Class</label>
-            <select id="sr-class" class="form-select" formControlName="class_id">
+            <label class="form-label" for="sr-class">
+              Class <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="sr-class"
+              class="form-select"
+              formControlName="class_id"
+              [class.is-invalid]="showErr(s5, 'class_id')"
+              aria-required="true"
+            >
               <option [ngValue]="null">—</option>
               @for (c of classes; track c.id) {
                 <option [ngValue]="c.id">{{ c.name }}</option>
               }
             </select>
+            @if (showErr(s5, 'class_id')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s5, 'class_id') }}</div>
+            }
           </div>
           <div class="mb-3">
-            <label class="form-label" for="sr-sec">Section</label>
-            <select id="sr-sec" class="form-select" formControlName="section_id">
+            <label class="form-label" for="sr-sec">
+              Section <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="sr-sec"
+              class="form-select"
+              formControlName="section_id"
+              [class.is-invalid]="showErr(s5, 'section_id')"
+              aria-required="true"
+            >
               <option [ngValue]="null">—</option>
               @for (s of sections; track s.id) {
                 <option [ngValue]="s.id">{{ s.name }}</option>
               }
             </select>
+            @if (showErr(s5, 'section_id')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s5, 'section_id') }}</div>
+            }
           </div>
           <div class="mb-3">
             <label class="form-label" for="sr-roll">Roll number</label>
@@ -224,25 +442,68 @@
           </div>
           @if (categoryOptions().length) {
             <div class="mb-3 span-2">
-              <label class="form-label" for="sr-cat">Category</label>
-              <select id="sr-cat" class="form-select" formControlName="category">
+              <label class="form-label" for="sr-cat">
+                Category <span class="text-danger req" aria-hidden="true">*</span>
+              </label>
+              <select
+                id="sr-cat"
+                class="form-select"
+                formControlName="category"
+                [class.is-invalid]="showErr(s5, 'category')"
+                aria-required="true"
+              >
                 <option value="">—</option>
                 @for (opt of categoryOptions(); track opt) {
                   <option [value]="opt">{{ opt }}</option>
                 }
               </select>
+              @if (showErr(s5, 'category')) {
+                <div class="invalid-feedback d-block">{{ errMsg(s5, 'category') }}</div>
+              }
             </div>
           }
-          <div class="form-check span-2 mb-0">
-            <input class="form-check-input" type="checkbox" id="sr-login" formControlName="create_student_login" />
-            <label class="form-check-label" for="sr-login">
-              Create student login (username: subdomain-admission, default password, inactive)
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-login-pw">
+              @if (editStudentId()) {
+                New login password (optional)
+              } @else {
+                Initial password (optional)
+              }
             </label>
+            <input
+              id="sr-login-pw"
+              class="form-control"
+              type="password"
+              autocomplete="new-password"
+              formControlName="login_password"
+              [placeholder]="
+                editStudentId()
+                  ? 'Leave blank to keep current password · min 6 characters'
+                  : 'Min 6 chars; random if empty'
+              "
+              [class.is-invalid]="showErr(s5, 'login_password')"
+            />
+            @if (editStudentId() && hasLoginAccount) {
+              <div class="form-text">Only fill this field if you want to change the student&rsquo;s login password.</div>
+            }
+            @if (showErr(s5, 'login_password')) {
+              <div class="invalid-feedback d-block">{{ errMsg(s5, 'login_password') }}</div>
+            }
           </div>
+          @if (!editStudentId()) {
+            <div class="form-check span-2 mb-0">
+              <input class="form-check-input" type="checkbox" id="sr-login" formControlName="create_student_login" />
+              <label class="form-check-label" for="sr-login">
+                Create student login (username auto-generated; inactive until activated)
+              </label>
+            </div>
+          }
         </form>
         <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting">Submit</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting || loadingEdit()">
+            {{ editStudentId() ? 'Save changes' : 'Submit' }}
+          </button>
         </div>
       }
     </div>

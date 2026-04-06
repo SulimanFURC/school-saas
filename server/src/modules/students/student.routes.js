@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../core/middleware/auth.middleware');
 const authorize = require('../../core/middleware/authorize.middleware');
@@ -7,7 +7,7 @@ const studentController = require('./student.controller');
 
 router.use(authMiddleware);
 router.use(checkFeature('students'));
-router.use(authorize('admin'));
+router.use(authorize('admin', 'super_admin'));
 
 router.post('/students/register', studentController.register);
 router.post('/students/promote', studentController.promote);

@@ -1,4 +1,4 @@
-﻿import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
 import { environment } from '../../environments/environment';
@@ -7,6 +7,9 @@ export interface SchoolClassDto {
   id: number;
   name: string;
   display_order: number | null;
+  code?: string | null;
+  is_active?: boolean;
+  sections?: SectionDto[];
 }
 
 export interface SectionDto {
@@ -26,8 +29,29 @@ export class AcademicService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  listClasses() {
-    return this.http.get<SchoolClassDto[]>(`${this.base}/classes`);
+  listClasses(includeSections = false) {
+    const params = includeSections ? { include: 'sections' } : undefined;
+    return this.http.get<SchoolClassDto[]>(`${this.base}/classes`, { params });
+  }
+
+  createClass(body: {
+    name: string;
+    display_order?: number | null;
+    code?: string | null;
+    is_active?: boolean;
+  }) {
+    return this.http.post<SchoolClassDto>(`${this.base}/classes`, body);
+  }
+
+  updateClass(
+    id: number,
+    body: Partial<{ name: string; display_order: number | null; code: string | null; is_active: boolean }>
+  ) {
+    return this.http.patch<SchoolClassDto>(`${this.base}/classes/${id}`, body);
+  }
+
+  deleteClass(id: number) {
+    return this.http.delete(`${this.base}/classes/${id}`);
   }
 
   listSections(classId: number) {
@@ -36,7 +60,23 @@ export class AcademicService {
     });
   }
 
+  createSection(classId: number, name: string) {
+    return this.http.post<SectionDto>(`${this.base}/sections`, { class_id: classId, name });
+  }
+
+  updateSection(id: number, name: string) {
+    return this.http.patch<SectionDto>(`${this.base}/sections/${id}`, { name });
+  }
+
+  deleteSection(id: number) {
+    return this.http.delete(`${this.base}/sections/${id}`);
+  }
+
   listAcademicYears() {
     return this.http.get<AcademicYearDto[]>(`${this.base}/academic-years`);
+  }
+
+  getCurrentAcademicYear() {
+    return this.http.get<AcademicYearDto>(`${this.base}/academic-years/current`);
   }
 }

@@ -10,7 +10,7 @@ import {
 } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 
-import { TENANT_NAV_CONFIG, type NavItemConfig } from '../../config/nav.config';
+import { TENANT_NAV_CONFIG, isNavGroup, type NavEntry, type NavGroupConfig } from '../../config/nav.config';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { BrandingService } from '../../services/branding.service';
@@ -66,11 +66,13 @@ export class MainLayoutComponent {
     return 'assets/default-logo.png';
   });
 
-  readonly navItems = computed((): NavItemConfig[] => {
+  readonly navEntries = computed((): NavEntry[] => {
     const enabled = this.features.enabled();
-    return TENANT_NAV_CONFIG.filter(
-      (item) => !item.moduleKey || enabled.has(item.moduleKey)
-    );
+    return TENANT_NAV_CONFIG.filter((entry) => {
+      const key = isNavGroup(entry) ? entry.moduleKey : entry.moduleKey;
+      if (!key) return true;
+      return enabled.has(key);
+    });
   });
 
   readonly pageTitle = toSignal(
@@ -98,6 +100,10 @@ export class MainLayoutComponent {
       mq.addEventListener('change', sync);
       this.destroyRef.onDestroy(() => mq.removeEventListener('change', sync));
     });
+  }
+
+  isNavGroupEntry(entry: NavEntry): entry is NavGroupConfig {
+    return isNavGroup(entry);
   }
 
   toggleSidebar(): void {

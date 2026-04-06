@@ -1,4 +1,4 @@
-﻿const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 const Student = require('./student.model');
 
@@ -25,6 +25,7 @@ const StudentGuardian = sequelize.define(
     father_phone: { type: DataTypes.STRING(20), allowNull: true },
     father_occupation: { type: DataTypes.STRING(100), allowNull: true },
     mother_name: { type: DataTypes.STRING(100), allowNull: true },
+    mother_phone: { type: DataTypes.STRING(20), allowNull: true },
     mother_occupation: { type: DataTypes.STRING(100), allowNull: true },
     guardian_name: { type: DataTypes.STRING(100), allowNull: true },
     guardian_phone: { type: DataTypes.STRING(20), allowNull: true },
