@@ -1,4 +1,5 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -17,7 +18,7 @@ type SelectionMode = 'all' | 'manual';
 
 @Component({
   selector: 'app-student-promote',
-  imports: [ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
   templateUrl: './student-promote.component.html',
   styleUrl: './student-promote.component.scss',
 })
@@ -355,6 +356,34 @@ export class StudentPromoteComponent implements OnInit {
     if (next.has(id)) next.delete(id);
     else next.add(id);
     this.selected.set(next);
+  }
+
+  /** Row click to toggle selection; ignores clicks on inputs and controls. */
+  onRowClick(ev: MouseEvent, id: string): void {
+    const t = ev.target as HTMLElement | null;
+    if (t?.closest('input, button, a, label, select, textarea')) return;
+    this.toggle(id);
+  }
+
+  rowInitials(row: StudentListRow): string {
+    const fn = (row.first_name ?? '').trim();
+    const ln = (row.last_name ?? '').trim();
+    let a = fn[0];
+    let b = ln[0];
+    if (!a || !b) {
+      const name = (row.display_name || row.full_name || '').trim();
+      const parts = name.split(/\s+/).filter(Boolean);
+      a = a || parts[0]?.[0] || '?';
+      b = b || (parts.length > 1 ? parts[parts.length - 1][0] : '') || '';
+    }
+    return (a + b).toUpperCase();
+  }
+
+  genderClass(row: StudentListRow): string {
+    const g = (row.gender ?? '').toLowerCase();
+    if (g === 'female' || g === 'f') return 'sp-gender--f';
+    if (g === 'male' || g === 'm') return 'sp-gender--m';
+    return 'sp-gender--na';
   }
 
   toggleAll(checked: boolean): void {
