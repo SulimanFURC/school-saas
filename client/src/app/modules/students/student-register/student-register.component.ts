@@ -71,8 +71,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
 
-  readonly step = signal(0);
-  readonly stepLabels = ['Personal', 'Guardian', 'Medical', 'Previous school', 'Address & enrollment'];
   readonly bloodOptions = BLOOD_OPTIONS;
 
   /** Set when route is `/students/:id/edit` */
@@ -418,23 +416,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
     }
   }
 
-  private formForStep(i: number): FormGroup | null {
-    switch (i) {
-      case 0:
-        return this.s1;
-      case 1:
-        return this.s2;
-      case 2:
-        return this.s3;
-      case 3:
-        return this.s4;
-      case 4:
-        return this.s5;
-      default:
-        return null;
-    }
-  }
-
   showErr(fg: FormGroup, name: string): boolean {
     const c = fg.get(name);
     return !!(c && c.invalid && c.touched);
@@ -466,34 +447,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       }
     }
     return null;
-  }
-
-  goNext(): void {
-    const i = this.step();
-    const fg = this.formForStep(i);
-    if (fg) {
-      fg.markAllAsTouched();
-      if (i === 3) {
-        this.updateCategoryValidators();
-      }
-      if (fg.invalid) {
-        const first = this.firstInvalidMessage(fg);
-        this.toast.open(first || 'Please fix the highlighted fields', 'Dismiss', { duration: 5000 });
-        return;
-      }
-    }
-    if (i === 3) {
-      this.updateCategoryValidators();
-    }
-    this.step.set(Math.min(4, i + 1));
-  }
-
-  goPrev(): void {
-    this.step.update((s) => Math.max(0, s - 1));
-  }
-
-  progressPercent(): number {
-    return ((this.step() + 1) / 5) * 100;
   }
 
   categoryOptions(): string[] {

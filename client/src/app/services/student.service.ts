@@ -50,6 +50,18 @@ export function resolveStudentFirstLast(d: Record<string, unknown>): {
   return { first_name: '', last_name: '' };
 }
 
+/** Subset of enrollment fields returned by list / lookup (snake_case from API). */
+export interface StudentCurrentEnrollmentDto {
+  id?: number;
+  academic_year_id?: number;
+  class_id?: number;
+  section_id?: number;
+  roll_number?: number | null;
+  academicYear?: { id: number; name: string | null } | null;
+  schoolClass?: { id: number; name: string; code?: string | null } | null;
+  section?: { id: number; name: string } | null;
+}
+
 export interface StudentListRow {
   id: string;
   admission_no: string;
@@ -62,7 +74,7 @@ export interface StudentListRow {
   phone: string | null;
   status: string;
   class_name: string | null;
-  current_enrollment?: unknown;
+  current_enrollment?: StudentCurrentEnrollmentDto | null;
 }
 
 function normalizeStudentListRow(raw: Record<string, unknown>): StudentListRow {
@@ -78,7 +90,9 @@ function normalizeStudentListRow(raw: Record<string, unknown>): StudentListRow {
     phone: (raw['phone'] as string | null) ?? null,
     status: String(raw['status'] ?? 'active'),
     class_name: (raw['class_name'] ?? raw['className'] ?? null) as string | null,
-    current_enrollment: raw['current_enrollment'] ?? raw['currentEnrollment'],
+    current_enrollment: (raw['current_enrollment'] ??
+      raw['currentEnrollment'] ??
+      null) as StudentCurrentEnrollmentDto | null,
   };
 }
 
@@ -174,7 +188,8 @@ export class StudentService {
     let httpParams = new HttpParams();
     if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
     if (params?.pageSize != null) httpParams = httpParams.set('pageSize', String(params.pageSize));
-    if (params?.q) httpParams = httpParams.set('q', params.q);
+    const qTrim = params?.q != null ? String(params.q).trim() : '';
+    if (qTrim.length > 0) httpParams = httpParams.set('q', qTrim);
     if (params?.class_id != null) httpParams = httpParams.set('class_id', String(params.class_id));
     if (params?.section_id != null) httpParams = httpParams.set('section_id', String(params.section_id));
     if (params?.academic_year_id != null) {
@@ -183,6 +198,23 @@ export class StudentService {
     return this.http.get<unknown>(`${this.base}/students`, { params: httpParams }).pipe(
       map((body) => normalizeStudentListResponse(body, params?.pageSize ?? 20))
     );
+  }
+
+  /** Resolve student + current placement by exact admission number (case-insensitive). */
+  lookupByAdmission(admissionNo: string) {
+    const q = String(admissionNo).trim();
+    return this.http
+      .get<unknown>(`${this.base}/students/lookup`, {
+        params: new HttpParams().set('admission_no', q),
+      })
+      .pipe(
+        map((body) => {
+          if (!body || typeof body !== 'object') return null;
+          const data = (body as Record<string, unknown>)['data'];
+          if (!data || typeof data !== 'object') return null;
+          return normalizeStudentListRow(data as Record<string, unknown>);
+        })
+      );
   }
 
   getById(id: string) {

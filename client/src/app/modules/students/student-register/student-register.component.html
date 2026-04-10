@@ -1,12 +1,12 @@
-<section class="page">
-  <header class="content-area-header" aria-labelledby="register-page-title">
+<section class="page page--student-register">
+  <header class="content-area-header content-area-header--register" aria-labelledby="register-page-title">
     <div class="content-area-header__main">
       <h1 id="register-page-title" class="content-area-header__title">{{ pageTitle() }}</h1>
       <p class="content-area-header__subtitle">
         @if (editStudentId()) {
           Update student records and enrollment
         } @else {
-          Multi-step admission form
+          Complete all sections below to register a student
         }
       </p>
     </div>
@@ -23,7 +23,7 @@
     </div>
   </header>
 
-  <div class="card shadow-sm border-0 position-relative">
+  <div class="position-relative reg-stack">
     @if (loadingEdit()) {
       <div
         class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-body rounded z-2"
@@ -34,20 +34,14 @@
         </div>
       </div>
     }
-    <div class="card-body">
-      <div class="mb-3">
-        <div class="progress" style="height: 6px">
-          <div class="progress-bar" role="progressbar" [style.width.%]="progressPercent()"></div>
-        </div>
-        <div class="d-flex justify-content-between small text-secondary mt-2 flex-wrap gap-1">
-          @for (label of stepLabels; track label; let i = $index) {
-            <span [class.fw-bold]="step() === i" [class.text-primary]="step() === i">{{ i + 1 }}. {{ label }}</span>
-          }
-        </div>
-      </div>
 
-      @if (step() === 0) {
-        <form [formGroup]="s1" class="grid">
+    <section class="reg-section reg-section--personal" aria-labelledby="sr-sec-personal">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-personal" class="reg-section__title">Personal</h2>
+        <p class="reg-section__desc">Identity and contact details</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s1" class="grid">
           <div class="mb-3">
             <label class="form-label" for="sr-adm">
               Admission No <span class="text-danger req" aria-hidden="true">*</span>
@@ -131,43 +125,58 @@
               <div class="invalid-feedback d-block">{{ errMsg(s1, 'email') }}</div>
             }
           </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-photo">Student photo</label>
-            <input
-              id="sr-photo"
-              class="form-control"
-              type="file"
-              [accept]="photoInputAccept"
-              (change)="onPhotoFileChange($event)"
-            />
-            <div class="form-text">PNG or JPEG, up to 5 MB. Stored securely and optimized for display.</div>
-            @if (photoPreviewDisplay(); as prev) {
-              <div class="student-reg-photo-preview mt-2">
-                <img [src]="prev" alt="" />
+          <div class="mb-3 span-2 reg-photo-block">
+            <span class="form-label d-block" id="sr-photo-label-text">Student photo</span>
+            <div class="reg-photo-field">
+              <div class="reg-photo-field__preview">
+                @if (photoPreviewDisplay(); as prev) {
+                  <div class="student-reg-photo-preview">
+                    <img [src]="prev" alt="" />
+                  </div>
+                } @else {
+                  <div class="reg-photo-field__placeholder" aria-hidden="true">
+                    <i class="bi bi-image"></i>
+                  </div>
+                }
               </div>
-            }
-            @if (photoFile) {
-              <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhotoFile()">
-                Clear selected file
-              </button>
-            }
-            @if (editStudentId() && photoPreviewDisplay() && !removeExistingPhoto && !photoFile) {
-              <button type="button" class="btn btn-link btn-sm text-danger px-0 d-block mt-1" (click)="removeSavedPhoto()">
-                Remove saved photo
-              </button>
-            }
-            @if (editStudentId() && removeExistingPhoto && !photoFile) {
-              <p class="small text-secondary mb-0 mt-1">Saved photo will be removed when you save.</p>
-            }
+              <div class="reg-photo-field__controls">
+                <input
+                  id="sr-photo"
+                  class="visually-hidden"
+                  type="file"
+                  [accept]="photoInputAccept"
+                  (change)="onPhotoFileChange($event)"
+                  aria-labelledby="sr-photo-label-text"
+                />
+                <label for="sr-photo" class="reg-photo-field__choose">Choose file</label>
+                <div class="form-text reg-hint">PNG or JPEG, up to 5 MB. Stored securely and optimized for display.</div>
+                @if (photoFile) {
+                  <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhotoFile()">
+                    Clear selected file
+                  </button>
+                }
+                @if (editStudentId() && photoPreviewDisplay() && !removeExistingPhoto && !photoFile) {
+                  <button type="button" class="btn btn-link btn-sm text-danger px-0 d-block mt-1" (click)="removeSavedPhoto()">
+                    Remove saved photo
+                  </button>
+                }
+                @if (editStudentId() && removeExistingPhoto && !photoFile) {
+                  <p class="small text-secondary mb-0 mt-1">Saved photo will be removed when you save.</p>
+                }
+              </div>
+            </div>
           </div>
-        </form>
-        <div class="actions">
-          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
-      }
+      </div>
+    </section>
 
-      @if (step() === 1) {
-        <form [formGroup]="s2" class="grid">
+    <section class="reg-section reg-section--guardian" aria-labelledby="sr-sec-guardian">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-guardian" class="reg-section__title">Guardian</h2>
+        <p class="reg-section__desc">Primary guardian and contact</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s2" class="grid">
           <div class="mb-3 span-2">
             <label class="form-label" for="sr-gt">Guardian</label>
             <select id="sr-gt" class="form-select" formControlName="guardian_type">
@@ -315,15 +324,17 @@
               }
             </div>
           }
-        </form>
-        <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
-      }
+      </div>
+    </section>
 
-      @if (step() === 2) {
-        <form [formGroup]="s3" class="grid">
+    <section class="reg-section reg-section--medical" aria-labelledby="sr-sec-medical">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-medical" class="reg-section__title">Medical</h2>
+        <p class="reg-section__desc">Health-related information</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s3" class="grid">
           <div class="mb-3">
             <label class="form-label" for="sr-blood">Blood group</label>
             <select id="sr-blood" class="form-select" formControlName="blood_group">
@@ -333,15 +344,17 @@
               }
             </select>
           </div>
-        </form>
-        <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
-      }
+      </div>
+    </section>
 
-      @if (step() === 3) {
-        <form [formGroup]="s4" class="grid">
+    <section class="reg-section reg-section--prev-school" aria-labelledby="sr-sec-prev-school">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-prev-school" class="reg-section__title">Previous school</h2>
+        <p class="reg-section__desc">Prior institution, if any</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s4" class="grid">
           <div class="mb-3 span-2">
             <label class="form-label" for="sr-pschool">Previous school name</label>
             <input id="sr-pschool" class="form-control" formControlName="school_name" />
@@ -350,15 +363,17 @@
             <label class="form-label" for="sr-paddr">Previous school address</label>
             <textarea id="sr-paddr" class="form-control" rows="2" formControlName="school_address"></textarea>
           </div>
-        </form>
-        <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="goNext()" [disabled]="loadingEdit()">Next</button>
         </div>
-      }
+      </div>
+    </section>
 
-      @if (step() === 4) {
-        <form [formGroup]="s5" class="grid">
+    <section class="reg-section reg-section--address" aria-labelledby="sr-sec-address">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-address" class="reg-section__title">Address &amp; additional details</h2>
+        <p class="reg-section__desc">Residence and notes</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s5" class="grid">
           <div class="mb-3 span-2">
             <label class="form-label" for="sr-caddr">Current address</label>
             <textarea id="sr-caddr" class="form-control" rows="2" formControlName="current_address"></textarea>
@@ -375,7 +390,17 @@
             <label class="form-label" for="sr-rtype">Room type</label>
             <input id="sr-rtype" class="form-control" formControlName="room_type" />
           </div>
+        </div>
+      </div>
+    </section>
 
+    <section class="reg-section reg-section--enrollment" aria-labelledby="sr-sec-enrollment">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-enrollment" class="reg-section__title">Enrollment</h2>
+        <p class="reg-section__desc">Class placement for this admission</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s5" class="grid">
           <div class="mb-3">
             <label class="form-label" for="sr-year">
               Academic year <span class="text-danger req" aria-hidden="true">*</span>
@@ -462,6 +487,17 @@
               }
             </div>
           }
+        </div>
+      </div>
+    </section>
+
+    <section class="reg-section reg-section--account" aria-labelledby="sr-sec-account">
+      <header class="reg-section__header">
+        <h2 id="sr-sec-account" class="reg-section__title">Student account</h2>
+        <p class="reg-section__desc">Optional login credentials</p>
+      </header>
+      <div class="reg-section__body">
+        <div [formGroup]="s5" class="grid">
           <div class="mb-3 span-2">
             <label class="form-label" for="sr-login-pw">
               @if (editStudentId()) {
@@ -498,14 +534,25 @@
               </label>
             </div>
           }
-        </form>
-        <div class="actions">
-          <button type="button" class="btn btn-outline-secondary" (click)="goPrev()" [disabled]="loadingEdit()">Back</button>
-          <button type="button" class="btn btn-primary" (click)="submit()" [disabled]="submitting || loadingEdit()">
-            {{ editStudentId() ? 'Save changes' : 'Submit' }}
-          </button>
         </div>
-      }
+      </div>
+    </section>
+
+    <div class="reg-actions">
+      <div class="reg-actions__dots" aria-hidden="true">
+        @for (_ of [0, 1, 2, 3, 4, 5, 6]; track $index) {
+          <span class="reg-actions__dot"></span>
+        }
+      </div>
+      <div class="reg-actions__buttons">
+        <a routerLink="/students" class="btn btn-outline-secondary reg-actions__cancel">Cancel</a>
+        <button type="button" class="btn btn-primary reg-actions__submit" (click)="submit()" [disabled]="submitting || loadingEdit()">
+          @if (!editStudentId()) {
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+          }
+          {{ editStudentId() ? 'Save changes' : 'Submit' }}
+        </button>
+      </div>
     </div>
   </div>
 </section>

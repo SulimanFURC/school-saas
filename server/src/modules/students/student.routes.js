@@ -12,6 +12,7 @@ router.use(authorize('admin', 'super_admin'));
 router.post('/students/register', studentController.register);
 router.post('/students/promote', studentController.promote);
 router.get('/students', studentController.list);
+router.get('/students/lookup', studentController.lookupByAdmission);
 router.get('/students/:id/login-details', studentController.getLoginDetails);
 router.get('/students/:id', studentController.getById);
 router.put('/students/:id', studentController.update);

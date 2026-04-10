@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { StudentService, resolveStudentDisplayName } from '../../../services/student.service';
 import { ToastService } from '../../../services/toast.service';
 
@@ -29,6 +30,7 @@ export class StudentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private students = inject(StudentService);
   private toast = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   readonly activeTab = signal(0);
 
@@ -145,14 +147,33 @@ export class StudentDetailComponent implements OnInit {
   }
 
   suspend(): void {
+    void this.runSuspend();
+  }
+
+  private async runSuspend(): Promise<void> {
     if (!this.studentId || !this.student) return;
-    if (!confirm('Mark this student as suspended?')) return;
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Suspend student?',
+      message: 'Mark this student as suspended? They may lose access until reactivated.',
+      variant: 'primary',
+      confirmLabel: 'Suspend',
+      cancelLabel: 'Cancel',
+      ariaIdPrefix: 'student-suspend',
+    });
+    if (!ok) return;
+
+    this.confirmDialog.setBusy(true);
     this.students.update(this.studentId, { status: 'suspended' }).subscribe({
       next: () => {
+        this.confirmDialog.complete();
         this.toast.open('Updated', 'Dismiss', { duration: 3000 });
         this.student = { ...this.student!, status: 'suspended' };
       },
-      error: (e) => this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 }),
+      error: (e) => {
+        this.confirmDialog.complete();
+        this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 });
+      },
     });
   }
 }

@@ -7,6 +7,7 @@ import {
   StudentListRow,
   resolveStudentDisplayName,
 } from '../../../services/student.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { ToastService } from '../../../services/toast.service';
 import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import {
@@ -36,6 +37,7 @@ export class StudentListComponent implements OnInit {
   private studentsApi = inject(StudentService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   loading = signal(true);
   rows = signal<StudentListRow[]>([]);
@@ -169,14 +171,37 @@ export class StudentListComponent implements OnInit {
 
   deleteRow(row: StudentListRow, ev: Event): void {
     ev.stopPropagation();
-    if (!confirm(`Delete student ${row.admission_no}?`)) return;
+    void this.runDeleteStudent(row);
+  }
+
+  private deleteConfirmMessage(row: StudentListRow): string {
+    const name = this.displayName(row);
+    const adm = row.admission_no?.trim() || 'this student';
+    return `Remove ${adm} (${name}) from your school? This cannot be undone.`;
+  }
+
+  private async runDeleteStudent(row: StudentListRow): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete student?',
+      message: this.deleteConfirmMessage(row),
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      ariaIdPrefix: 'student-delete',
+    });
+    if (!ok) return;
+
+    this.confirmDialog.setBusy(true);
     this.studentsApi.delete(row.id).subscribe({
       next: () => {
+        this.confirmDialog.complete();
         this.toast.open('Student removed', 'Dismiss', { duration: 3000 });
         this.load();
       },
-      error: (e) =>
-        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 5000 }),
+      error: (e) => {
+        this.confirmDialog.complete();
+        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 5000 });
+      },
     });
   }
 

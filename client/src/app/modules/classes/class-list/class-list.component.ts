@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { ToastService } from '../../../services/toast.service';
 import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
@@ -17,6 +18,7 @@ export type ClassSortKey = 'name';
 export class ClassListComponent implements OnInit {
   private api = inject(AcademicService);
   private toast = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   loading = signal(true);
   rows = signal<SchoolClassDto[]>([]);
@@ -98,14 +100,31 @@ export class ClassListComponent implements OnInit {
 
   deleteClass(c: SchoolClassDto, ev: Event): void {
     ev.stopPropagation();
-    if (!confirm(`Delete class "${c.name}"?`)) return;
+    void this.runDeleteClass(c);
+  }
+
+  private async runDeleteClass(c: SchoolClassDto): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete class?',
+      message: `Delete class "${c.name}"? This cannot be undone if the server allows removal.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      ariaIdPrefix: 'class-delete',
+    });
+    if (!ok) return;
+
+    this.confirmDialog.setBusy(true);
     this.api.deleteClass(c.id).subscribe({
       next: () => {
+        this.confirmDialog.complete();
         this.toast.open('Class removed', 'Dismiss', { duration: 3000 });
         this.load();
       },
-      error: (e) =>
-        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 6000 }),
+      error: (e) => {
+        this.confirmDialog.complete();
+        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 6000 });
+      },
     });
   }
 }

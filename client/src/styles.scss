@@ -804,3 +804,216 @@ html.tenant-branding-active {
     --bs-btn-hover-color: var(--secondary-color);
   }
 }
+
+/* —— Toasts (ToastService): Ark-style bottom-end, 300ms ease, translate+scale, prompt colors —— */
+$app-toast-ease: cubic-bezier(0.4, 0, 0.2, 1);
+$app-toast-duration: 300ms;
+
+#app-toast-container.app-toast-container {
+  --bs-toast-spacing: 1rem; /* prompt gap: 16px */
+}
+
+#app-toast-container .toast.app-toast-ark {
+  --bs-toast-max-width: none;
+  width: min(20rem, calc(100vw - 2.5rem));
+  max-width: min(24rem, calc(100vw - 2.5rem));
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  will-change: transform, opacity;
+}
+
+/* Override Bootstrap .fade (150ms linear) to match prompt transition-all duration-300 ease-default */
+#app-toast-container .toast.app-toast-ark.fade {
+  transition:
+    opacity $app-toast-duration $app-toast-ease,
+    transform $app-toast-duration $app-toast-ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-toast-container .toast.app-toast-ark.fade {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bootstrap uses .showing at animation endpoints (opacity 0) — add motion like Ark CSS vars */
+#app-toast-container .toast.app-toast-ark.toast.showing {
+  opacity: 0;
+  transform: translate3d(1rem, 1rem, 0) scale(0.96);
+}
+
+#app-toast-container .toast.app-toast-ark.fade.show:not(.showing) {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.app-toast__panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.08),
+    0 2px 4px -2px rgb(0 0 0 / 0.06);
+  overflow-wrap: anywhere;
+}
+
+/* basic-toast.tsx: bg-white border-gray-100 */
+.app-toast__panel--basic {
+  background-color: #fff;
+  border: 1px solid #f3f4f6;
+}
+
+html.theme-dark .app-toast__panel--basic,
+html[data-bs-theme='dark'] .app-toast__panel--basic {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.app-toast__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.app-toast__title--solo {
+  color: #111827;
+}
+
+html.theme-dark .app-toast__title--solo,
+html[data-bs-theme='dark'] .app-toast__title--solo {
+  color: #f3f4f6;
+}
+
+.app-toast__desc {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.app-toast__desc--solo {
+  margin-top: 0;
+  opacity: 1;
+}
+
+/* demo.tsx variant panels */
+.app-toast__panel--success {
+  background-color: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  color: #166534;
+}
+
+.app-toast__panel--error {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.app-toast__panel--warning {
+  background-color: #fefce8;
+  border-left: 4px solid #eab308;
+  color: #854d0e;
+}
+
+.app-toast__panel--info {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+}
+
+.app-toast__panel--neutral {
+  background-color: #f9fafb;
+  border-left: 4px solid #9ca3af;
+  color: #374151;
+}
+
+html.theme-dark .app-toast__panel--neutral,
+html[data-bs-theme='dark'] .app-toast__panel--neutral {
+  background-color: color-mix(in srgb, var(--bs-body-bg) 92%, #9ca3af);
+  color: var(--bs-body-color);
+}
+
+html.theme-dark .app-toast__panel--success,
+html[data-bs-theme='dark'] .app-toast__panel--success {
+  background-color: color-mix(in srgb, #166534 22%, var(--bs-body-bg));
+  color: #bbf7d0;
+  border-left-color: #22c55e;
+}
+
+html.theme-dark .app-toast__panel--error,
+html[data-bs-theme='dark'] .app-toast__panel--error {
+  background-color: color-mix(in srgb, #991b1b 25%, var(--bs-body-bg));
+  color: #fecaca;
+  border-left-color: #ef4444;
+}
+
+html.theme-dark .app-toast__panel--warning,
+html[data-bs-theme='dark'] .app-toast__panel--warning {
+  background-color: color-mix(in srgb, #854d0e 22%, var(--bs-body-bg));
+  color: #fef08a;
+  border-left-color: #eab308;
+}
+
+html.theme-dark .app-toast__panel--info,
+html[data-bs-theme='dark'] .app-toast__panel--info {
+  background-color: color-mix(in srgb, #1e40af 22%, var(--bs-body-bg));
+  color: #bfdbfe;
+  border-left-color: #3b82f6;
+}
+
+.app-toast__panel--success .app-toast__icon {
+  color: #22c55e;
+  font-size: 1rem;
+  margin-top: 0.125rem;
+}
+
+.app-toast__panel--error .app-toast__icon {
+  color: #ef4444;
+  font-size: 1rem;
+  margin-top: 0.125rem;
+}
+
+.app-toast__panel--warning .app-toast__icon {
+  color: #eab308;
+  font-size: 1rem;
+  margin-top: 0.125rem;
+}
+
+.app-toast__panel--info .app-toast__icon {
+  color: #3b82f6;
+  font-size: 1rem;
+  margin-top: 0.125rem;
+}
+
+.app-toast__panel--neutral .app-toast__icon {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-top: 0.125rem;
+}
+
+.app-toast__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.25rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.app-toast__panel--basic .app-toast__close:hover {
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+}
+
+html.theme-dark .app-toast__panel--basic .app-toast__close:hover,
+html[data-bs-theme='dark'] .app-toast__panel--basic .app-toast__close:hover {
+  background-color: #374151;
+}
+
+.app-toast__panel:not(.app-toast__panel--basic) .app-toast__close:hover {
+  background-color: rgb(0 0 0 / 0.08);
+  border-radius: 0.25rem;
+}

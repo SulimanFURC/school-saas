@@ -23,24 +23,43 @@
         @for (entry of navEntries(); track entry) {
           @if (isNavGroupEntry(entry)) {
             <div class="nav-group">
-              <div
-                class="layout-nav-item layout-nav-item--parent text-secondary small text-uppercase px-2 py-1 mb-1"
+              <button
+                type="button"
+                class="layout-nav-item layout-nav-item--parent layout-nav-item--toggle text-secondary small text-uppercase px-2 py-1 mb-1 w-100 text-start"
+                [attr.aria-expanded]="isNavGroupExpanded(navGroupKey(entry))"
+                [attr.aria-controls]="navGroupPanelId(navGroupKey(entry))"
+                (click)="toggleNavGroup(navGroupKey(entry))"
               >
                 <i class="bi" [ngClass]="navIconClass(entry.icon)"></i>
-                <span class="ds-body-sm">{{ entry.label }}</span>
-              </div>
-              <div class="nav-group__children d-flex flex-column gap-1 ps-2 border-start ms-2">
-                @for (item of entry.children; track item.path) {
-                  <a
-                    class="layout-nav-item layout-nav-item--sub"
-                    [routerLink]="item.path"
-                    routerLinkActive="layout-nav-item--active"
-                    [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-                    (click)="closeSidebarIfMobile()"
+                <span class="ds-body-sm flex-grow-1">{{ entry.label }}</span>
+                <i
+                  class="bi bi-chevron-down nav-group__chevron"
+                  [class.nav-group__chevron--open]="isNavGroupExpanded(navGroupKey(entry))"
+                  aria-hidden="true"
+                ></i>
+              </button>
+              <div
+                class="nav-group__panel"
+                [class.nav-group__panel--open]="isNavGroupExpanded(navGroupKey(entry))"
+              >
+                <div class="nav-group__panel-inner">
+                  <div
+                    class="nav-group__children d-flex flex-column gap-1 ps-2 border-start ms-2"
+                    [id]="navGroupPanelId(navGroupKey(entry))"
                   >
-                    <span class="ds-body-sm">{{ item.label }}</span>
-                  </a>
-                }
+                    @for (item of entry.children; track item.path) {
+                      <a
+                        class="layout-nav-item layout-nav-item--sub"
+                        [routerLink]="item.path"
+                        routerLinkActive="layout-nav-item--active"
+                        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                        (click)="closeSidebarIfMobile()"
+                      >
+                        <span class="ds-body-sm">{{ item.label }}</span>
+                      </a>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
           } @else {

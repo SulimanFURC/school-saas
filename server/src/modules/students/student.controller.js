@@ -141,6 +141,7 @@ async function assertRollUnique(tenantId, academicYearId, classId, sectionId, ro
     class_id: classId,
     section_id: sectionId,
     roll_number: Number(rollNumber),
+    status: 'active',
   };
   if (excludeEnrollmentId) {
     where.id = { [Op.ne]: excludeEnrollmentId };
@@ -450,11 +451,7 @@ exports.loadStudentDetail = async (tenantId, studentId) => {
   if (!student) return null;
 
   const plain = student.get({ plain: true });
-  let currentEnrollment = null;
-  if (activeYear && plain.enrollments) {
-    currentEnrollment = plain.enrollments.find((e) => e.academic_year_id === activeYear.id) || null;
-  }
-  plain.current_enrollment = currentEnrollment;
+  plain.current_enrollment = resolveCurrentEnrollment(activeYear, plain.enrollments);
   const user = await User.findOne({
     where: { student_id: studentId, tenant_id: tenantId },
     attributes: ['id', 'username', 'status', 'email'],
@@ -468,6 +465,122 @@ function parseQueryInt(v) {
   const n = parseInt(String(v), 10);
   return Number.isNaN(n) ? null : n;
 }
+
+/** Parse integer from JSON body (Number(x, 10) is wrong — Number ignores radix). */
+function parseBodyInt(v) {
+  if (v == null || v === '') return null;
+  const n = parseInt(String(v), 10);
+  return Number.isNaN(n) ? null : n;
+}
+
+/**
+ * Profile "current" placement: prefer active enrollment for the tenant's active academic year;
+ * otherwise the active enrollment with the greatest academic_year_id (forward session after promote).
+ */
+function resolveCurrentEnrollment(activeYear, enrollments) {
+  if (!enrollments || !enrollments.length) return null;
+  const active = enrollments.filter((e) => e.status === 'active');
+  if (!active.length) return null;
+  if (activeYear) {
+    const match = active.find((e) => e.academic_year_id === activeYear.id);
+    if (match) return match;
+  }
+  return active.reduce(
+    (best, e) => (!best || e.academic_year_id > best.academic_year_id ? e : best),
+    null
+  );
+}
+
+/** Next academic year for tenant after `afterYearId` (by ascending `id`). */
+async function getNextAcademicYearAfter(tenantId, afterYearId, transaction) {
+  return AcademicYear.findOne({
+    where: { tenant_id: tenantId, id: { [Op.gt]: afterYearId } },
+    order: [['id', 'ASC']],
+    transaction,
+  });
+}
+
+function mapPlainEnrollmentToListCurrentEnrollment(ePlain) {
+  if (!ePlain) return null;
+  const ay = ePlain.academicYear;
+  return {
+    id: ePlain.id,
+    student_id: ePlain.student_id,
+    academic_year_id: ePlain.academic_year_id,
+    class_id: ePlain.class_id,
+    section_id: ePlain.section_id,
+    roll_number: ePlain.roll_number,
+    category: ePlain.category,
+    promotion_type: ePlain.promotion_type,
+    status: ePlain.status,
+    schoolClass: ePlain.schoolClass,
+    section: ePlain.section,
+    academicYear: ay ? { id: ay.id, name: ay.name } : null,
+  };
+}
+
+function listRowFromStudentAndEnrollmentPlain(p, ePlain) {
+  const ce = mapPlainEnrollmentToListCurrentEnrollment(ePlain);
+  const displayName =
+    p.full_name && String(p.full_name).trim()
+      ? String(p.full_name).trim()
+      : [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+  return {
+    id: p.id,
+    admission_no: p.admission_no,
+    full_name: p.full_name,
+    first_name: p.first_name,
+    last_name: p.last_name,
+    display_name: displayName,
+    dob: p.dob,
+    gender: p.gender,
+    phone: p.phone,
+    status: p.status,
+    current_enrollment: ce,
+    class_name: ce && ce.schoolClass ? ce.schoolClass.name : null,
+  };
+}
+
+exports.lookupByAdmission = async (req, res) => {
+  try {
+    const tenantId = req.tenant.id;
+    const raw = req.query.admission_no != null ? String(req.query.admission_no).trim() : '';
+    if (!raw) {
+      return res.status(400).json({ message: 'admission_no query parameter is required' });
+    }
+    const activeYear = await getActiveAcademicYear(tenantId);
+    const student = await Student.findOne({
+      where: {
+        tenant_id: tenantId,
+        [Op.and]: sequelize.where(
+          sequelize.fn('LOWER', sequelize.col('admission_no')),
+          raw.toLowerCase()
+        ),
+      },
+      attributes: { exclude: ['photo_base64'] },
+    });
+    if (!student) {
+      return res.status(404).json({ message: 'No student found with this admission number' });
+    }
+    const enrollments = await StudentEnrollment.findAll({
+      where: { tenant_id: tenantId, student_id: student.id },
+      include: [
+        { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
+        { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+        { model: Section, as: 'section', attributes: ['id', 'name'] },
+      ],
+    });
+    const plainEnrolls = enrollments.map((e) => e.get({ plain: true }));
+    const cePlain = resolveCurrentEnrollment(activeYear, plainEnrolls);
+    if (!cePlain) {
+      return res.status(404).json({ message: 'No active enrollment found for this student' });
+    }
+    const p = student.get({ plain: true });
+    res.json({ data: listRowFromStudentAndEnrollmentPlain(p, cePlain) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.list = async (req, res) => {
   try {
@@ -511,36 +624,56 @@ exports.list = async (req, res) => {
       enrollmentWhere.section_id = sectionId;
     }
 
-    let rows;
+    let listRows;
     let count;
+
     if (hasEnrollmentFilter) {
+      enrollmentWhere.status = 'active';
       if (!yearForEnrollment && (classId || sectionId)) {
         return res.status(400).json({ message: 'Set an active academic year or pass academic_year_id' });
       }
-      const result = await Student.findAndCountAll({
-        where: studentWhere,
-        distinct: true,
-        col: 'Student.id',
-        attributes: { exclude: ['photo_base64'] },
-        order: [['admission_no', 'ASC']],
-        limit: pageSize,
-        offset,
-        subQuery: false,
-        include: [
-          {
-            model: StudentEnrollment,
-            as: 'enrollments',
-            required: true,
-            where: enrollmentWhere,
-            include: [
-              { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
-              { model: Section, as: 'section', attributes: ['id', 'name'] },
-            ],
-          },
-        ],
+      /**
+       * Query from StudentEnrollment with Student include. Do not use findAndCountAll with
+       * distinct/col — Sequelize 6 + PostgreSQL emits invalid SQL (missing FROM-clause for
+       * "Student->Student" or "StudentEnrollment->StudentEnrollment").
+       */
+      const [enrollmentRows, enrollmentTotal] = await Promise.all([
+        StudentEnrollment.findAll({
+          where: enrollmentWhere,
+          limit: pageSize,
+          offset,
+          include: [
+            {
+              model: Student,
+              as: 'student',
+              where: studentWhere,
+              required: true,
+              attributes: { exclude: ['photo_base64'] },
+            },
+            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+            { model: Section, as: 'section', attributes: ['id', 'name'] },
+            { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
+          ],
+          order: [[{ model: Student, as: 'student' }, 'admission_no', 'ASC']],
+        }),
+        StudentEnrollment.count({
+          where: enrollmentWhere,
+          include: [
+            {
+              model: Student,
+              as: 'student',
+              where: studentWhere,
+              required: true,
+            },
+          ],
+        }),
+      ]);
+      count = enrollmentTotal;
+      listRows = enrollmentRows.map((row) => {
+        const ePlain = row.get({ plain: true });
+        const p = ePlain.student;
+        return listRowFromStudentAndEnrollmentPlain(p, ePlain);
       });
-      rows = result.rows;
-      count = result.count;
     } else {
       const result = await Student.findAndCountAll({
         where: studentWhere,
@@ -549,58 +682,37 @@ exports.list = async (req, res) => {
         limit: pageSize,
         offset,
       });
-      rows = result.rows;
+      const rows = result.rows;
       count = result.count;
-    }
 
-    /** For unfiltered list: attach active-year enrollment without a heavy join (avoids slow/hanging queries). */
-    let enrollmentByStudentId = new Map();
-    if (!hasEnrollmentFilter && activeYear && rows.length) {
-      const ids = rows.map((r) => r.id);
-      const enrollRows = await StudentEnrollment.findAll({
-        where: {
-          tenant_id: tenantId,
-          academic_year_id: activeYear.id,
-          student_id: { [Op.in]: ids },
-        },
-        include: [
-          { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
-          { model: Section, as: 'section', attributes: ['id', 'name'] },
-        ],
+      /** For unfiltered list: attach active-year enrollment without a heavy join (avoids slow/hanging queries). */
+      const enrollmentByStudentId = new Map();
+      if (activeYear && rows.length) {
+        const ids = rows.map((r) => r.id);
+        const enrollRows = await StudentEnrollment.findAll({
+          where: {
+            tenant_id: tenantId,
+            academic_year_id: activeYear.id,
+            student_id: { [Op.in]: ids },
+            status: 'active',
+          },
+          include: [
+            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+            { model: Section, as: 'section', attributes: ['id', 'name'] },
+            { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
+          ],
+        });
+        for (const e of enrollRows) {
+          enrollmentByStudentId.set(e.student_id, e.get({ plain: true }));
+        }
+      }
+
+      listRows = rows.map((s) => {
+        const p = s.get({ plain: true });
+        const ePlain = activeYear ? enrollmentByStudentId.get(p.id) || null : null;
+        return listRowFromStudentAndEnrollmentPlain(p, ePlain);
       });
-      for (const e of enrollRows) {
-        enrollmentByStudentId.set(e.student_id, e.get({ plain: true }));
-      }
     }
-
-    const listRows = rows.map((s) => {
-      const p = s.get({ plain: true });
-      let ce = null;
-      if (hasEnrollmentFilter && p.enrollments && p.enrollments.length) {
-        ce =
-          p.enrollments.find((e) => e.academic_year_id === yearForEnrollment) || p.enrollments[0];
-      } else if (!hasEnrollmentFilter && activeYear) {
-        ce = enrollmentByStudentId.get(p.id) || null;
-      }
-      const displayName =
-        p.full_name && String(p.full_name).trim()
-          ? String(p.full_name).trim()
-          : [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
-      return {
-        id: p.id,
-        admission_no: p.admission_no,
-        full_name: p.full_name,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        display_name: displayName,
-        dob: p.dob,
-        gender: p.gender,
-        phone: p.phone,
-        status: p.status,
-        current_enrollment: ce,
-        class_name: ce && ce.schoolClass ? ce.schoolClass.name : null,
-      };
-    });
 
     res.json({
       data: listRows,
@@ -958,18 +1070,26 @@ exports.promote = async (req, res) => {
     const tenantId = req.tenant.id;
     const body = req.body || {};
     const studentIds = body.student_ids;
-    const fromYearId = body.from_academic_year_id != null ? Number(body.from_academic_year_id, 10) : null;
-    const fromClassId = body.from_class_id != null ? Number(body.from_class_id, 10) : null;
+    const fromYearId = parseBodyInt(body.from_academic_year_id);
+    const fromClassId = parseBodyInt(body.from_class_id);
     let toYearId =
       body.to_academic_year_id != null
-        ? Number(body.to_academic_year_id, 10)
+        ? parseBodyInt(body.to_academic_year_id)
         : body.academic_year_id != null
-          ? Number(body.academic_year_id, 10)
+          ? parseBodyInt(body.academic_year_id)
           : null;
     let toClassId =
-      body.to_class_id != null ? Number(body.to_class_id, 10) : body.new_class_id != null ? Number(body.new_class_id, 10) : null;
+      body.to_class_id != null
+        ? parseBodyInt(body.to_class_id)
+        : body.new_class_id != null
+          ? parseBodyInt(body.new_class_id)
+          : null;
     let toSectionId =
-      body.to_section_id != null ? Number(body.to_section_id, 10) : body.new_section_id != null ? Number(body.new_section_id, 10) : null;
+      body.to_section_id != null
+        ? parseBodyInt(body.to_section_id)
+        : body.new_section_id != null
+          ? parseBodyInt(body.new_section_id)
+          : null;
     const kind = body.kind === 'repeat' ? 'repeat' : 'promote';
     const rollMap = parseRollMap(body);
     const legacyRoll = body.roll_number;
@@ -996,7 +1116,21 @@ exports.promote = async (req, res) => {
       return res.status(400).json({ message: 'from_academic_year_id or an active academic year is required' });
     }
 
-    await assertEnrollmentRefs(tenantId, toYearId, toClassId, toSectionId);
+    try {
+      await assertEnrollmentRefs(tenantId, toYearId, toClassId, toSectionId);
+    } catch (refErr) {
+      await t.rollback();
+      if (refErr.code === 'BAD_YEAR') {
+        return res.status(400).json({ message: 'Invalid target academic year' });
+      }
+      if (refErr.code === 'BAD_CLASS') {
+        return res.status(400).json({ message: 'Invalid target class' });
+      }
+      if (refErr.code === 'BAD_SECTION') {
+        return res.status(400).json({ message: 'Invalid target section for the selected class' });
+      }
+      throw refErr;
+    }
 
     const toClassRow = await SchoolClass.findOne({
       where: { id: toClassId, tenant_id: tenantId },
@@ -1010,6 +1144,8 @@ exports.promote = async (req, res) => {
     const createdBy = req.user && req.user.userId ? req.user.userId : null;
 
     const created = [];
+    const updated = [];
+
     for (const sid of studentIds) {
       const student = await Student.findOne({
         where: { id: sid, tenant_id: tenantId },
@@ -1024,6 +1160,7 @@ exports.promote = async (req, res) => {
         tenant_id: tenantId,
         student_id: sid,
         academic_year_id: effectiveFromYearId,
+        status: 'active',
       };
       if (fromClassId) {
         sourceWhere.class_id = fromClassId;
@@ -1035,75 +1172,148 @@ exports.promote = async (req, res) => {
       if (!sourceEnroll) {
         await t.rollback();
         return res.status(400).json({
-          message: `No enrollment in source year/class for student ${sid}`,
-        });
-      }
-
-      if (kind === 'repeat' && toClassId !== sourceEnroll.class_id) {
-        await t.rollback();
-        return res.status(400).json({
-          message: 'Repeat promotion requires target class to match source class',
-        });
-      }
-
-      const existing = await StudentEnrollment.findOne({
-        where: {
-          tenant_id: tenantId,
-          student_id: sid,
-          academic_year_id: toYearId,
-        },
-        transaction: t,
-      });
-      if (existing) {
-        await t.rollback();
-        return res.status(409).json({
-          message: `Student ${sid} already has enrollment for target academic year`,
+          message: `No active enrollment in source year/class for student ${sid}`,
         });
       }
 
       const rollForStudent =
         rollMap.has(String(sid)) ? rollMap.get(String(sid)) : legacyRoll;
 
-      await assertRollUnique(tenantId, toYearId, toClassId, toSectionId, rollForStudent, null);
+      if (kind === 'repeat') {
+        if (toYearId !== sourceEnroll.academic_year_id) {
+          await t.rollback();
+          return res.status(400).json({
+            message: 'Repeat requires target academic year to match the source enrollment year',
+          });
+        }
+        if (toClassId !== sourceEnroll.class_id) {
+          await t.rollback();
+          return res.status(400).json({
+            message: 'Repeat promotion requires target class to match source class',
+          });
+        }
 
-      const promotionType = kind === 'repeat' ? 'repeated' : 'promoted';
+        await assertRollUnique(
+          tenantId,
+          toYearId,
+          toClassId,
+          toSectionId,
+          rollForStudent,
+          sourceEnroll.id
+        );
 
-      const row = await StudentEnrollment.create(
-        {
-          tenant_id: tenantId,
-          student_id: sid,
-          academic_year_id: toYearId,
-          class_id: toClassId,
-          section_id: toSectionId,
-          roll_number:
-            rollForStudent != null && rollForStudent !== '' ? Number(rollForStudent) : null,
-          category: null,
-          promotion_type: promotionType,
-          status: 'active',
-        },
-        { transaction: t }
-      );
-      created.push(row);
+        await sourceEnroll.update(
+          {
+            section_id: toSectionId,
+            roll_number:
+              rollForStudent != null && rollForStudent !== '' ? Number(rollForStudent) : null,
+            promotion_type: 'repeated',
+          },
+          { transaction: t }
+        );
+        await sourceEnroll.reload({ transaction: t });
 
-      await StudentPromotion.create(
-        {
-          tenant_id: tenantId,
-          student_id: sid,
-          from_academic_year_id: effectiveFromYearId,
-          to_academic_year_id: toYearId,
-          from_class_id: sourceEnroll.class_id,
-          to_class_id: toClassId,
-          from_section_id: sourceEnroll.section_id,
-          to_section_id: toSectionId,
-          kind,
-          created_by_user_id: createdBy,
-        },
-        { transaction: t }
-      );
+        await StudentPromotion.create(
+          {
+            tenant_id: tenantId,
+            student_id: sid,
+            from_academic_year_id: sourceEnroll.academic_year_id,
+            to_academic_year_id: toYearId,
+            from_class_id: sourceEnroll.class_id,
+            to_class_id: toClassId,
+            from_section_id: sourceEnroll.section_id,
+            to_section_id: toSectionId,
+            kind,
+            created_by_user_id: createdBy,
+          },
+          { transaction: t }
+        );
+        updated.push(sourceEnroll);
+      } else {
+        const nextYear = await getNextAcademicYearAfter(
+          tenantId,
+          sourceEnroll.academic_year_id,
+          t
+        );
+        if (!nextYear) {
+          await t.rollback();
+          return res.status(400).json({
+            message:
+              'No next academic year after the source session. Create the next academic year before promoting.',
+          });
+        }
+        if (toYearId !== nextYear.id) {
+          await t.rollback();
+          return res.status(400).json({
+            message: `Promotion is only allowed to the next academic year (${nextYear.name || nextYear.id}).`,
+          });
+        }
+
+        const existing = await StudentEnrollment.findOne({
+          where: {
+            tenant_id: tenantId,
+            student_id: sid,
+            academic_year_id: toYearId,
+          },
+          transaction: t,
+        });
+        if (existing) {
+          await t.rollback();
+          return res.status(409).json({
+            message: `Student ${sid} already has enrollment for target academic year`,
+          });
+        }
+
+        await assertRollUnique(tenantId, toYearId, toClassId, toSectionId, rollForStudent, null);
+
+        const row = await StudentEnrollment.create(
+          {
+            tenant_id: tenantId,
+            student_id: sid,
+            academic_year_id: toYearId,
+            class_id: toClassId,
+            section_id: toSectionId,
+            roll_number:
+              rollForStudent != null && rollForStudent !== '' ? Number(rollForStudent) : null,
+            category: null,
+            promotion_type: 'promoted',
+            status: 'active',
+          },
+          { transaction: t }
+        );
+        created.push(row);
+
+        await StudentPromotion.create(
+          {
+            tenant_id: tenantId,
+            student_id: sid,
+            from_academic_year_id: sourceEnroll.academic_year_id,
+            to_academic_year_id: toYearId,
+            from_class_id: sourceEnroll.class_id,
+            to_class_id: toClassId,
+            from_section_id: sourceEnroll.section_id,
+            to_section_id: toSectionId,
+            kind,
+            created_by_user_id: createdBy,
+          },
+          { transaction: t }
+        );
+
+        if (toYearId > sourceEnroll.academic_year_id) {
+          await sourceEnroll.update({ status: 'inactive' }, { transaction: t });
+        }
+      }
     }
 
     await t.commit();
-    res.status(201).json({ created: created.length, enrollments: created });
+    res.status(201).json({
+      created: created.length,
+      updated: updated.length,
+      enrollments: [
+        ...created.map((r) => r.get({ plain: true })),
+        ...updated.map((r) => r.get({ plain: true })),
+      ],
+    });
   } catch (err) {
     await t.rollback();
     if (err.code === 'ROLL_TAKEN') {

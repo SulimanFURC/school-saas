@@ -1,38 +1,491 @@
-.card {
-  padding: 1rem;
+/* Register / edit student — design-matched cards; Bootstrap + theme tokens */
+
+/* Full-bleed canvas within .layout-content (padding must match main-layout.component.scss) */
+:host {
+  display: block;
+  margin: -1.75rem -1.5rem -1rem;
+  padding: 1.75rem 1.5rem 1rem;
+  background-color: #f5f6fa;
 }
 
+:host-context(html.theme-dark),
+:host-context(html[data-bs-theme='dark']) {
+  background-color: color-mix(in srgb, var(--bs-body-bg) 93%, var(--bs-tertiary-bg) 7%);
+}
+
+.page--student-register {
+  gap: 1.75rem;
+}
+
+/* Flat page header on gray (overrides global .content-area-header card) */
+.page--student-register .content-area-header--register {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+
+.page--student-register .content-area-header__title {
+  color: var(--bs-body-color);
+  font-weight: 700;
+  font-size: 1.375rem;
+}
+
+.page--student-register .content-area-header__subtitle {
+  color: var(--ds-on-surface-variant);
+  font-size: 0.8125rem;
+}
+
+.reg-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* --- Section cards --- */
+.reg-section {
+  --reg-header-bg: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(100, 116, 139, 0.22);
+  --reg-focus-border: #64748b;
+
+  margin: 0;
+  color: var(--bs-body-color);
+  border: 1px solid color-mix(in srgb, var(--bs-border-color) 45%, #e0e0e0 55%);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--bs-body-bg);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.06),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+:host-context(html.theme-dark) .reg-section,
+:host-context(html[data-bs-theme='dark']) .reg-section {
+  border-color: color-mix(in srgb, var(--bs-border-color) 70%, transparent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.reg-section--personal {
+  --reg-header-bg: linear-gradient(135deg, #6d28d9 0%, #a78bfa 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(124, 58, 237, 0.22);
+  --reg-focus-border: #7c3aed;
+}
+
+.reg-section--guardian {
+  --reg-header-bg: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(37, 99, 235, 0.22);
+  --reg-focus-border: #2563eb;
+}
+
+.reg-section--medical {
+  --reg-header-bg: linear-gradient(135deg, #0d9488 0%, #34d399 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(13, 148, 136, 0.22);
+  --reg-focus-border: #0d9488;
+}
+
+.reg-section--prev-school {
+  --reg-header-bg: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(234, 88, 12, 0.22);
+  --reg-focus-border: #ea580c;
+}
+
+.reg-section--address {
+  --reg-header-bg: linear-gradient(135deg, #db2777 0%, #f472b6 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(219, 39, 119, 0.22);
+  --reg-focus-border: #db2777;
+}
+
+.reg-section--enrollment {
+  --reg-header-bg: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(8, 145, 178, 0.22);
+  --reg-focus-border: #0891b2;
+}
+
+.reg-section--account {
+  --reg-header-bg: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(51, 65, 85, 0.28);
+  --reg-focus-border: #475569;
+}
+
+:host-context(html.theme-dark) .reg-section--personal,
+:host-context(html[data-bs-theme='dark']) .reg-section--personal {
+  --reg-header-bg: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(167, 139, 250, 0.28);
+  --reg-focus-border: #a78bfa;
+}
+
+:host-context(html.theme-dark) .reg-section--guardian,
+:host-context(html[data-bs-theme='dark']) .reg-section--guardian {
+  --reg-header-bg: linear-gradient(135deg, #1e40af 0%, #0369a1 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
+  --reg-focus-border: #38bdf8;
+}
+
+:host-context(html.theme-dark) .reg-section--medical,
+:host-context(html[data-bs-theme='dark']) .reg-section--medical {
+  --reg-header-bg: linear-gradient(135deg, #115e59 0%, #047857 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(52, 211, 153, 0.25);
+  --reg-focus-border: #34d399;
+}
+
+:host-context(html.theme-dark) .reg-section--prev-school,
+:host-context(html[data-bs-theme='dark']) .reg-section--prev-school {
+  --reg-header-bg: linear-gradient(135deg, #9a3412 0%, #c2410c 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(251, 146, 60, 0.25);
+  --reg-focus-border: #fb923c;
+}
+
+:host-context(html.theme-dark) .reg-section--address,
+:host-context(html[data-bs-theme='dark']) .reg-section--address {
+  --reg-header-bg: linear-gradient(135deg, #9d174d 0%, #be185d 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(244, 114, 182, 0.25);
+  --reg-focus-border: #f472b6;
+}
+
+:host-context(html.theme-dark) .reg-section--enrollment,
+:host-context(html[data-bs-theme='dark']) .reg-section--enrollment {
+  --reg-header-bg: linear-gradient(135deg, #0e7490 0%, #0f766e 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(34, 211, 238, 0.25);
+  --reg-focus-border: #22d3ee;
+}
+
+:host-context(html.theme-dark) .reg-section--account,
+:host-context(html[data-bs-theme='dark']) .reg-section--account {
+  --reg-header-bg: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --reg-focus: 0 0 0 0.2rem rgba(148, 163, 184, 0.22);
+  --reg-focus-border: #94a3b8;
+}
+
+.reg-section__header {
+  padding: 16px 20px;
+  margin: 0;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  background: var(--reg-header-bg);
+}
+
+.reg-section__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.reg-section__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.reg-section__body {
+  padding: 20px;
+  background-color: var(--bs-body-bg);
+}
+
+/* --- Grid --- */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem 1rem;
-  margin-top: 0.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.25rem;
+  margin-top: 0;
 }
 
-.span-2 {
-  grid-column: span 2;
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.125rem 1.25rem;
+  }
+
+  .span-2 {
+    grid-column: span 2;
+  }
 }
 
-.actions {
+/* --- Form controls (scoped) --- */
+.page--student-register .reg-section__body .form-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: color-mix(in srgb, var(--bs-body-color) 88%, transparent);
+}
+
+.page--student-register .reg-section__body .form-control:not(textarea),
+.page--student-register .reg-section__body .form-select {
+  min-height: 40px;
+  border-radius: 7px;
+  border-color: #e0e0e0;
+}
+
+:host-context(html.theme-dark) .page--student-register .reg-section__body .form-control:not(textarea),
+:host-context(html.theme-dark) .page--student-register .reg-section__body .form-select,
+:host-context(html[data-bs-theme='dark']) .page--student-register .reg-section__body .form-control:not(textarea),
+:host-context(html[data-bs-theme='dark']) .page--student-register .reg-section__body .form-select {
+  border-color: var(--bs-border-color);
+  background-color: var(--bs-body-bg);
+}
+
+.page--student-register .reg-section__body textarea.form-control {
+  border-radius: 7px;
+  border-color: #e0e0e0;
+  min-height: 2.75rem;
+}
+
+:host-context(html.theme-dark) .page--student-register .reg-section__body textarea.form-control,
+:host-context(html[data-bs-theme='dark']) .page--student-register .reg-section__body textarea.form-control {
+  border-color: var(--bs-border-color);
+}
+
+.page--student-register .reg-section__body .form-control:focus-visible,
+.page--student-register .reg-section__body .form-select:focus-visible {
+  border-color: var(--reg-focus-border);
+  box-shadow: var(--reg-focus);
+}
+
+.page--student-register .reg-section__body .form-control.is-invalid:focus-visible,
+.page--student-register .reg-section__body .form-select.is-invalid:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-danger-rgb), 0.22);
+}
+
+/* --- Photo upload --- */
+.reg-photo-block .form-label {
+  margin-bottom: 0.5rem;
+}
+
+.reg-section--personal .reg-photo-field {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 2px dashed color-mix(in srgb, #7c3aed 40%, #e0e0e0 60%);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--bs-body-bg) 96%, #7c3aed 4%);
 }
 
-.ds-on-variant {
+:host-context(html.theme-dark) .reg-section--personal .reg-photo-field,
+:host-context(html[data-bs-theme='dark']) .reg-section--personal .reg-photo-field {
+  border-color: color-mix(in srgb, #a78bfa 45%, var(--bs-border-color) 55%);
+  background-color: color-mix(in srgb, var(--bs-body-bg) 94%, #6d28d9 6%);
+}
+
+.reg-photo-field__preview {
+  flex: 0 0 auto;
+}
+
+.reg-photo-field__placeholder {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-secondary-color);
+  font-size: 1.75rem;
+}
+
+.reg-photo-field__controls {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.reg-photo-field__choose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.375rem 1.125rem;
+  margin: 0;
+  border: 2px solid #7c3aed;
+  color: #6d28d9;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  background-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.reg-photo-field__choose:hover {
+  background-color: color-mix(in srgb, #7c3aed 10%, transparent);
+  color: #5b21b6;
+}
+
+:host-context(html.theme-dark) .reg-photo-field__choose,
+:host-context(html[data-bs-theme='dark']) .reg-photo-field__choose {
+  border-color: #a78bfa;
+  color: #c4b5fd;
+}
+
+:host-context(html.theme-dark) .reg-photo-field__choose:hover,
+:host-context(html[data-bs-theme='dark']) .reg-photo-field__choose:hover {
+  background-color: color-mix(in srgb, #a78bfa 14%, transparent);
+  color: #e9d5ff;
+}
+
+.student-reg-photo-preview img {
+  display: block;
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--bs-border-color) 55%, transparent);
+}
+
+/* --- Footer actions --- */
+.reg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 0.25rem;
+}
+
+.reg-actions__dots {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reg-actions__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, var(--bs-secondary-color) 35%, #e0e0e0 65%);
+  opacity: 0.85;
+}
+
+.reg-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem 0.75rem;
+  margin-left: auto;
+}
+
+.reg-actions__cancel {
+  min-width: 5.5rem;
+  border-radius: 8px;
+  min-height: 40px;
+  font-weight: 500;
+  border-color: #e0e0e0;
+  color: var(--bs-secondary-color);
+  background: transparent;
+}
+
+.reg-actions__cancel:hover {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.reg-actions__submit.btn.btn-primary {
+  --bs-btn-bg: #7c3aed;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-bg: #6d28d9;
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-bg: #5b21b6;
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-bg: #7c3aed;
+  --bs-btn-disabled-border-color: transparent;
+
+  min-width: 6.75rem;
+  min-height: 40px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #fff;
+  background-image: linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #a78bfa 100%);
+  background-color: transparent;
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.35);
+}
+
+.reg-actions__submit.btn.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  color: #fff;
+  background-image: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #9333ea 100%);
+}
+
+.reg-actions__submit.btn.btn-primary:disabled {
+  opacity: 0.65;
+  background-image: linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #a78bfa 100%);
+}
+
+.reg-actions__submit.btn.btn-primary:focus-visible {
+  color: #fff;
+  box-shadow:
+    0 2px 8px rgba(109, 40, 217, 0.35),
+    0 0 0 0.2rem rgba(124, 58, 237, 0.35);
+}
+
+.reg-hint,
+.page--student-register .form-text {
   color: var(--ds-on-surface-variant);
+  font-size: 0.8125rem;
 }
 
 .form-label .req {
   font-weight: 600;
 }
 
-.student-reg-photo-preview img {
-  display: block;
-  max-height: 120px;
-  max-width: 100%;
-  border-radius: 0.5rem;
-  object-fit: cover;
-  border: 1px solid color-mix(in srgb, var(--ds-outline) 40%, transparent);
+.page--student-register .form-check {
+  padding-top: 0.25rem;
+}
+
+.page--student-register .form-check-label {
+  color: var(--bs-body-color);
+  font-size: 0.875rem;
+}
+
+.page--student-register .form-check-input {
+  border-color: var(--bs-border-color);
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+}
+
+.page--student-register .form-check-input:checked {
+  background-color: #7c3aed;
+  border-color: #6d28d9;
+}
+
+.page--student-register .form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.25);
+}
+
+:host-context(html.theme-dark) .page--student-register .form-check-input:checked,
+:host-context(html[data-bs-theme='dark']) .page--student-register .form-check-input:checked {
+  background-color: #7c3aed;
+  border-color: #a78bfa;
+}
+
+.page--student-register .btn-outline-secondary.reg-actions__cancel {
+  --bs-btn-color: var(--bs-secondary-color);
+  --bs-btn-border-color: #e0e0e0;
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: var(--bs-border-color);
+  --bs-btn-hover-color: var(--bs-body-color);
+  --bs-btn-active-bg: var(--bs-tertiary-bg);
+  --bs-btn-active-border-color: var(--bs-border-color);
+}
+
+:host-context(html.theme-dark) .page--student-register .btn-outline-secondary.reg-actions__cancel,
+:host-context(html[data-bs-theme='dark']) .page--student-register .btn-outline-secondary.reg-actions__cancel {
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-color: var(--bs-body-color);
 }

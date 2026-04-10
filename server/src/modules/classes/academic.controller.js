@@ -114,7 +114,7 @@ exports.deleteClass = async (req, res) => {
       return res.status(404).json({ message: 'Class not found' });
     }
     const enrollCount = await StudentEnrollment.count({
-      where: { tenant_id: tenantId, class_id: id },
+      where: { tenant_id: tenantId, class_id: id, status: 'active' },
     });
     if (enrollCount > 0) {
       return res.status(409).json({
@@ -222,7 +222,7 @@ exports.deleteSection = async (req, res) => {
       return res.status(409).json({ message: 'Cannot delete the only section of a class' });
     }
     const enrollCount = await StudentEnrollment.count({
-      where: { tenant_id: tenantId, section_id: id },
+      where: { tenant_id: tenantId, section_id: id, status: 'active' },
     });
     if (enrollCount > 0) {
       return res.status(409).json({
