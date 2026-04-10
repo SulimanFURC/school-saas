@@ -1,4 +1,4 @@
-﻿const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 
 const Student = sequelize.define(
@@ -18,6 +18,7 @@ const Student = sequelize.define(
       type: DataTypes.STRING(50),
       allowNull: false,
     },
+    full_name: { type: DataTypes.STRING(200), allowNull: true },
     first_name: { type: DataTypes.STRING(100), allowNull: true },
     last_name: { type: DataTypes.STRING(100), allowNull: true },
     gender: { type: DataTypes.STRING(20), allowNull: true },
@@ -25,17 +26,13 @@ const Student = sequelize.define(
     phone: { type: DataTypes.STRING(20), allowNull: true },
     email: { type: DataTypes.STRING(255), allowNull: true },
     photo_url: { type: DataTypes.TEXT, allowNull: true },
+    /** Optimized JPEG as base64 (see register/update photo_base64) */
+    photo_base64: { type: DataTypes.TEXT('long'), allowNull: true },
+    photo_mime: { type: DataTypes.STRING(64), allowNull: true },
     blood_group: { type: DataTypes.STRING(5), allowNull: true },
     current_address: { type: DataTypes.TEXT, allowNull: true },
     permanent_address: { type: DataTypes.TEXT, allowNull: true },
     extra_details: { type: DataTypes.TEXT, allowNull: true },
-    bank_name: { type: DataTypes.STRING(100), allowNull: true },
-    bank_branch: { type: DataTypes.STRING(100), allowNull: true },
-    bank_ifsc: { type: DataTypes.STRING(20), allowNull: true },
-    height_cm: { type: DataTypes.STRING(20), allowNull: true },
-    weight_kg: { type: DataTypes.STRING(20), allowNull: true },
-    hostel_name: { type: DataTypes.STRING(100), allowNull: true },
-    room_no: { type: DataTypes.STRING(50), allowNull: true },
     room_type: { type: DataTypes.STRING(50), allowNull: true },
     status: {
       type: DataTypes.STRING(50),

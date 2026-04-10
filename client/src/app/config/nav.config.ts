@@ -7,12 +7,42 @@ export interface NavItemConfig {
   moduleKey?: string;
 }
 
-export const TENANT_NAV_CONFIG: NavItemConfig[] = [
+export interface NavGroupConfig {
+  label: string;
+  icon: string;
+  moduleKey?: string;
+  children: NavItemConfig[];
+}
+
+export type NavEntry = NavItemConfig | NavGroupConfig;
+
+export function isNavGroup(entry: NavEntry): entry is NavGroupConfig {
+  return 'children' in entry && Array.isArray((entry as NavGroupConfig).children);
+}
+
+export const TENANT_NAV_CONFIG: NavEntry[] = [
   { label: 'Dashboard', path: '/', icon: 'dashboard', exact: true },
-  { label: 'Students', path: '/students', icon: 'school', moduleKey: 'students' },
+  {
+    label: 'Students',
+    icon: 'school',
+    moduleKey: 'students',
+    children: [
+      { label: 'All Students', path: '/students', icon: 'school' },
+      { label: 'Register / Enroll', path: '/students/register', icon: 'school' },
+      { label: 'Promote', path: '/students/promote', icon: 'school' },
+    ],
+  },
   { label: 'Teachers', path: '/teachers', icon: 'badge', moduleKey: 'teachers' },
   { label: 'Fees', path: '/fees', icon: 'payments', moduleKey: 'fees' },
-  { label: 'Classes', path: '/classes', icon: 'class', moduleKey: 'classes' },
+  {
+    label: 'Class',
+    icon: 'class',
+    moduleKey: 'classes',
+    children: [
+      { label: 'All Classes', path: '/classes', icon: 'class' },
+      { label: 'Add new class', path: '/classes/new', icon: 'class' },
+    ],
+  },
   { label: 'Attendance', path: '/attendance', icon: 'event_available', moduleKey: 'attendance' },
   { label: 'Reports', path: '/reports', icon: 'assessment', moduleKey: 'reports' },
   { label: 'Settings', path: '/settings', icon: 'settings' },

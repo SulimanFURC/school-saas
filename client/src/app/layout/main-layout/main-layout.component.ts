@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { afterNextRender, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NavigationEnd,
@@ -8,9 +8,9 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { filter, map, startWith } from 'rxjs';
+import { filter, map, startWith, tap } from 'rxjs';
 
-import { TENANT_NAV_CONFIG, type NavItemConfig } from '../../config/nav.config';
+import { TENANT_NAV_CONFIG, isNavGroup, type NavEntry, type NavGroupConfig } from '../../config/nav.config';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { BrandingService } from '../../services/branding.service';
@@ -66,16 +66,22 @@ export class MainLayoutComponent {
     return 'assets/default-logo.png';
   });
 
-  readonly navItems = computed((): NavItemConfig[] => {
+  readonly navEntries = computed((): NavEntry[] => {
     const enabled = this.features.enabled();
-    return TENANT_NAV_CONFIG.filter(
-      (item) => !item.moduleKey || enabled.has(item.moduleKey)
-    );
+    return TENANT_NAV_CONFIG.filter((entry) => {
+      const key = isNavGroup(entry) ? entry.moduleKey : entry.moduleKey;
+      if (!key) return true;
+      return enabled.has(key);
+    });
   });
+
+  /** Keys of nav groups whose submenus are expanded */
+  readonly expandedNavGroupKeys = signal<Set<string>>(new Set());
 
   readonly pageTitle = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      tap((e) => this.ensureGroupsExpandedForUrl(e.urlAfterRedirects)),
       map(() => this.resolveTitle()),
       startWith(this.resolveTitle())
     ),
@@ -98,6 +104,17 @@ export class MainLayoutComponent {
       mq.addEventListener('change', sync);
       this.destroyRef.onDestroy(() => mq.removeEventListener('change', sync));
     });
+
+    this.ensureGroupsExpandedForUrl(this.router.url);
+
+    effect(() => {
+      this.navEntries();
+      this.ensureGroupsExpandedForUrl(this.router.url);
+    });
+  }
+
+  isNavGroupEntry(entry: NavEntry): entry is NavGroupConfig {
+    return isNavGroup(entry);
   }
 
   toggleSidebar(): void {
@@ -112,6 +129,63 @@ export class MainLayoutComponent {
 
   navIconClass(materialIcon: string): string {
     return NAV_ICON_MAP[materialIcon] ?? 'bi-circle';
+  }
+
+  navGroupKey(entry: NavGroupConfig): string {
+    return entry.moduleKey ?? entry.label;
+  }
+
+  navGroupPanelId(key: string): string {
+    return `nav-group-panel-${key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+  }
+
+  isNavGroupExpanded(key: string): boolean {
+    return this.expandedNavGroupKeys().has(key);
+  }
+
+  toggleNavGroup(key: string): void {
+    this.expandedNavGroupKeys.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  private ensureGroupsExpandedForUrl(rawUrl: string): void {
+    const path = this.normalizeNavUrl(rawUrl);
+    const toAdd = new Set<string>();
+    for (const entry of this.navEntries()) {
+      if (!isNavGroup(entry)) continue;
+      const key = this.navGroupKey(entry);
+      if (entry.children.some((c) => this.urlMatchesChildPath(path, c.path))) {
+        toAdd.add(key);
+      }
+    }
+    if (toAdd.size === 0) return;
+    this.expandedNavGroupKeys.update((prev) => {
+      const next = new Set(prev);
+      for (const k of toAdd) {
+        next.add(k);
+      }
+      return next;
+    });
+  }
+
+  private normalizeNavUrl(url: string): string {
+    const q = url.indexOf('?');
+    const h = url.indexOf('#');
+    let end = url.length;
+    if (q >= 0) end = Math.min(end, q);
+    if (h >= 0) end = Math.min(end, h);
+    return url.slice(0, end);
+  }
+
+  private urlMatchesChildPath(url: string, childPath: string): boolean {
+    return url === childPath || url.startsWith(`${childPath}/`);
   }
 
   private resolveTitle(): string {

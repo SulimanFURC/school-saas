@@ -1,4 +1,4 @@
-﻿const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 const Student = require('./student.model');
 const AcademicYear = require('../classes/academicYear.model');
@@ -40,6 +40,11 @@ const StudentEnrollment = sequelize.define(
     },
     roll_number: { type: DataTypes.INTEGER, allowNull: true },
     category: { type: DataTypes.STRING(100), allowNull: true },
+    promotion_type: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'initial',
+    },
     status: {
       type: DataTypes.STRING(50),
       defaultValue: 'active',
@@ -54,6 +59,10 @@ const StudentEnrollment = sequelize.define(
         unique: true,
         fields: ['tenant_id', 'student_id', 'academic_year_id'],
         name: 'enroll_student_year_unique',
+      },
+      {
+        fields: ['tenant_id', 'academic_year_id', 'class_id'],
+        name: 'enrollments_tenant_year_class_idx',
       },
     ],
   }

@@ -25,17 +25,32 @@
   } @else {
     <div class="tenant-list__table-wrap">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 tenant-table">
+        <table class="table app-data-table align-middle mb-0 tenant-table">
           <thead>
             <tr>
-              <th class="tenant-table__th">Tenant</th>
-              <th class="tenant-table__th">Status</th>
-              <th class="tenant-table__th">Last updated</th>
-              <th class="tenant-table__th tenant-table__th--actions text-end">Actions</th>
+              <th scope="col" [attr.aria-sort]="sortAria('name')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+                  Tenant
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('status')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('status')">
+                  Status
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('status')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="sortAria('updated')">
+                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('updated')">
+                  Last updated
+                  <i class="app-data-table__sort-icon" [class]="sortIconClass('updated')" aria-hidden="true"></i>
+                </button>
+              </th>
+              <th scope="col" class="text-end tenant-table__th--actions">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (row of tenants(); track row.id) {
+            @for (row of sortedTenants(); track row.id) {
               <tr class="tenant-table__data-row">
                 <td class="tenant-table__cell tenant-table__cell--tenant">
                   <div class="tenant-table__tenant">
@@ -90,8 +105,8 @@
         </table>
       </div>
 
-      <div class="tenant-list__paginator d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 border-top">
-        <div class="d-flex align-items-center gap-2">
+      <div class="tenant-list__paginator">
+        <div class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-top">
           <label class="mb-0 small text-secondary" for="tenantPageSize">Rows per page</label>
           <select
             id="tenantPageSize"
@@ -105,42 +120,15 @@
             }
           </select>
         </div>
-        <nav aria-label="Tenant pagination">
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" [class.disabled]="pageIndex() === 0">
-              <button type="button" class="page-link" (click)="onPageIndexChange(0)" [disabled]="pageIndex() === 0">«</button>
-            </li>
-            <li class="page-item" [class.disabled]="pageIndex() === 0">
-              <button type="button" class="page-link" (click)="onPageIndexChange(pageIndex() - 1)" [disabled]="pageIndex() === 0">‹</button>
-            </li>
-            @for (p of pageNumbers(); track p) {
-              <li class="page-item" [class.active]="p === pageIndex()">
-                <button type="button" class="page-link" (click)="onPageIndexChange(p)">{{ p + 1 }}</button>
-              </li>
-            }
-            <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
-              <button
-                type="button"
-                class="page-link"
-                (click)="onPageIndexChange(pageIndex() + 1)"
-                [disabled]="pageIndex() >= totalPages() - 1"
-              >
-                ›
-              </button>
-            </li>
-            <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
-              <button
-                type="button"
-                class="page-link"
-                (click)="onPageIndexChange(totalPages() - 1)"
-                [disabled]="pageIndex() >= totalPages() - 1"
-              >
-                »
-              </button>
-            </li>
-          </ul>
-        </nav>
-        <span class="small text-secondary"> {{ total() }} total </span>
+        <app-table-pagination-footer
+          [total]="total()"
+          [page]="pageIndex() + 1"
+          [pageSize]="pageSize()"
+          [totalPages]="totalPages()"
+          entryLabel="tenants"
+          ariaLabel="Tenant pagination"
+          (pageChange)="onFooterPageChange($event)"
+        />
       </div>
     </div>
   }

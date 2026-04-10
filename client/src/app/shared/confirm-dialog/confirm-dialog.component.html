@@ -1,0 +1,69 @@
+<div
+  class="modal fade show d-block confirm-dialog__modal"
+  tabindex="-1"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="ariaIdPrefix() + '-title'"
+  [attr.aria-describedby]="ariaIdPrefix() + '-desc'"
+  (click)="onModalRootClick($event)"
+>
+  <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+    <div class="modal-content confirm-dialog__content border-0 shadow">
+      <div class="modal-body confirm-dialog__body pt-4 pb-3 px-4">
+        <div class="d-flex align-items-start gap-3">
+          <div class="confirm-dialog__icon-wrap flex-shrink-0" aria-hidden="true">
+            <i class="bi bi-exclamation-triangle confirm-dialog__icon"></i>
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <h2 class="modal-title fs-5 mb-2" [id]="ariaIdPrefix() + '-title'">{{ title() }}</h2>
+            <p class="mb-0 small confirm-dialog__message" [id]="ariaIdPrefix() + '-desc'">
+              {{ message() }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-close confirm-dialog__close flex-shrink-0"
+            aria-label="Close"
+            [disabled]="busy()"
+            (click)="cancel()"
+          ></button>
+        </div>
+      </div>
+      <div class="modal-footer confirm-dialog__footer border-0 pt-0 pb-4 px-4 gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-confirm-dialog-initial-focus
+          [disabled]="busy()"
+          (click)="cancel()"
+        >
+          {{ cancelLabel() }}
+        </button>
+        @if (variant() === 'danger') {
+          <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="confirm()">
+            @if (busy()) {
+              <span
+                class="spinner-border spinner-border-sm me-1 text-white"
+                role="status"
+                aria-hidden="true"
+              ></span>
+            }
+            {{ confirmLabel() }}
+          </button>
+        } @else {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="confirm()">
+            @if (busy()) {
+              <span
+                class="spinner-border spinner-border-sm me-1 text-light"
+                role="status"
+                aria-hidden="true"
+              ></span>
+            }
+            {{ confirmLabel() }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show confirm-dialog__backdrop" (click)="cancel()" aria-hidden="true"></div>

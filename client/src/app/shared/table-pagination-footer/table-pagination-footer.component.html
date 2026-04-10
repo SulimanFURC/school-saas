@@ -1,0 +1,36 @@
+@if (total() > 0) {
+  <div class="app-data-table__footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <span class="app-data-table__footer-info">{{ rangeText() }}</span>
+    @if (totalPages() > 1) {
+      <nav class="app-data-table__pag" [attr.aria-label]="ariaLabel()">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          [disabled]="page() <= 1"
+          (click)="emitPage(page() - 1)"
+        >
+          Previous
+        </button>
+        @for (p of pageNumbers(); track p) {
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-primary]="p === page()"
+            [class.btn-outline-primary]="p !== page()"
+            (click)="emitPage(p)"
+          >
+            {{ p }}
+          </button>
+        }
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          [disabled]="page() >= totalPages()"
+          (click)="emitPage(page() + 1)"
+        >
+          Next
+        </button>
+      </nav>
+    }
+  </div>
+}

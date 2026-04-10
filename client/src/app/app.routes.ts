@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { SuperAdminLayoutComponent } from './layout/super-admin-layout/super-admin-layout.component';
@@ -79,6 +79,24 @@ export const routes: Routes = [
         data: { title: 'Register student', moduleKey: 'students' },
       },
       {
+        path: 'students/promote',
+        canActivate: [featureGuard],
+        loadComponent: () =>
+          import('./modules/students/student-promote/student-promote.component').then(
+            (m) => m.StudentPromoteComponent
+          ),
+        data: { title: 'Promote students', moduleKey: 'students' },
+      },
+      {
+        path: 'students/:id/edit',
+        canActivate: [featureGuard],
+        loadComponent: () =>
+          import('./modules/students/student-register/student-register.component').then(
+            (m) => m.StudentRegisterComponent
+          ),
+        data: { title: 'Edit student', moduleKey: 'students' },
+      },
+      {
         path: 'students/:id',
         canActivate: [featureGuard],
         loadComponent: () =>
@@ -89,6 +107,7 @@ export const routes: Routes = [
       },
       {
         path: 'students',
+        pathMatch: 'full',
         canActivate: [featureGuard],
         loadComponent: () =>
           import('./modules/students/student-list/student-list.component').then(
@@ -115,12 +134,17 @@ export const routes: Routes = [
         data: { title: 'Fees', moduleKey: 'fees' },
       },
       {
+        path: 'classes/new',
+        canActivate: [featureGuard],
+        loadComponent: () =>
+          import('./modules/classes/class-form/class-form.component').then((m) => m.ClassFormComponent),
+        data: { title: 'Add class', moduleKey: 'classes' },
+      },
+      {
         path: 'classes',
         canActivate: [featureGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
-          ),
+          import('./modules/classes/class-list/class-list.component').then((m) => m.ClassListComponent),
         data: { title: 'Classes', moduleKey: 'classes' },
       },
       {

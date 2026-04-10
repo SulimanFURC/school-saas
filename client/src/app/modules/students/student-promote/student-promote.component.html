@@ -1,0 +1,222 @@
+<section class="page">
+  <header class="content-area-header" aria-labelledby="promote-page-title">
+    <div class="content-area-header__main">
+      <h1 id="promote-page-title" class="content-area-header__title">Promote students</h1>
+      <p class="content-area-header__subtitle">Move students to the next session or repeat the same class in the current session.</p>
+    </div>
+    <div class="content-area-header__end">
+      <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/students" class="content-area-header__crumb content-area-header__crumb--parent">Students</a>
+        <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        <span class="content-area-header__crumb content-area-header__crumb--current">Promote students</span>
+      </nav>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else {
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h2 class="h6 mb-3">Select students</h2>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">From class</label>
+                <select
+                  class="form-select"
+                  [formControl]="form.controls.from_class_id"
+                  (change)="onFromClassChange()"
+                >
+                  <option [ngValue]="null">—</option>
+                  @for (c of classes(); track c.id) {
+                    <option [ngValue]="c.id">{{ c.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="promote-admission-search">Admission no.</label>
+                <div class="input-group">
+                  <input
+                    id="promote-admission-search"
+                    class="form-control"
+                    [formControl]="form.controls.admission_q"
+                    (keyup.enter)="searchByAdmission()"
+                    autocomplete="off"
+                    placeholder="Exact admission number"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    [disabled]="!admissionTrim()"
+                    (click)="searchByAdmission()"
+                  >
+                    Search
+                  </button>
+                </div>
+                <div class="form-text">Search loads the student’s current placement (any active session).</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <span class="form-label d-block mb-1">Selection</span>
+              <div class="btn-group" role="group" aria-label="Selection mode">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="promote-sel-mode"
+                  id="promote-sel-all"
+                  [checked]="selectionMode() === 'all'"
+                  (change)="onSelectionModeChange('all')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="promote-sel-all">All in table</label>
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="promote-sel-mode"
+                  id="promote-sel-manual"
+                  [checked]="selectionMode() === 'manual'"
+                  (change)="onSelectionModeChange('manual')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="promote-sel-manual">Choose manually</label>
+              </div>
+            </div>
+
+            @if (studentsTableLoading()) {
+              <div class="d-flex align-items-center gap-2 text-secondary small py-2" aria-live="polite">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>Loading students…</span>
+              </div>
+            }
+            @if (!studentsTableLoading() && studentRows().length === 0 && listEmptyHint(); as hint) {
+              <p class="text-secondary small mb-0">{{ hint }}</p>
+            }
+            @if (studentRows().length) {
+              <div class="table-responsive">
+                <table class="table table-sm app-data-table align-middle">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px">
+                        <input
+                          type="checkbox"
+                          class="form-check-input"
+                          [checked]="allRowsSelected()"
+                          (change)="toggleAll($any($event.target).checked)"
+                        />
+                      </th>
+                      <th>Admission</th>
+                      <th>Name</th>
+                      <th>Session</th>
+                      <th>Class</th>
+                      <th>Section</th>
+                      <th class="text-nowrap" style="width: 7rem">Roll</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (r of studentRows(); track r.id) {
+                      <tr>
+                        <td>
+                          <input
+                            type="checkbox"
+                            class="form-check-input"
+                            [checked]="selected().has(r.id)"
+                            (change)="toggle(r.id)"
+                          />
+                        </td>
+                        <td>{{ r.admission_no }}</td>
+                        <td>{{ r.display_name || r.full_name || '—' }}</td>
+                        <td>{{ enrollmentSessionName(r) }}</td>
+                        <td>{{ enrollmentClassName(r) }}</td>
+                        <td>{{ enrollmentSectionName(r) }}</td>
+                        <td>
+                          <input
+                            type="number"
+                            class="form-control form-control-sm"
+                            [value]="rollByStudentId()[r.id] || ''"
+                            (input)="setRollDraft(r.id, $any($event.target).value)"
+                            title="Optional; overrides same-for-all roll below"
+                          />
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h2 class="h6 mb-3">Promotion</h2>
+            <form [formGroup]="form" (ngSubmit)="submit()">
+              <div class="mb-3">
+                <label class="form-label">Active session (tenant)</label>
+                <input class="form-control" readonly [value]="currentYear()?.name || '—'" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Promote session</label>
+                <select class="form-select" formControlName="to_academic_year_id">
+                  <option [ngValue]="null">—</option>
+                  @for (y of allowedTargetYears(); track y.id) {
+                    <option [ngValue]="y.id">{{ y.name || ('Year ' + y.id) }}</option>
+                  }
+                </select>
+                @if (promoteNextYearMissing()) {
+                  <div class="form-text text-warning">
+                    Create the next academic year in settings before promoting forward.
+                  </div>
+                }
+                @if (form.get('repeat_class')?.value) {
+                  <div class="form-text">Repeat keeps the same session; you can change section below.</div>
+                }
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Promotion to class</label>
+                <select class="form-select" formControlName="to_class_id" (change)="onToClassChange()">
+                  <option [ngValue]="null">—</option>
+                  @for (c of classes(); track c.id) {
+                    <option [ngValue]="c.id">{{ c.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Section</label>
+                <select class="form-select" formControlName="to_section_id">
+                  <option [ngValue]="null">—</option>
+                  @for (s of sections(); track s.id) {
+                    <option [ngValue]="s.id">{{ s.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Roll number (optional, default for all)</label>
+                <input class="form-control" type="number" formControlName="roll_number" />
+                <div class="form-text">Per-student roll in the table overrides this when filled.</div>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" formControlName="repeat_class" id="sp-repeat" />
+                <label class="form-check-label" for="sp-repeat">Repeat same class (same session)</label>
+              </div>
+              <div class="d-flex gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="submitting() || promoteNextYearMissing()"
+                >
+                  Promote
+                </button>
+                <a class="btn btn-outline-secondary" routerLink="/students">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</section>

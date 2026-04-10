@@ -1,1 +1,13 @@
 <router-outlet />
+@if (confirmDialog.active(); as confirmCfg) {
+  <app-confirm-dialog
+    [title]="confirmCfg.title"
+    [message]="confirmCfg.message"
+    [confirmLabel]="confirmCfg.confirmLabel"
+    [cancelLabel]="confirmCfg.cancelLabel"
+    [variant]="confirmCfg.variant"
+    [ariaIdPrefix]="confirmCfg.ariaIdPrefix"
+    [busy]="confirmDialog.busy()"
+    (closed)="confirmDialog.onDialogClosed($event)"
+  />
+}

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 
@@ -6,6 +6,8 @@ import { environment } from '../../../../environments/environment';
 import { formatRelativeTime } from '../../../utils/relative-time';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
 import { ToastService } from '../../../services/toast.service';
+import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
+import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
 
 export interface TenantRow {
   id: string;
@@ -25,9 +27,11 @@ export interface TenantListResponse {
 
 export type TenantStatusKind = 'active' | 'inactive' | 'pending' | 'unknown';
 
+export type TenantSortKey = 'name' | 'status' | 'updated';
+
 @Component({
   selector: 'app-tenant-list',
-  imports: [RouterLink, CreateTenantDialogComponent],
+  imports: [RouterLink, CreateTenantDialogComponent, TablePaginationFooterComponent],
   templateUrl: './tenant-list.component.html',
   styleUrl: './tenant-list.component.scss',
 })
@@ -42,6 +46,16 @@ export class TenantListComponent implements OnInit {
   readonly showCreate = signal(false);
 
   readonly pageSizeOptions = [5, 10, 25, 50];
+
+  sortKey = signal<TenantSortKey | null>(null);
+  sortDir = signal<SortDir>('asc');
+
+  readonly sortedTenants = computed(() => {
+    const rows = this.tenants();
+    const key = this.sortKey();
+    if (!key) return rows;
+    return sortCopy(rows, (a, b) => this.compareByKey(a, b, key), this.sortDir());
+  });
 
   loading = true;
 
@@ -85,17 +99,40 @@ export class TenantListComponent implements OnInit {
     return Math.max(1, Math.ceil(t / ps));
   }
 
-  pageNumbers(): number[] {
-    const totalP = this.totalPages();
-    const cur = this.pageIndex();
-    const window = 5;
-    const start = Math.max(0, Math.min(cur - 2, totalP - window));
-    const end = Math.min(totalP, start + window);
-    const arr: number[] = [];
-    for (let i = start; i < end; i++) {
-      arr.push(i);
+  toggleSort(key: TenantSortKey): void {
+    if (this.sortKey() === key) {
+      this.sortDir.update(nextSortDir);
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set('asc');
     }
-    return arr;
+  }
+
+  sortAria(key: TenantSortKey): 'none' | 'ascending' | 'descending' {
+    if (this.sortKey() !== key) return 'none';
+    return this.sortDir() === 'asc' ? 'ascending' : 'descending';
+  }
+
+  sortIconClass(key: TenantSortKey): string {
+    if (this.sortKey() !== key) return 'bi bi-arrow-down-up';
+    return this.sortDir() === 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill';
+  }
+
+  private compareByKey(a: TenantRow, b: TenantRow, key: TenantSortKey): number {
+    switch (key) {
+      case 'name':
+        return compareNullableString(a.name, b.name);
+      case 'status':
+        return compareNullableString(a.status, b.status);
+      case 'updated':
+        return compareNullableString(a.updatedAt ?? '', b.updatedAt ?? '');
+      default:
+        return 0;
+    }
+  }
+
+  onFooterPageChange(oneBasedPage: number): void {
+    this.onPageIndexChange(oneBasedPage - 1);
   }
 
   openCreateTenant(): void {

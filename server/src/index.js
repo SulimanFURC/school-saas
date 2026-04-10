@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
@@ -14,6 +14,8 @@ const {
   seedModuleCatalog,
   backfillAllTenantModules,
 } = require('./seed/moduleSeed');
+const { seedCanonicalClassesForTenant } = require('./seed/canonicalClasses');
+const { backfillAcademicYearsAllTenants } = require('./seed/academicYearsSeed');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
 const authRoutes = require('./modules/auth/auth.routes');
 const authController = require('./modules/auth/auth.controller');
@@ -31,6 +33,7 @@ require('./modules/students/studentEnrollment.model');
 require('./modules/students/studentGuardian.model');
 require('./modules/students/studentPreviousSchool.model');
 require('./modules/students/studentDocument.model');
+require('./modules/students/studentPromotion.model');
 const SchoolClass = require('./modules/classes/class.model');
 const Section = require('./modules/classes/section.model');
 const AcademicYear = require('./modules/classes/academicYear.model');
@@ -52,7 +55,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
   })
 );
-app.use(express.json());
+/** Base64 expands ~33%; allow large phone photos. Override with JSON_BODY_LIMIT in .env */
+const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || '50mb';
+app.use(express.json({ limit: JSON_BODY_LIMIT }));
 app.post('/auth/signup', authController.signup);
 app.use(tenantMiddleware);
 
@@ -125,12 +130,23 @@ async function seedUsers() {
 
 
 
+async function backfillCanonicalClassesAllTenants() {
+  const tenants = await Tenant.findAll();
+  for (const t of tenants) {
+    if (t.subdomain === 'platform') continue;
+    await seedCanonicalClassesForTenant(t.id);
+  }
+  console.log('Canonical classes backfilled for tenants');
+}
+
 async function seedAbcSampleData() {
   const tenant = await Tenant.findOne({ where: { subdomain: 'abc' } });
   if (!tenant) {
     console.log('Skip ABC sample data: tenant not found');
     return;
   }
+
+  await seedCanonicalClassesForTenant(tenant.id);
 
   const [year] = await AcademicYear.findOrCreate({
     where: { tenant_id: tenant.id, name: '2025-2026' },
@@ -142,19 +158,23 @@ async function seedAbcSampleData() {
   );
   await year.update({ is_active: true });
 
-  const [cls] = await SchoolClass.findOrCreate({
-    where: { tenant_id: tenant.id, name: '10' },
-    defaults: { display_order: 10 },
+  const cls = await SchoolClass.findOne({
+    where: { tenant_id: tenant.id, code: 'C10' },
   });
+  if (!cls) {
+    console.log('Skip ABC enrollment: Class 10th not found');
+    return;
+  }
 
   const [section] = await Section.findOrCreate({
     where: { tenant_id: tenant.id, class_id: cls.id, name: 'A' },
-    defaults: {},
+    defaults: { tenant_id: tenant.id, class_id: cls.id, name: 'A' },
   });
 
   const [student] = await Student.findOrCreate({
     where: { tenant_id: tenant.id, admission_no: 'DEMO-001' },
     defaults: {
+      full_name: 'Seth Hallam',
       first_name: 'Seth',
       last_name: 'Hallam',
       gender: 'male',
@@ -166,13 +186,6 @@ async function seedAbcSampleData() {
       current_address: '123 Main Street',
       permanent_address: '123 Main Street',
       extra_details: 'Sample student seeded for development.',
-      bank_name: 'Demo Bank',
-      bank_branch: 'Central',
-      bank_ifsc: 'DEMO0001234',
-      height_cm: '165',
-      weight_kg: '55',
-      hostel_name: 'North Hostel',
-      room_no: '12A',
       room_type: 'Double',
     },
   });
@@ -188,6 +201,7 @@ async function seedAbcSampleData() {
       section_id: section.id,
       roll_number: 10,
       category: 'Science',
+      promotion_type: 'initial',
       status: 'active',
     },
   });
@@ -214,7 +228,6 @@ async function seedAbcSampleData() {
     defaults: {
       school_name: 'Previous Primary School',
       school_address: 'Old Town',
-      current_school_name: 'ABC School',
     },
   });
 
@@ -276,10 +289,13 @@ sequelize
   .then(() => seedUsers())
   .then(() => seedModuleCatalog())
   .then(() => backfillAllTenantModules())
+  .then(() => backfillCanonicalClassesAllTenants())
+  .then(() => backfillAcademicYearsAllTenants())
   .then(() => seedAbcSampleData())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log('Student photo: JSON field photo_base64 on POST /students/register or PUT /students/:id');
     });
   })
   .catch((err) => {

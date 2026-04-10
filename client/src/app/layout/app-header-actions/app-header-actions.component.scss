@@ -33,15 +33,22 @@
   min-height: 44px;
   padding: 0.25rem 0.5rem 0.25rem 0.5rem;
   margin-left: 0.25rem;
-  border-radius: 999px;
+  border-radius: 0.5rem;
   color: var(--ds-toolbar-fg);
   font: inherit;
   line-height: 1.2;
   text-align: left;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-toolbar-fg) 5%, transparent);
 
   &:hover {
     background-color: color-mix(in srgb, var(--ds-toolbar-fg) 8%, transparent);
   }
+}
+
+.dropdown.show .app-header-actions__user {
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--ds-toolbar-fg) 5%, transparent),
+    0 0 0 4px var(--ds-surface-container-highest);
 }
 
 .app-header-actions__user-text {
@@ -80,6 +87,11 @@
   height: 20px;
   font-size: 20px;
   color: var(--ds-toolbar-muted);
+  transition: transform 0.2s ease;
+}
+
+.dropdown.show .app-header-actions__chevron {
+  transform: rotate(180deg);
 }
 
 .app-header-actions__avatar {
@@ -87,8 +99,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 2px solid color-mix(in srgb, var(--ds-toolbar-fg) 35%, transparent);
   background-color: color-mix(in srgb, var(--ds-primary) 28%, var(--ds-surface-container-high));
@@ -96,6 +108,115 @@
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* Untitled-style account dropdown panel */
+.app-account-menu {
+  min-width: 240px;
+  max-width: min(280px, calc(100vw - 24px));
+  border-radius: 0.5rem;
+  border: 1px solid var(--ds-menu-divider);
+  background: var(--ds-menu-surface);
+  box-shadow:
+    0 4px 6px -2px color-mix(in srgb, var(--ds-on-surface) 8%, transparent),
+    0 12px 16px -4px color-mix(in srgb, var(--ds-on-surface) 12%, transparent);
+  padding: 0;
+  overflow: hidden;
+}
+
+.app-account-menu__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.app-account-menu__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.app-account-menu__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--ds-menu-on-surface) 18%, transparent);
+  background-color: color-mix(in srgb, var(--ds-primary) 28%, var(--ds-surface-container-high));
+  color: var(--ds-menu-on-surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-account-menu__online {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #22c55e;
+  border: 1.5px solid var(--ds-menu-surface);
+  box-sizing: border-box;
+}
+
+.app-account-menu__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  gap: 0;
+  line-height: 1.25;
+}
+
+.app-account-menu__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ds-menu-on-surface);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-account-menu__secondary {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--ds-on-surface-variant);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-account-menu__divider {
+  margin: 0;
+  border-color: var(--ds-menu-divider);
+  opacity: 1;
+}
+
+.app-account-menu .dropdown-item {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ds-menu-on-surface);
+
+  &:hover,
+  &:focus {
+    background-color: var(--ds-surface-container-highest);
+    color: var(--ds-menu-on-surface);
+  }
+
+  &:active {
+    background-color: var(--ds-surface-container-high);
+    color: var(--ds-menu-on-surface);
+  }
 }
 
 @media (max-width: 719.98px) {
