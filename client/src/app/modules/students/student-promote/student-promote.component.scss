@@ -1,0 +1,482 @@
+/* Promote Students — content-area visual design (scoped) */
+$sp-purple: #5a4cf5;
+$sp-purple-hover: color-mix(in srgb, $sp-purple 88%, black);
+$sp-page-bg: #f8f9fd;
+$sp-title: #1a237e;
+$sp-subtitle: #6c757d;
+$sp-card-radius: 14px;
+$sp-control-radius: 10px;
+
+:host {
+  display: block;
+}
+
+.student-promote-page.page {
+  background: $sp-page-bg;
+  border-radius: var(--ds-radius-md, 0.75rem);
+  padding: 1.25rem 1.25rem 2rem;
+  margin-inline: -0.25rem;
+}
+
+/* Flat header on tinted page (overrides global .content-area-header card) */
+.student-promote-page .content-area-header {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 0 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .student-promote-page.page {
+    padding: 1.5rem 1.75rem 2.25rem;
+    margin-inline: 0;
+  }
+}
+
+.sp-page-header__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.sp-page-header__icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #4f8cff, #2563eb);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+}
+
+.sp-page-header__title {
+  color: $sp-title !important;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.sp-page-header__subtitle {
+  color: $sp-subtitle !important;
+  max-width: 40rem;
+}
+
+/* Cards */
+.sp-card {
+  background: #fff;
+  border-radius: $sp-card-radius;
+  box-shadow: 0 10px 40px rgba(26, 35, 126, 0.06);
+  border: 1px solid color-mix(in srgb, #1a237e 6%, transparent);
+  overflow: hidden;
+}
+
+.sp-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.sp-card__body {
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+.sp-card__head-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.sp-card__head-icon--blue {
+  background: color-mix(in srgb, #2563eb 14%, white);
+  color: #2563eb;
+}
+
+.sp-card__head-icon--purple {
+  background: color-mix(in srgb, $sp-purple 16%, white);
+  color: $sp-purple;
+}
+
+.sp-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $sp-title;
+  margin: 0;
+}
+
+.sp-card__subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: $sp-subtitle;
+}
+
+.sp-field-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #868e96;
+  margin-bottom: 0.35rem;
+}
+
+.sp-label-hint {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  cursor: help;
+}
+
+.sp-control {
+  border-radius: $sp-control-radius;
+  border-color: #e2e5ef;
+  min-height: 2.625rem;
+}
+
+.sp-control:focus {
+  border-color: color-mix(in srgb, $sp-purple 45%, #e2e5ef);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, $sp-purple 18%, transparent);
+}
+
+.sp-input-icon {
+  background: #fff;
+  border-color: #e2e5ef;
+  border-radius: $sp-control-radius 0 0 $sp-control-radius;
+  color: #adb5bd;
+}
+
+.sp-admission-input .form-control {
+  border-left: 0;
+  border-radius: 0 $sp-control-radius $sp-control-radius 0;
+}
+
+.sp-admission-input .form-control:focus {
+  box-shadow: none;
+  border-color: #e2e5ef;
+}
+
+.sp-admission-input:focus-within {
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, $sp-purple 18%, transparent);
+  border-radius: $sp-control-radius;
+}
+
+.sp-admission-input:focus-within .form-control,
+.sp-admission-input:focus-within .input-group-text {
+  border-color: color-mix(in srgb, $sp-purple 45%, #e2e5ef);
+}
+
+.sp-btn-primary {
+  background: $sp-purple;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  border-radius: $sp-control-radius;
+  padding-inline: 1.25rem;
+  min-height: 2.625rem;
+}
+
+.sp-btn-primary:hover:not(:disabled) {
+  background: $sp-purple-hover;
+  color: #fff;
+}
+
+.sp-btn-primary:disabled {
+  opacity: 0.45;
+}
+
+.sp-help-muted {
+  color: #adb5bd !important;
+  font-size: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.sp-selection-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #adb5bd;
+}
+
+.sp-mode-group {
+  gap: 0;
+  box-shadow: inset 0 0 0 1px #e2e5ef;
+  border-radius: $sp-control-radius;
+  overflow: hidden;
+}
+
+.sp-mode-btn {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border: none;
+  color: #495057;
+  background: #fff;
+  box-shadow: none;
+}
+
+.sp-mode-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.sp-mode-btn--active {
+  background: $sp-purple !important;
+  color: #fff !important;
+}
+
+.sp-selected-count {
+  font-size: 0.8125rem;
+  color: #adb5bd;
+}
+
+.sp-found-summary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3d7bfd;
+}
+
+/* Table */
+.sp-table-wrap {
+  border: 1px solid #eef0f6;
+  border-radius: $sp-control-radius;
+  background: #fafbff;
+}
+
+.sp-table {
+  font-size: 0.8125rem;
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: color-mix(in srgb, $sp-purple 6%, white);
+}
+
+.sp-th {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #868e96;
+  border-bottom: 1px solid #eef0f6 !important;
+  padding: 0.75rem 0.65rem;
+  white-space: nowrap;
+}
+
+.sp-tr {
+  cursor: pointer;
+  border-bottom: 1px solid #f0f2f8;
+}
+
+.sp-tr:last-child {
+  border-bottom: none;
+}
+
+.sp-tr--selected {
+  background: color-mix(in srgb, $sp-purple 7%, white) !important;
+}
+
+.sp-td-mono {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.sp-td-muted {
+  color: #6c757d;
+}
+
+.sp-student-name {
+  font-weight: 600;
+  color: #212529;
+}
+
+.sp-avatar {
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(145deg, #ec4899, #db2777);
+  flex-shrink: 0;
+}
+
+.sp-avatar--alt {
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+}
+
+.sp-gender {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.sp-gender--f {
+  background: color-mix(in srgb, #ec4899 12%, white);
+  color: #be185d;
+}
+
+.sp-gender--m {
+  background: color-mix(in srgb, #3b82f6 12%, white);
+  color: #1d4ed8;
+}
+
+.sp-gender--na {
+  background: #f1f3f5;
+  color: #868e96;
+}
+
+.sp-fee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #868e96;
+}
+
+.sp-fee-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #ced4da;
+}
+
+.sp-att-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #e9ecef;
+  overflow: hidden;
+  min-width: 4rem;
+}
+
+.sp-att-bar--na {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.sp-table-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #adb5bd;
+  margin-top: 0.75rem;
+}
+
+.sp-roll-input {
+  min-height: 2rem;
+  border-radius: 8px;
+}
+
+/* Promotion panel */
+.sp-readonly-session {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sp-readonly-session__dot {
+  position: absolute;
+  left: 0.75rem;
+  z-index: 2;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 25%, transparent);
+}
+
+.sp-readonly-session__input {
+  padding-left: 1.75rem;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #212529;
+}
+
+.sp-roll-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #3d7bfd;
+  margin-top: 0.4rem;
+}
+
+.sp-repeat-box {
+  background: #fffbeb;
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, white);
+  border-radius: $sp-control-radius;
+  padding: 0.75rem 1rem;
+}
+
+.sp-repeat-label {
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.sp-btn-promote {
+  min-height: 2.75rem;
+  font-size: 0.9375rem;
+}
+
+.sp-btn-cancel {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #495057;
+  font-weight: 600;
+  border-radius: $sp-control-radius;
+  min-height: 2.625rem;
+}
+
+.sp-btn-cancel:hover {
+  background: #f8f9fa;
+  color: #343a40;
+  border-color: #dee2e6;
+}
+
+html.theme-dark .student-promote-page.page,
+html[data-bs-theme='dark'] .student-promote-page.page {
+  background: var(--bs-body-bg);
+}
+
+html.theme-dark .sp-card,
+html[data-bs-theme='dark'] .sp-card {
+  background: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  box-shadow: none;
+}
+
+html.theme-dark .sp-page-header__title,
+html.theme-dark .sp-card__title,
+html[data-bs-theme='dark'] .sp-page-header__title,
+html[data-bs-theme='dark'] .sp-card__title {
+  color: var(--bs-body-color) !important;
+}
+
+html.theme-dark .sp-control,
+html[data-bs-theme='dark'] .sp-control {
+  background: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+html.theme-dark .sp-table-wrap,
+html[data-bs-theme='dark'] .sp-table-wrap {
+  background: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color);
+}

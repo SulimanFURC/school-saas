@@ -18,14 +18,14 @@
 }
 
 /* Flat page header on gray (overrides global .content-area-header card) */
-.page--student-register .content-area-header--register {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding-left: 0;
-  padding-right: 0;
-  padding-top: 0;
-}
+// .page--student-register .content-area-header--register {
+//   background: transparent !important;
+//   border: none !important;
+//   box-shadow: none !important;
+//   padding-left: 0;
+//   padding-right: 0;
+//   padding-top: 0;
+// }
 
 .page--student-register .content-area-header__title {
   color: var(--bs-body-color);
