@@ -1018,3 +1018,19 @@ html[data-bs-theme='dark'] .app-toast__panel--basic .app-toast__close:hover {
   background-color: rgb(0 0 0 / 0.08);
   border-radius: 0.25rem;
 }
+
+@media print {
+  .layout-sidebar,
+  .layout-toolbar,
+  .no-print,
+  .btn-print-hide {
+    display: none !important;
+  }
+
+  .layout-main,
+  .layout-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

@@ -1,0 +1,105 @@
+<section class="page fee-receipt-page">
+  <div class="no-print d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+    <a routerLink="/fees/collection" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>
+      Back to collection
+    </a>
+    <button type="button" class="btn btn-primary btn-sm btn-print-hide" (click)="printReceipt()">
+      <i class="bi bi-printer me-1"></i>
+      Print receipt
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (fees().length === 0) {
+    <div class="alert alert-info">No fee records for this student yet.</div>
+  } @else {
+    <div class="receipt-container card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <span class="fw-semibold text-uppercase small text-secondary">Invoice</span>
+          <span class="small text-secondary">
+            {{ latestFee()?.collection_date | date: 'mediumDate' }}
+          </span>
+          <span class="small">
+            Status:
+            <strong>{{ latestFee()?.status ?? '—' }}</strong>
+          </span>
+        </div>
+        <hr class="my-3" />
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <h3 class="h6 text-secondary mb-2">From</h3>
+            <p class="mb-1 fw-semibold">{{ branding.tenantName() || 'School' }}</p>
+            @if (branding.tenantAddress()) {
+              <p class="mb-1 small text-secondary">{{ branding.tenantAddress() }}</p>
+            }
+            @if (branding.tenantContactEmail()) {
+              <p class="mb-0 small"><a [href]="'mailto:' + branding.tenantContactEmail()">{{ branding.tenantContactEmail() }}</a></p>
+            }
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 text-secondary mb-2">To</h3>
+            <p class="mb-1 fw-semibold">{{ studentDisplayName() }}</p>
+            <p class="mb-1 small">Registration No: {{ registrationNo() }}</p>
+            <p class="mb-0 small">Class: {{ classLabel() }}</p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Fee Type</th>
+                <th scope="col">Month/Year</th>
+                <th scope="col">Invoice Number</th>
+                <th scope="col">Date of Payment</th>
+                <th scope="col" class="text-end">Amount Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of fees(); track f.id; let i = $index) {
+                <tr
+                  [class.table-active]="f.is_latest"
+                  [style.background-color]="f.is_latest ? '#e8f4fd' : null"
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    {{ f.fee_type }}
+                    @if (f.is_latest) {
+                      <span class="ms-1 fw-semibold text-primary">→ Current Payment</span>
+                    }
+                  </td>
+                  <td>{{ f.collection_date | date: 'MMM yyyy' }}</td>
+                  <td>{{ f.invoice_number }}</td>
+                  <td>{{ f.collection_date | date: 'mediumDate' }}</td>
+                  <td class="text-end">{{ formatMoney(f.amount) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <div class="text-end" style="min-width: 200px">
+            <div class="d-flex justify-content-between gap-4 mb-1">
+              <span>Subtotal:</span>
+              <span>{{ formatMoney(totalAmount()) }}</span>
+            </div>
+            <div class="d-flex justify-content-between gap-4 fw-bold fs-5">
+              <span>Total:</span>
+              <span>{{ formatMoney(totalAmount()) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</section>

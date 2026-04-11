@@ -12,6 +12,9 @@ export interface TenantBrandingResponse {
   secondaryColor: string;
   logoUrl: string | null;
   usesDefaults?: boolean;
+  tenantName?: string;
+  tenantAddress?: string | null;
+  tenantContactEmail?: string | null;
 }
 
 const DEFAULT_PRIMARY = '#1976d2';
@@ -38,10 +41,16 @@ export class BrandingService {
   private readonly primarySig = signal<string>(DEFAULT_PRIMARY);
   private readonly secondarySig = signal<string>(DEFAULT_SECONDARY);
   private readonly logoRelativeSig = signal<string | null>(null);
+  private readonly tenantNameSig = signal<string>('');
+  private readonly tenantAddressSig = signal<string | null>(null);
+  private readonly tenantContactEmailSig = signal<string | null>(null);
 
   readonly primaryColor = this.primarySig.asReadonly();
   readonly secondaryColor = this.secondarySig.asReadonly();
   readonly logoUrl = this.logoRelativeSig.asReadonly();
+  readonly tenantName = this.tenantNameSig.asReadonly();
+  readonly tenantAddress = this.tenantAddressSig.asReadonly();
+  readonly tenantContactEmail = this.tenantContactEmailSig.asReadonly();
 
   async loadForCurrentTenant(): Promise<void> {
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem(LS_TOKEN) : null;
@@ -69,6 +78,9 @@ export class BrandingService {
     this.primarySig.set(primary);
     this.secondarySig.set(secondary);
     this.logoRelativeSig.set(data.logoUrl ?? null);
+    this.tenantNameSig.set(data.tenantName != null && data.tenantName !== '' ? data.tenantName : '');
+    this.tenantAddressSig.set(data.tenantAddress ?? null);
+    this.tenantContactEmailSig.set(data.tenantContactEmail ?? null);
 
     document.documentElement.style.setProperty('--primary-color', primary);
     document.documentElement.style.setProperty('--secondary-color', secondary);
@@ -80,6 +92,9 @@ export class BrandingService {
     this.primarySig.set(DEFAULT_PRIMARY);
     this.secondarySig.set(DEFAULT_SECONDARY);
     this.logoRelativeSig.set(null);
+    this.tenantNameSig.set('');
+    this.tenantAddressSig.set(null);
+    this.tenantContactEmailSig.set(null);
     document.documentElement.style.setProperty('--primary-color', DEFAULT_PRIMARY);
     document.documentElement.style.setProperty('--secondary-color', DEFAULT_SECONDARY);
     document.documentElement.classList.add('tenant-branding-active');
@@ -89,6 +104,9 @@ export class BrandingService {
     this.primarySig.set(DEFAULT_PRIMARY);
     this.secondarySig.set(DEFAULT_SECONDARY);
     this.logoRelativeSig.set(null);
+    this.tenantNameSig.set('');
+    this.tenantAddressSig.set(null);
+    this.tenantContactEmailSig.set(null);
     document.documentElement.style.removeProperty('--primary-color');
     document.documentElement.style.removeProperty('--secondary-color');
     document.documentElement.classList.remove('tenant-branding-active');

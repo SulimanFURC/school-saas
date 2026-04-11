@@ -1,0 +1,17 @@
+.receipt-container {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media print {
+  .receipt-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  .fee-receipt-page {
+    padding: 0 !important;
+  }
+}
