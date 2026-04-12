@@ -21,21 +21,44 @@ const CANONICAL_CLASSES = [
 
 /**
  * Ensures each canonical class exists for the tenant and has section A.
+ *
+ * Avoids `SchoolClass.findOrCreate({ where: { tenant_id, code } })` alone: the model also has a
+ * unique index on `(tenant_id, name)`. Legacy or partial rows can match by name but not code;
+ * `findOrCreate` then INSERT hits the name unique constraint and Sequelize's error-retry path
+ * can throw (where key missing for the violated column).
  */
 async function seedCanonicalClassesForTenant(tenantId) {
+  if (!tenantId) {
+    console.warn('seedCanonicalClassesForTenant: skipped — missing tenantId');
+    return;
+  }
+
   for (const row of CANONICAL_CLASSES) {
-    const [cls] = await SchoolClass.findOrCreate({
-      where: { tenant_id: tenantId, code: row.code },
-      defaults: {
-        tenant_id: tenantId,
+    let cls =
+      (await SchoolClass.findOne({
+        where: { tenant_id: tenantId, code: row.code },
+      })) ||
+      (await SchoolClass.findOne({
+        where: { tenant_id: tenantId, name: row.name },
+      }));
+
+    if (cls) {
+      await cls.update({
+        code: row.code,
         name: row.name,
         display_order: row.display_order,
         is_active: true,
-      },
-    });
-    if (cls.name !== row.name || cls.display_order !== row.display_order) {
-      await cls.update({ name: row.name, display_order: row.display_order, is_active: true });
+      });
+    } else {
+      cls = await SchoolClass.create({
+        tenant_id: tenantId,
+        code: row.code,
+        name: row.name,
+        display_order: row.display_order,
+        is_active: true,
+      });
     }
+
     await Section.findOrCreate({
       where: { tenant_id: tenantId, class_id: cls.id, name: 'A' },
       defaults: { tenant_id: tenantId, class_id: cls.id, name: 'A' },

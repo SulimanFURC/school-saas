@@ -15,7 +15,27 @@ function normalizeHex(color) {
   return color.trim();
 }
 
-function brandingPayload(row, tenantId) {
+function tenantIdentityFields(tenant) {
+  if (!tenant) {
+    return {
+      tenantName: '',
+      tenantAddress: null,
+      tenantContactEmail: null,
+    };
+  }
+  const plain = tenant.get ? tenant.get({ plain: true }) : tenant;
+  return {
+    tenantName: plain.name != null ? String(plain.name) : '',
+    tenantAddress: plain.address != null && String(plain.address).trim() !== '' ? String(plain.address) : null,
+    tenantContactEmail:
+      plain.contact_email != null && String(plain.contact_email).trim() !== ''
+        ? String(plain.contact_email)
+        : null,
+  };
+}
+
+function brandingPayload(row, tenantId, tenant) {
+  const identity = tenantIdentityFields(tenant);
   if (!row) {
     return {
       tenantId,
@@ -23,6 +43,7 @@ function brandingPayload(row, tenantId) {
       secondaryColor: DEFAULT_SECONDARY,
       logoUrl: null,
       usesDefaults: true,
+      ...identity,
     };
   }
   return {
@@ -31,6 +52,7 @@ function brandingPayload(row, tenantId) {
     secondaryColor: row.secondary_color || DEFAULT_SECONDARY,
     logoUrl: row.logo_url || null,
     usesDefaults: false,
+    ...identity,
   };
 }
 
@@ -44,10 +66,14 @@ exports.getForCurrentTenant = async (req, res) => {
     if (role === 'super_admin') {
       return res.status(403).json({ message: 'Use super admin branding endpoints' });
     }
-    const row = await TenantBranding.findOne({ where: { tenant_id: tenantId } });
-    res.json(brandingPayload(row, tenantId));
+    const [row, tenant] = await Promise.all([
+      TenantBranding.findOne({ where: { tenant_id: tenantId } }),
+      Tenant.findByPk(tenantId, { attributes: ['name', 'address', 'contact_email'] }),
+    ]);
+    res.json(brandingPayload(row, tenantId, tenant));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('getForCurrentTenant error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -59,9 +85,10 @@ exports.getForTenant = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
     const row = await TenantBranding.findOne({ where: { tenant_id: tenantId } });
-    res.json(brandingPayload(row, tenantId));
+    res.json(brandingPayload(row, tenantId, tenant));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('getForTenant branding error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -120,9 +147,10 @@ exports.upsertBranding = async (req, res) => {
     }
 
     const fresh = await TenantBranding.findOne({ where: { tenant_id: tenantId } });
-    res.json(brandingPayload(fresh, tenantId));
+    res.json(brandingPayload(fresh, tenantId, tenant));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('upsertBranding error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

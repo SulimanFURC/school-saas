@@ -125,13 +125,25 @@ export const routes: Routes = [
         data: { title: 'Teachers', moduleKey: 'teachers' },
       },
       {
-        path: 'fees',
+        path: 'fees/collection',
         canActivate: [featureGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/fees/fee-collection/fee-collection.component').then(
+            (m) => m.FeeCollectionComponent
           ),
-        data: { title: 'Fees', moduleKey: 'fees' },
+        data: { title: 'Fee collection', moduleKey: 'fees' },
+      },
+      {
+        path: 'fees/receipt/:studentId',
+        canActivate: [featureGuard],
+        loadComponent: () =>
+          import('./modules/fees/fee-receipt/fee-receipt.component').then((m) => m.FeeReceiptComponent),
+        data: { title: 'Fee receipt', moduleKey: 'fees' },
+      },
+      {
+        path: 'fees',
+        pathMatch: 'full',
+        redirectTo: 'fees/collection',
       },
       {
         path: 'classes/new',

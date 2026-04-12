@@ -33,7 +33,12 @@ export const TENANT_NAV_CONFIG: NavEntry[] = [
     ],
   },
   { label: 'Teachers', path: '/teachers', icon: 'badge', moduleKey: 'teachers' },
-  { label: 'Fees', path: '/fees', icon: 'payments', moduleKey: 'fees' },
+  {
+    label: 'Fees',
+    icon: 'payments',
+    moduleKey: 'fees',
+    children: [{ label: 'Fee Collection', path: '/fees/collection', icon: 'payments' }],
+  },
   {
     label: 'Class',
     icon: 'class',
