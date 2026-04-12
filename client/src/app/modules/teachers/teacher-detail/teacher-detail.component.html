@@ -1,0 +1,99 @@
+<section class="page">
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (!teacher()) {
+    <p class="text-secondary">Teacher not found.</p>
+    <a routerLink="/teachers" class="btn btn-outline-secondary">Back</a>
+  } @else {
+    @let t = teacher()!;
+    <header class="content-area-header mb-4">
+      <div class="content-area-header__main">
+        <h1 class="content-area-header__title">{{ displayName(t) }}</h1>
+        <p class="content-area-header__subtitle">{{ t.designation || 'Teacher' }} · {{ t.email }}</p>
+      </div>
+      <div class="content-area-header__end d-flex flex-wrap gap-2">
+        <a [routerLink]="['/teachers', teacherId(), 'edit']" class="btn btn-primary">Edit</a>
+        <button type="button" class="btn btn-outline-secondary" (click)="copyUsernameOnly()">Copy username</button>
+        <button type="button" class="btn btn-outline-primary" (click)="generateNewPassword()">
+          Generate new password
+        </button>
+        <label class="btn btn-outline-secondary mb-0">
+          Upload CV
+          <input type="file" class="d-none" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" (change)="onCvSelected($event)" />
+        </label>
+        <button type="button" class="btn btn-outline-danger" (click)="deleteTeacher()">Delete</button>
+        <a routerLink="/teachers" class="btn btn-link">Back to list</a>
+      </div>
+    </header>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body text-center">
+            @if (photoSrc(t)) {
+              <img [src]="photoSrc(t)!" class="img-fluid rounded mb-3" style="max-height: 220px" alt="" />
+            } @else {
+              <div class="text-secondary py-4">No photo</div>
+            }
+            <dl class="text-start small mb-0">
+              <dt>Username</dt>
+              <dd>{{ t.login_user?.username || '—' }}</dd>
+              <p class="small text-secondary mt-2 mb-0">
+                The password cannot be displayed. Use <strong>Generate new password</strong> to create one you can
+                copy and share.
+              </p>
+              <dt>Account</dt>
+              <dd>
+                <span class="badge" [class.text-bg-success]="t.login_user?.status === 'active'" [class.text-bg-secondary]="t.login_user?.status !== 'active'">
+                  {{ t.login_user?.status || '—' }}
+                </span>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-3">
+          <div class="card-header bg-transparent fw-semibold">Profile</div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4">Mobile</dt>
+              <dd class="col-sm-8">{{ t.mobile_number || '—' }}</dd>
+              <dt class="col-sm-4">Address</dt>
+              <dd class="col-sm-8">{{ t.address || '—' }}</dd>
+              <dt class="col-sm-4">Joining date</dt>
+              <dd class="col-sm-8">{{ t.joining_date || '—' }}</dd>
+              <dt class="col-sm-4">Date of birth</dt>
+              <dd class="col-sm-8">{{ t.dob || '—' }}</dd>
+              <dt class="col-sm-4">Gender</dt>
+              <dd class="col-sm-8">{{ t.gender || '—' }}</dd>
+              <dt class="col-sm-4">Qualification</dt>
+              <dd class="col-sm-8">{{ t.qualification || '—' }}</dd>
+              <dt class="col-sm-4">Experience</dt>
+              <dd class="col-sm-8">{{ t.experience || '—' }}</dd>
+              <dt class="col-sm-4">CV</dt>
+              <dd class="col-sm-8">
+                @if (cvHref(t)) {
+                  <a [href]="cvHref(t)!" target="_blank" rel="noopener">{{ t.cv_file_name || 'Download' }}</a>
+                } @else {
+                  —
+                }
+              </dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</section>
+
+@if (loginCredentials(); as cred) {
+  <app-teacher-login-credentials-modal
+    [username]="cred.username"
+    [password]="cred.password"
+    [wasReset]="cred.wasReset"
+    (dismissed)="onCredentialsDismissed()"
+  />
+}

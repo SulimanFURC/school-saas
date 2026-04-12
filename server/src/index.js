@@ -43,12 +43,16 @@ const StudentGuardian = require('./modules/students/studentGuardian.model');
 const StudentPreviousSchool = require('./modules/students/studentPreviousSchool.model');
 const StudentDocument = require('./modules/students/studentDocument.model');
 const FeeCollection = require('./modules/fees/feeCollection.model');
+const Teacher = require('./modules/teachers/teacher.model');
 User.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
+User.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
+Teacher.hasOne(User, { foreignKey: 'teacher_id', as: 'login_user' });
 FeeCollection.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 Student.hasMany(FeeCollection, { foreignKey: 'student_id', as: 'feeCollections' });
 FeeCollection.belongsTo(User, { foreignKey: 'collected_by_user_id', as: 'collectedBy' });
 const academicRoutes = require('./modules/classes/academic.routes');
 const studentApiRoutes = require('./modules/students/student.routes');
+const teacherApiRoutes = require('./modules/teachers/teacher.routes');
 const feeRoutes = require('./modules/fees/fee.routes');
 
 
@@ -99,6 +103,7 @@ app.get(
 
 app.use(academicRoutes);
 app.use(studentApiRoutes);
+app.use(teacherApiRoutes);
 app.use('/fees', tenantMiddleware, feeRoutes);
 
 const PORT = process.env.PORT || 5000;

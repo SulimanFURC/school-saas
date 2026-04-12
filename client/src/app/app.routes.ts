@@ -2,10 +2,12 @@ import { Routes } from '@angular/router';
 
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { SuperAdminLayoutComponent } from './layout/super-admin-layout/super-admin-layout.component';
+import { adminRoleGuard } from './guards/admin-role.guard';
 import { authGuard } from './guards/auth.guard';
 import { featureGuard } from './guards/feature.guard';
 import { guestGuard } from './guards/guest.guard';
 import { superAdminGuard } from './guards/super-admin.guard';
+import { teacherRoleGuard } from './guards/teacher-role.guard';
 
 export const routes: Routes = [
   {
@@ -65,13 +67,14 @@ export const routes: Routes = [
     children: [
       {
         path: '',
+        canActivate: [adminRoleGuard],
         loadComponent: () =>
           import('./modules/home/home.component').then((m) => m.HomeComponent),
         data: { title: 'Dashboard' },
       },
       {
         path: 'students/register',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/students/student-register/student-register.component').then(
             (m) => m.StudentRegisterComponent
@@ -80,7 +83,7 @@ export const routes: Routes = [
       },
       {
         path: 'students/promote',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/students/student-promote/student-promote.component').then(
             (m) => m.StudentPromoteComponent
@@ -89,7 +92,7 @@ export const routes: Routes = [
       },
       {
         path: 'students/:id/edit',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/students/student-register/student-register.component').then(
             (m) => m.StudentRegisterComponent
@@ -98,7 +101,7 @@ export const routes: Routes = [
       },
       {
         path: 'students/:id',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/students/student-detail/student-detail.component').then(
             (m) => m.StudentDetailComponent
@@ -108,7 +111,7 @@ export const routes: Routes = [
       {
         path: 'students',
         pathMatch: 'full',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/students/student-list/student-list.component').then(
             (m) => m.StudentListComponent
@@ -116,17 +119,48 @@ export const routes: Routes = [
         data: { title: 'Students', moduleKey: 'students' },
       },
       {
-        path: 'teachers',
-        canActivate: [featureGuard],
+        path: 'teachers/me',
+        canActivate: [featureGuard, teacherRoleGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/teachers/teacher-self-profile/teacher-self-profile.component').then(
+            (m) => m.TeacherSelfProfileComponent
           ),
+        data: { title: 'My profile', moduleKey: 'teachers' },
+      },
+      {
+        path: 'teachers/new',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-form/teacher-form.component').then((m) => m.TeacherFormComponent),
+        data: { title: 'Add teacher', moduleKey: 'teachers' },
+      },
+      {
+        path: 'teachers/:id/edit',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-form/teacher-form.component').then((m) => m.TeacherFormComponent),
+        data: { title: 'Edit teacher', moduleKey: 'teachers' },
+      },
+      {
+        path: 'teachers/:id',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-detail/teacher-detail.component').then(
+            (m) => m.TeacherDetailComponent
+          ),
+        data: { title: 'Teacher details', moduleKey: 'teachers' },
+      },
+      {
+        path: 'teachers',
+        pathMatch: 'full',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-list/teacher-list.component').then((m) => m.TeacherListComponent),
         data: { title: 'Teachers', moduleKey: 'teachers' },
       },
       {
         path: 'fees/collection',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/fees/fee-collection/fee-collection.component').then(
             (m) => m.FeeCollectionComponent
@@ -135,7 +169,7 @@ export const routes: Routes = [
       },
       {
         path: 'fees/receipt/:studentId',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/fees/fee-receipt/fee-receipt.component').then((m) => m.FeeReceiptComponent),
         data: { title: 'Fee receipt', moduleKey: 'fees' },
@@ -147,21 +181,21 @@ export const routes: Routes = [
       },
       {
         path: 'classes/new',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/classes/class-form/class-form.component').then((m) => m.ClassFormComponent),
         data: { title: 'Add class', moduleKey: 'classes' },
       },
       {
         path: 'classes',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/classes/class-list/class-list.component').then((m) => m.ClassListComponent),
         data: { title: 'Classes', moduleKey: 'classes' },
       },
       {
         path: 'attendance',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./shared/placeholder-page/placeholder-page.component').then(
             (m) => m.PlaceholderPageComponent
@@ -170,7 +204,7 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
-        canActivate: [featureGuard],
+        canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./shared/placeholder-page/placeholder-page.component').then(
             (m) => m.PlaceholderPageComponent
@@ -179,6 +213,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
+        canActivate: [adminRoleGuard],
         loadComponent: () =>
           import('./shared/placeholder-page/placeholder-page.component').then(
             (m) => m.PlaceholderPageComponent
@@ -187,6 +222,7 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
+        canActivate: [adminRoleGuard],
         loadComponent: () =>
           import('./shared/placeholder-page/placeholder-page.component').then(
             (m) => m.PlaceholderPageComponent

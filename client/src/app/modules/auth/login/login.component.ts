@@ -25,7 +25,7 @@ export class LoginComponent {
 
   readonly form = this.fb.nonNullable.group({
     subdomain: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -60,6 +60,8 @@ export class LoginComponent {
           let target = '/';
           if (role === 'super_admin') {
             target = '/super-admin/tenants';
+          } else if (role === 'teacher') {
+            target = '/teachers/me';
           } else if (
             returnUrl &&
             returnUrl.startsWith('/') &&
