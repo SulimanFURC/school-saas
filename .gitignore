@@ -13,3 +13,4 @@ server/uploads/
 # Cursor IDE — local AI rules & skills (keep on machine; not shared via remote)
 .cursor/rules/
 .cursor/skills/
+.cursor/agents/
