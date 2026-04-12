@@ -15,13 +15,10 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="login-email">Email</label>
-        <input id="login-email" class="form-control" type="email" formControlName="email" autocomplete="username" />
+        <label class="form-label" for="login-email">Email or username</label>
+        <input id="login-email" class="form-control" type="text" formControlName="email" autocomplete="username" />
         @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-          <div class="invalid-feedback d-block">Email is required</div>
-        }
-        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
-          <div class="invalid-feedback d-block">Enter a valid email</div>
+          <div class="invalid-feedback d-block">Email or username is required</div>
         }
       </div>
 

@@ -1,0 +1,99 @@
+<section class="page">
+  <header class="content-area-header" aria-labelledby="teachers-page-title">
+    <div class="content-area-header__main">
+      <h1 id="teachers-page-title" class="content-area-header__title">All Teachers</h1>
+      <p class="content-area-header__subtitle">Staff directory for your school</p>
+    </div>
+    <div class="content-area-header__end">
+      <a routerLink="/teachers/new" class="btn btn-primary">Add teacher</a>
+    </div>
+  </header>
+
+  <div class="card shadow-sm border-0">
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="text-center py-5">
+        <p class="mb-2 fw-medium">No teachers found</p>
+        <p class="small text-secondary mb-3">Add a teacher to create their profile and login.</p>
+        <a routerLink="/teachers/new" class="btn btn-outline-primary">Add teacher</a>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table app-data-table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Designation</th>
+              <th scope="col">Username</th>
+              <th scope="col">Account</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.id) {
+              <tr class="row-link" (click)="openDetail(row)">
+                <td>{{ displayName(row) }}</td>
+                <td>{{ row.email }}</td>
+                <td>{{ row.designation || '—' }}</td>
+                <td>{{ row.login?.username || '—' }}</td>
+                <td>
+                  @if (row.login) {
+                    <span
+                      class="badge"
+                      [class.text-bg-success]="row.login.status === 'active'"
+                      [class.text-bg-secondary]="row.login.status !== 'active'"
+                    >
+                      {{ row.login.status }}
+                    </span>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+                  @if (row.login) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary me-1"
+                      title="Generate a new password to copy or share"
+                      (click)="generateAndShowPassword(row, $event)"
+                    >
+                      Password
+                    </button>
+                  }
+                  <a class="btn btn-sm btn-outline-secondary me-1" [routerLink]="['/teachers', row.id, 'edit']" (click)="$event.stopPropagation()">
+                    Edit
+                  </a>
+                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteRow(row, $event)">Delete</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-table-pagination-footer
+        [total]="total()"
+        [page]="page()"
+        [pageSize]="pageSize()"
+        [totalPages]="totalPages()"
+        entryLabel="teachers"
+        ariaLabel="Teachers pagination"
+        (pageChange)="setPage($event)"
+      />
+    }
+  </div>
+</section>
+
+@if (loginCredentials(); as c) {
+  <app-teacher-login-credentials-modal
+    [username]="c.username"
+    [password]="c.password"
+    [wasReset]="true"
+    (dismissed)="onCredentialsDismissed()"
+  />
+}

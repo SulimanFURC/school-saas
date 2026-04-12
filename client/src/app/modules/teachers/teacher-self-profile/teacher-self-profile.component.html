@@ -1,0 +1,92 @@
+<section class="page">
+  <header class="content-area-header mb-4">
+    <div class="content-area-header__main">
+      <h1 class="content-area-header__title">My profile</h1>
+      <p class="content-area-header__subtitle">View and update your details</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (!teacher()) {
+    <p class="text-secondary">Unable to load profile.</p>
+  } @else {
+    @let t = teacher()!;
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h2 class="h6 text-secondary">School account</h2>
+            <dl class="small mb-0">
+              <dt>Username</dt>
+              <dd>{{ t.login_user?.username || '—' }}</dd>
+              <dt>Work email</dt>
+              <dd>{{ t.email }}</dd>
+              <dt>Designation</dt>
+              <dd>{{ t.designation || '—' }}</dd>
+              <dt>Joining date</dt>
+              <dd>{{ t.joining_date || '—' }}</dd>
+              <dt>Date of birth</dt>
+              <dd>{{ t.dob || '—' }}</dd>
+              <dt>Gender</dt>
+              <dd>{{ t.gender || '—' }}</dd>
+            </dl>
+            <p class="small text-secondary mt-3 mb-0">Contact your administrator to change email, designation, or HR dates.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="card shadow-sm border-0">
+          <div class="card-header bg-transparent fw-semibold">Editable details</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="sp-fn">First name</label>
+                <input id="sp-fn" class="form-control" formControlName="first_name" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="sp-ln">Last name</label>
+                <input id="sp-ln" class="form-control" formControlName="last_name" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="sp-mob">Mobile number</label>
+                <input id="sp-mob" class="form-control" formControlName="mobile_number" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="sp-addr">Address</label>
+                <textarea id="sp-addr" class="form-control" rows="2" formControlName="address"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="sp-qual">Qualification</label>
+                <textarea id="sp-qual" class="form-control" rows="2" formControlName="qualification"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="sp-exp">Experience</label>
+                <input id="sp-exp" class="form-control" formControlName="experience" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Profile photo</label>
+                @if (photoDataUrl()) {
+                  <div class="mb-2">
+                    <img [src]="photoDataUrl()!" alt="" class="img-thumbnail" style="max-height: 120px" />
+                  </div>
+                }
+                <input type="file" class="form-control" accept="image/*" (change)="onPhotoSelected($event)" />
+                @if (photoDataUrl()) {
+                  <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhoto()">Remove photo</button>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+              {{ submitting() ? 'Saving…' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</section>

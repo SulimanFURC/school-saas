@@ -68,11 +68,38 @@ export class MainLayoutComponent {
 
   readonly navEntries = computed((): NavEntry[] => {
     const enabled = this.features.enabled();
-    return TENANT_NAV_CONFIG.filter((entry) => {
+    const role = this.auth.userRole()?.toLowerCase() ?? '';
+
+    const base = TENANT_NAV_CONFIG.filter((entry) => {
       const key = isNavGroup(entry) ? entry.moduleKey : entry.moduleKey;
       if (!key) return true;
       return enabled.has(key);
     });
+
+    if (role === 'teacher') {
+      return base
+        .filter((entry) => {
+          if (isNavGroup(entry)) {
+            return entry.moduleKey === 'teachers';
+          }
+          return entry.path === '/' || entry.path === '/teachers/me';
+        })
+        .map((entry) => {
+          if (isNavGroup(entry) && entry.moduleKey === 'teachers') {
+            return {
+              ...entry,
+              children: [{ label: 'My profile', path: '/teachers/me', icon: 'badge' }],
+            };
+          }
+          return entry;
+        });
+    }
+
+    if (role === 'student') {
+      return base.filter((entry) => !isNavGroup(entry) && (entry.path === '/' || entry.path === '/profile'));
+    }
+
+    return base;
   });
 
   /** Keys of nav groups whose submenus are expanded */
