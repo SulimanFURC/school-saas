@@ -8,6 +8,7 @@ const CATALOG = [
   { name: 'Classes', key: 'classes', group: 'academic' },
   { name: 'Attendance', key: 'attendance', group: 'academic' },
   { name: 'Fees', key: 'fees', group: 'finance' },
+  { name: 'Expenses', key: 'expenses', group: 'finance' },
   { name: 'Exams', key: 'exams', group: 'management' },
   { name: 'Results', key: 'results', group: 'management' },
   { name: 'Library', key: 'library', group: 'academic' },

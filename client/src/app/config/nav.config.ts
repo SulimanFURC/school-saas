@@ -42,12 +42,6 @@ export const TENANT_NAV_CONFIG: NavEntry[] = [
     ],
   },
   {
-    label: 'Fees',
-    icon: 'payments',
-    moduleKey: 'fees',
-    children: [{ label: 'Fee Collection', path: '/fees/collection', icon: 'payments' }],
-  },
-  {
     label: 'Class',
     icon: 'class',
     moduleKey: 'classes',
@@ -56,7 +50,15 @@ export const TENANT_NAV_CONFIG: NavEntry[] = [
       { label: 'Add new class', path: '/classes/new', icon: 'class' },
     ],
   },
+  {
+    label: 'Fees',
+    icon: 'payments',
+    moduleKey: 'fees',
+    children: [{ label: 'Fee Collection', path: '/fees/collection', icon: 'payments' }],
+  },
+  { label: 'Expenses', path: '/expenses', icon: 'receipt_long', moduleKey: 'expenses' },
   { label: 'Attendance', path: '/attendance', icon: 'event_available', moduleKey: 'attendance' },
+  { label: 'Exams', path: '/exams', icon: 'quiz', moduleKey: 'exams' },
   { label: 'Reports', path: '/reports', icon: 'assessment', moduleKey: 'reports' },
   { label: 'Settings', path: '/settings', icon: 'settings' },
 ];

@@ -180,6 +180,15 @@ export const routes: Routes = [
         redirectTo: 'fees/collection',
       },
       {
+        path: 'expenses',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./shared/placeholder-page/placeholder-page.component').then(
+            (m) => m.PlaceholderPageComponent
+          ),
+        data: { title: 'Expenses', moduleKey: 'expenses' },
+      },
+      {
         path: 'classes/new',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
@@ -201,6 +210,15 @@ export const routes: Routes = [
             (m) => m.PlaceholderPageComponent
           ),
         data: { title: 'Attendance', moduleKey: 'attendance' },
+      },
+      {
+        path: 'exams',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./shared/placeholder-page/placeholder-page.component').then(
+            (m) => m.PlaceholderPageComponent
+          ),
+        data: { title: 'Exams', moduleKey: 'exams' },
       },
       {
         path: 'reports',

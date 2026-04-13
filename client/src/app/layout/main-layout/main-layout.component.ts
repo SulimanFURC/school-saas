@@ -22,8 +22,10 @@ const NAV_ICON_MAP: Record<string, string> = {
   school: 'bi-mortarboard',
   badge: 'bi-person-badge',
   payments: 'bi-currency-dollar',
+  receipt_long: 'bi-receipt',
   class: 'bi-collection',
   event_available: 'bi-calendar-check',
+  quiz: 'bi-card-checklist',
   assessment: 'bi-graph-up',
   settings: 'bi-gear',
 };
