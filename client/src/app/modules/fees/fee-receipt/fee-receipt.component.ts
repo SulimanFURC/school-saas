@@ -3,6 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 
+import { ButtonModule } from 'primeng/button';
+import { MessageModule } from 'primeng/message';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+
 import { BrandingService } from '../../../services/branding.service';
 import { FeeCollection, FeeService } from '../../../services/fee.service';
 import {
@@ -14,7 +20,16 @@ import { ToastService } from '../../../services/toast.service';
 @Component({
   selector: 'app-fee-receipt',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [
+    CommonModule,
+    RouterLink,
+    DatePipe,
+    ButtonModule,
+    ProgressSpinnerModule,
+    TableModule,
+    MessageModule,
+    TagModule,
+  ],
   templateUrl: './fee-receipt.component.html',
   styleUrl: './fee-receipt.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,7 +83,8 @@ export class FeeReceiptComponent {
 
   readonly latestFee = computed(() => {
     const list = this.fees();
-    return list.length ? list[0] : null;
+    if (!list.length) return null;
+    return list.find((f) => f.is_latest) ?? list[0];
   });
 
   constructor() {
@@ -96,6 +112,19 @@ export class FeeReceiptComponent {
         this.loading.set(false);
       },
     });
+  }
+
+  statusSeverity(status: string | undefined): 'success' | 'warn' | 'danger' | 'secondary' {
+    switch (status) {
+      case 'Paid':
+        return 'success';
+      case 'Pending':
+        return 'warn';
+      case 'Unpaid':
+        return 'danger';
+      default:
+        return 'secondary';
+    }
   }
 
   formatMoney(n: number): string {

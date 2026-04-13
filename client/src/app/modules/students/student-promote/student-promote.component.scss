@@ -33,39 +33,6 @@ $sp-control-radius: 10px;
   }
 }
 
-.sp-page-header__main {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.sp-page-header__icon {
-  flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #4f8cff, #2563eb);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.75rem;
-  line-height: 1;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
-}
-
-.sp-page-header__title {
-  color: $sp-title !important;
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
-}
-
-.sp-page-header__subtitle {
-  color: $sp-subtitle !important;
-  max-width: 40rem;
-}
-
 /* Cards */
 .sp-card {
   background: #fff;
@@ -461,9 +428,7 @@ html[data-bs-theme='dark'] .sp-card {
   box-shadow: none;
 }
 
-html.theme-dark .sp-page-header__title,
 html.theme-dark .sp-card__title,
-html[data-bs-theme='dark'] .sp-page-header__title,
 html[data-bs-theme='dark'] .sp-card__title {
   color: var(--bs-body-color) !important;
 }

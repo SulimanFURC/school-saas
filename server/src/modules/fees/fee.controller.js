@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const FeeCollection = require('./feeCollection.model');
 const Student = require('../students/student.model');
 const StudentEnrollment = require('../students/studentEnrollment.model');
@@ -69,11 +69,31 @@ function classNameFromEnrollment(ePlain) {
   return cls ? cls.name : null;
 }
 
+/**
+ * Next invoice for INV-{calendarYear}-{6-digit-seq} per tenant.
+ * Uses max existing numeric suffix (not row count) so deletes / gaps do not reuse numbers.
+ * Concurrent creates can still collide; callers should retry on SequelizeUniqueConstraintError.
+ */
 async function generateInvoiceNumber(tenantId) {
-  const count = await FeeCollection.count({ where: { tenant_id: tenantId } });
-  const year = new Date().getFullYear();
-  const seq = String(count + 1).padStart(6, '0');
-  return `INV-${year}-${seq}`;
+  const calendarYear = new Date().getFullYear();
+  const likePattern = `INV-${calendarYear}-%`;
+  const rows = await FeeCollection.sequelize.query(
+    `SELECT COALESCE(MAX((SUBSTRING(invoice_number FROM '[0-9]+$'))::INTEGER), 0) AS max_seq
+     FROM fee_collections
+     WHERE tenant_id = :tenantId
+       AND invoice_number LIKE :likePattern
+       AND invoice_number ~ '^INV-[0-9]{4}-[0-9]+$'`,
+    {
+      replacements: { tenantId, likePattern },
+      type: QueryTypes.SELECT,
+    }
+  );
+  const maxSeq = Number(rows[0]?.max_seq ?? 0);
+  const next = maxSeq + 1;
+  if (next > 999999) {
+    throw new Error('Invoice sequence overflow for calendar year');
+  }
+  return `INV-${calendarYear}-${String(next).padStart(6, '0')}`;
 }
 
 exports.create = async (req, res) => {
@@ -138,12 +158,11 @@ exports.create = async (req, res) => {
       });
     }
 
-    const invoice_number = await generateInvoiceNumber(tenantId);
     const student_name = displayNameFromStudent(student) || student.admission_no;
     const class_name = classNameFromEnrollment(cePlain);
     const roll_number = cePlain.roll_number != null ? cePlain.roll_number : null;
 
-    const feeRecord = await FeeCollection.create({
+    const buildCreatePayload = (invoice_number) => ({
       tenant_id: tenantId,
       student_id: student.id,
       invoice_number,
@@ -163,6 +182,32 @@ exports.create = async (req, res) => {
       notes: notes != null && String(notes).trim() !== '' ? String(notes).trim() : null,
       collected_by_user_id: req.user.userId,
     });
+
+    const maxInvoiceAttempts = 15;
+    let feeRecord;
+    let invoice_number;
+    for (let attempt = 0; attempt < maxInvoiceAttempts; attempt++) {
+      invoice_number = await generateInvoiceNumber(tenantId);
+      try {
+        feeRecord = await FeeCollection.create(buildCreatePayload(invoice_number));
+        break;
+      } catch (createErr) {
+        const isInvoiceDup =
+          createErr.name === 'SequelizeUniqueConstraintError' &&
+          createErr.fields &&
+          Object.prototype.hasOwnProperty.call(createErr.fields, 'invoice_number');
+        if (isInvoiceDup && attempt < maxInvoiceAttempts - 1) {
+          continue;
+        }
+        throw createErr;
+      }
+    }
+
+    if (!feeRecord) {
+      return res.status(409).json({
+        message: 'Could not allocate a unique invoice number; please try again',
+      });
+    }
 
     res.status(201).json({
       message: 'Fee collected successfully',
@@ -261,7 +306,11 @@ exports.getByStudent = async (req, res) => {
     }
     const rows = await FeeCollection.findAll({
       where: { tenant_id: tenantId, student_id: studentId },
-      order: [['collection_date', 'DESC']],
+      // Latest = most recently created row for this student (not collection_date).
+      order: [
+        ['created_at', 'DESC'],
+        ['id', 'DESC'],
+      ],
     });
     const data = rows.map((r, i) => {
       const plain = r.get({ plain: true });

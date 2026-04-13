@@ -1,91 +1,144 @@
+<p-toast position="top-right" />
+<p-confirmdialog />
+<p-menu
+  #rowActionMenu
+  [model]="rowActionMenuModel"
+  [popup]="true"
+  appendTo="body"
+  styleClass="teacher-row-actions-menu"
+/>
+
 <section class="page">
-  <header class="content-area-header" aria-labelledby="teachers-page-title">
-    <div class="content-area-header__main">
-      <h1 id="teachers-page-title" class="content-area-header__title">All Teachers</h1>
-      <p class="content-area-header__subtitle">Staff directory for your school</p>
+  <header class="content-area-header sp-page-header" aria-labelledby="teachers-page-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-person-badge-fill"></i>
+      </div>
+      <div>
+        <h1 id="teachers-page-title" class="content-area-header__title sp-page-header__title">All Teachers</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Staff directory for your school</p>
+      </div>
     </div>
-    <div class="content-area-header__end">
-      <a routerLink="/teachers/new" class="btn btn-primary">Add teacher</a>
+    <div class="content-area-header__end d-flex flex-wrap align-items-center justify-content-end gap-2">
+      <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/teachers" class="content-area-header__crumb content-area-header__crumb--parent">Teachers</a>
+        <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        <span class="content-area-header__crumb content-area-header__crumb--current">All Teachers</span>
+      </nav>
     </div>
   </header>
 
   <div class="card shadow-sm border-0">
-    @if (loading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+    <p-table
+      [value]="sortedRows()"
+      [lazy]="true"
+      [lazyLoadOnInit]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [first]="firstIndex()"
+      [totalRecords]="total()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [loading]="loading()"
+      [showLoader]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template pTemplate="caption">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-1">
+          <span class="fw-semibold">Teacher records</span>
+          <div class="d-flex align-items-center gap-2">
+            <p-iconfield iconPosition="left" class="flex-grow-1">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="search"
+                placeholder="Search teachers…"
+                autocomplete="off"
+                class="w-100"
+                (input)="onSearchInput($any($event.target).value)"
+              />
+            </p-iconfield>
+            <p-button label="Add teacher" icon="pi pi-plus" routerLink="/teachers/new" />
+          </div>
         </div>
-      </div>
-    } @else if (rows().length === 0) {
-      <div class="text-center py-5">
-        <p class="mb-2 fw-medium">No teachers found</p>
-        <p class="small text-secondary mb-3">Add a teacher to create their profile and login.</p>
-        <a routerLink="/teachers/new" class="btn btn-outline-primary">Add teacher</a>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table class="table app-data-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Designation</th>
-              <th scope="col">Username</th>
-              <th scope="col">Account</th>
-              <th scope="col" class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track row.id) {
-              <tr class="row-link" (click)="openDetail(row)">
-                <td>{{ displayName(row) }}</td>
-                <td>{{ row.email }}</td>
-                <td>{{ row.designation || '—' }}</td>
-                <td>{{ row.login?.username || '—' }}</td>
-                <td>
-                  @if (row.login) {
-                    <span
-                      class="badge"
-                      [class.text-bg-success]="row.login.status === 'active'"
-                      [class.text-bg-secondary]="row.login.status !== 'active'"
-                    >
-                      {{ row.login.status }}
-                    </span>
-                  } @else {
-                    —
-                  }
-                </td>
-                <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
-                  @if (row.login) {
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-primary me-1"
-                      title="Generate a new password to copy or share"
-                      (click)="generateAndShowPassword(row, $event)"
-                    >
-                      Password
-                    </button>
-                  }
-                  <a class="btn btn-sm btn-outline-secondary me-1" [routerLink]="['/teachers', row.id, 'edit']" (click)="$event.stopPropagation()">
-                    Edit
-                  </a>
-                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteRow(row, $event)">Delete</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <app-table-pagination-footer
-        [total]="total()"
-        [page]="page()"
-        [pageSize]="pageSize()"
-        [totalPages]="totalPages()"
-        entryLabel="teachers"
-        ariaLabel="Teachers pagination"
-        (pageChange)="setPage($event)"
-      />
-    }
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" [attr.aria-sort]="sortAria('name')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+              Name
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('name')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('email')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('email')">
+              Email
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('email')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('designation')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('designation')">
+              Designation
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('designation')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('username')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('username')">
+              Username
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('username')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('account')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('account')">
+              Account
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('account')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" class="text-end">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr class="row-link" (click)="openDetail(row)">
+          <td>{{ displayName(row) }}</td>
+          <td>{{ row.email }}</td>
+          <td>{{ row.designation || '—' }}</td>
+          <td>{{ row.login?.username || '—' }}</td>
+          <td>
+            <p-tag [value]="accountLabel(row)" [severity]="accountSeverity(row)" />
+          </td>
+          <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+            <p-button
+              type="button"
+              icon="pi pi-ellipsis-v"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              ariaLabel="Open teacher actions menu"
+              (onClick)="openRowActionMenu($event, row)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty text-center py-5">
+              <p class="mb-2 fw-medium">No teachers found</p>
+              <p class="small text-secondary mb-3">
+                Add a teacher to create their profile and login.
+              </p>
+              <p-button label="Add teacher" icon="pi pi-plus" routerLink="/teachers/new" [outlined]="true" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </section>
 

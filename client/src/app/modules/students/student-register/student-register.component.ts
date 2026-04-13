@@ -1,4 +1,12 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -11,9 +19,19 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DatePickerModule } from 'primeng/datepicker';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { Textarea as PrimeTextarea } from 'primeng/textarea';
+import { SelectModule } from 'primeng/select';
+import { ToastModule } from 'primeng/toast';
+
 import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
 import { StudentService, resolveStudentFirstLast } from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
 
 const BLOOD_OPTIONS = [
   'A+',
@@ -44,6 +62,40 @@ function optionalLoginPasswordValidator(control: AbstractControl): ValidationErr
 
 const PHOTO_ACCEPT = 'image/png,image/jpeg,image/jpg';
 
+const GUARDIAN_TYPE_OPTIONS = [
+  { label: 'Father', value: 'father' },
+  { label: 'Mother', value: 'mother' },
+  { label: 'Other', value: 'other' },
+] as const;
+
+const GENDER_OPTIONS: { label: string; value: string }[] = [
+  { label: '—', value: '' },
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+];
+
+function parseYmdToLocalDate(ymd: string): Date | null {
+  const parts = ymd.trim().split('-').map((p) => Number(p));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  const [y, m, d] = parts;
+  const dt = new Date(y, m - 1, d);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+function formatDobForApi(v: Date | string | null | undefined): string | undefined {
+  if (v == null || v === '') return undefined;
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) return undefined;
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(v).trim();
+  return s ? s.slice(0, 10) : undefined;
+}
+
 function readFileAsBase64Payload(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -59,9 +111,24 @@ function readFileAsBase64Payload(file: File): Promise<string> {
 
 @Component({
   selector: 'app-student-register',
-  imports: [FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    CardModule,
+    ButtonModule,
+    InputTextModule,
+    PrimeTextarea,
+    SelectModule,
+    DatePickerModule,
+    InputNumberModule,
+    CheckboxModule,
+    ToastModule,
+  ],
+  providers: [MessageService],
   templateUrl: './student-register.component.html',
   styleUrl: './student-register.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentRegisterComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -69,9 +136,11 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
   private students = inject(StudentService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private toast = inject(ToastService);
+  private messages = inject(MessageService);
 
   readonly bloodOptions = BLOOD_OPTIONS;
+  readonly guardianTypeOptions: { label: string; value: string }[] = [...GUARDIAN_TYPE_OPTIONS];
+  readonly genderOptions = GENDER_OPTIONS;
 
   /** Set when route is `/students/:id/edit` */
   readonly editStudentId = signal<string | null>(null);
@@ -91,7 +160,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
     first_name: ['', [Validators.required, Validators.maxLength(100)]],
     last_name: ['', [Validators.maxLength(100)]],
     gender: [''],
-    dob: [''],
+    dob: [null as Date | null],
     phone: ['', [Validators.maxLength(20)]],
     email: ['', [optionalEmailValidator]],
   });
@@ -176,7 +245,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
     }
     const ok = /^image\/(png|jpeg|jpg)$/i.test(file.type);
     if (!ok) {
-      this.toast.open('Please choose a PNG or JPEG image', 'Dismiss', { duration: 4000 });
+      this.notifyError('Please choose a PNG or JPEG image', 4000);
       input.value = '';
       this.photoFile = null;
       this.revokeLocalPreview();
@@ -215,7 +284,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           if (student && typeof student === 'object') {
             this.applyStudentData(student as Record<string, unknown>);
           } else {
-            this.toast.open('Student not found', 'Dismiss', { duration: 4000 });
+            this.notifyError('Student not found', 4000);
             void this.router.navigate(['/students']);
           }
         }
@@ -223,7 +292,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       },
       error: (e) => {
         this.loadingEdit.set(false);
-        this.toast.open(e.error?.message || 'Failed to load form data', 'Dismiss', { duration: 5000 });
+        this.notifyError(e.error?.message || 'Failed to load form data', 5000);
         if (editId) void this.router.navigate(['/students']);
       },
     });
@@ -285,7 +354,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       first_name: fn,
       last_name: ln,
       gender: String(d['gender'] ?? ''),
-      dob: dobStr,
+      dob: dobStr ? parseYmdToLocalDate(dobStr) : null,
       phone: String(d['phone'] ?? ''),
       email: String(d['email'] ?? ''),
     });
@@ -460,6 +529,33 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
     return [];
   }
 
+  categorySelectItems(): { label: string; value: string }[] {
+    return this.categoryOptions().map((v) => ({ label: v, value: v }));
+  }
+
+  bloodSelectItems(): { label: string; value: string }[] {
+    return [{ label: '—', value: '' }, ...this.bloodOptions.map((b) => ({ label: b, value: b }))];
+  }
+
+  get yearSelectOptions(): { id: number; label: string }[] {
+    return this.years.map((y) => ({
+      id: y.id,
+      label: y.name != null && String(y.name).trim() ? String(y.name) : `Year ${y.id}`,
+    }));
+  }
+
+  private notifyError(detail: string, life: number): void {
+    this.messages.add({ severity: 'error', summary: 'Error', detail: String(detail), life });
+  }
+
+  private notifySuccess(detail: string, life: number): void {
+    this.messages.add({ severity: 'success', summary: 'Success', detail: String(detail), life });
+  }
+
+  private notifyInfo(detail: string, life: number): void {
+    this.messages.add({ severity: 'info', summary: 'Notice', detail: String(detail), life });
+  }
+
   guardianType(): string {
     return String(this.s2.get('guardian_type')?.value || 'father');
   }
@@ -481,11 +577,11 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       for (const fg of order) {
         if (fg.invalid) {
           const m = this.firstInvalidMessage(fg);
-          this.toast.open(m || 'Please complete required fields', 'Dismiss', { duration: 5000 });
+          this.notifyError(m || 'Please complete required fields', 5000);
           return;
         }
       }
-      this.toast.open('Please complete required fields', 'Dismiss', { duration: 4000 });
+      this.notifyError('Please complete required fields', 4000);
       return;
     }
 
@@ -531,7 +627,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           photo_base64 = await readFileAsBase64Payload(file);
         } catch {
           this.submitting = false;
-          this.toast.open('Could not read photo file', 'Dismiss', { duration: 4000 });
+          this.notifyError('Could not read photo file', 4000);
           return;
         }
       }
@@ -542,7 +638,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           first_name: v1.first_name.trim(),
           last_name: v1.last_name?.trim() || undefined,
           gender: v1.gender || undefined,
-          dob: v1.dob || undefined,
+          dob: formatDobForApi(v1.dob),
           phone: v1.phone || undefined,
           email: v1.email || undefined,
           blood_group: m.blood_group || undefined,
@@ -575,13 +671,13 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
               const pw = res.login.password ? ` Password: ${res.login.password}` : '';
               msg = `Login: ${res.login.username}${pw}. Account is inactive until activated.`;
             }
-            this.toast.open(msg, 'Dismiss', { duration: 12000 });
+            this.notifyInfo(msg, 12000);
             if (st?.id) void this.router.navigate(['/students', st.id]);
             else void this.router.navigate(['/students']);
           },
           error: (e) => {
             this.submitting = false;
-            this.toast.open(e.error?.message || 'Registration failed', 'Dismiss', { duration: 6000 });
+            this.notifyError(e.error?.message || 'Registration failed', 6000);
           },
         });
     })();
@@ -600,11 +696,11 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       for (const fg of order) {
         if (fg.invalid) {
           const m = this.firstInvalidMessage(fg);
-          this.toast.open(m || 'Please complete required fields', 'Dismiss', { duration: 5000 });
+          this.notifyError(m || 'Please complete required fields', 5000);
           return;
         }
       }
-      this.toast.open('Please complete required fields', 'Dismiss', { duration: 4000 });
+      this.notifyError('Please complete required fields', 4000);
       return;
     }
 
@@ -650,7 +746,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       first_name: v1.first_name.trim(),
       last_name: v1.last_name?.trim() || undefined,
       gender: v1.gender || undefined,
-      dob: v1.dob || undefined,
+      dob: formatDobForApi(v1.dob),
       phone: v1.phone || undefined,
       email: v1.email || undefined,
       blood_group: m.blood_group || undefined,
@@ -688,7 +784,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           body['photo_base64'] = await readFileAsBase64Payload(file);
         } catch {
           this.submitting = false;
-          this.toast.open('Could not read photo file', 'Dismiss', { duration: 4000 });
+          this.notifyError('Could not read photo file', 4000);
           return;
         }
       }
@@ -696,12 +792,12 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       this.students.update(id, body).subscribe({
         next: () => {
           this.submitting = false;
-          this.toast.open('Student updated', 'Dismiss', { duration: 4000 });
+          this.notifySuccess('Student updated', 4000);
           void this.router.navigate(['/students', id]);
         },
         error: (e) => {
           this.submitting = false;
-          this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 6000 });
+          this.notifyError(e.error?.message || 'Update failed', 6000);
         },
       });
     })();

@@ -91,6 +91,16 @@ export const routes: Routes = [
         data: { title: 'Promote students', moduleKey: 'students' },
       },
       {
+        path: 'students',
+        pathMatch: 'full',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/students/student-list/student-list.component').then(
+            (m) => m.StudentListComponent
+          ),
+        data: { title: 'Students', moduleKey: 'students' },
+      },
+      {
         path: 'students/:id/edit',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
@@ -107,16 +117,6 @@ export const routes: Routes = [
             (m) => m.StudentDetailComponent
           ),
         data: { title: 'Student details', moduleKey: 'students' },
-      },
-      {
-        path: 'students',
-        pathMatch: 'full',
-        canActivate: [featureGuard, adminRoleGuard],
-        loadComponent: () =>
-          import('./modules/students/student-list/student-list.component').then(
-            (m) => m.StudentListComponent
-          ),
-        data: { title: 'Students', moduleKey: 'students' },
       },
       {
         path: 'teachers/me',

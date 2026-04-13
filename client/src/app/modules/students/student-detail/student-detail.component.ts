@@ -1,9 +1,15 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { take } from 'rxjs';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
 
-import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { StudentService, resolveStudentDisplayName } from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
 
 /** Tab ids for `@switch` panels — add entries here when adding tabs (order = bar order). */
 export type StudentDetailTabId = 'basic' | 'guardian' | 'academic' | 'fees';
@@ -22,34 +28,38 @@ function initialsFromName(name: string): string {
 
 @Component({
   selector: 'app-student-detail',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    CardModule,
+    ButtonModule,
+    TagModule,
+    TableModule,
+    ToastModule,
+    ConfirmDialogModule,
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './student-detail.component.html',
   styleUrl: './student-detail.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private students = inject(StudentService);
-  private toast = inject(ToastService);
-  private confirmDialog = inject(ConfirmDialogService);
-
+  private messages = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   readonly activeTab = signal(0);
 
-  /**
-   * Visible tabs (bar + slider width = 100% / length). To add Guardian later:
-   * insert `{ id: 'guardian', label: 'Guardian' }` and a matching `@case` in the template.
-   */
   readonly tabs: readonly StudentDetailTab[] = [
     { id: 'basic', label: 'Basic info' },
     { id: 'academic', label: 'Academic history' },
     { id: 'fees', label: 'Fees' },
   ];
 
-  loading = true;
+  readonly loading = signal(true);
   studentId = '';
   student: Record<string, unknown> | null = null;
   enrollments: unknown[] = [];
 
-  /** Resolved image URL (http(s), or data URL from stored base64). */
   readonly profilePhotoSrc = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -59,12 +69,12 @@ export class StudentDetailComponent implements OnInit {
     this.students.getById(id).subscribe({
       next: (data) => {
         this.student = data;
-        this.loading = false;
+        this.loading.set(false);
         this.setupProfilePhoto();
       },
-      error: (e) => {
-        this.loading = false;
-        this.toast.open(e.error?.message || 'Failed to load student', 'Dismiss', { duration: 5000 });
+      error: (e: { error?: { message?: string } }) => {
+        this.loading.set(false);
+        this.notifyError(e.error?.message || 'Failed to load student', 5000);
       },
     });
     this.students.enrollments(id).subscribe({
@@ -94,13 +104,11 @@ export class StudentDetailComponent implements OnInit {
     this.activeTab.set(Math.max(0, Math.min(i, max)));
   }
 
-  /** Current tab id for `@switch` panels. */
   activeTabId(): StudentDetailTabId {
     const i = this.activeTab();
     return this.tabs[i]?.id ?? this.tabs[0].id;
   }
 
-  /** Moves the underline indicator (width = 100% / tabs.length). */
   sliderTransform(): string {
     return `translateX(${this.activeTab() * 100}%)`;
   }
@@ -117,6 +125,17 @@ export class StudentDetailComponent implements OnInit {
 
   chipStatus(s: Record<string, unknown>): string {
     return String(s['status'] ?? '—');
+  }
+
+  statusSeverity(status: string): 'success' | 'warn' | 'danger' | 'secondary' | 'info' | 'contrast' {
+    const key = status?.toLowerCase() ?? '';
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'secondary' | 'info' | 'contrast'> = {
+      active: 'success',
+      inactive: 'secondary',
+      suspended: 'warn',
+      graduated: 'info',
+    };
+    return map[key] ?? 'secondary';
   }
 
   dobDisplay(v: unknown): string {
@@ -140,40 +159,52 @@ export class StudentDetailComponent implements OnInit {
         const msg = d.has_account
           ? `Username: ${d.username || '—'} · status: ${d.status || '—'}`
           : 'No student login account';
-        this.toast.open(msg, 'Dismiss', { duration: 6000 });
+        this.notifyInfo(msg, 6000);
       },
-      error: (e) => this.toast.open(e.error?.message || 'Failed', 'Dismiss', { duration: 4000 }),
+      error: (e: { error?: { message?: string } }) =>
+        this.notifyError(e.error?.message || 'Failed', 4000),
     });
   }
 
   suspend(): void {
-    void this.runSuspend();
+    this.runSuspend();
   }
 
-  private async runSuspend(): Promise<void> {
+  private runSuspend(): void {
     if (!this.studentId || !this.student) return;
 
-    const ok = await this.confirmDialog.confirm({
-      title: 'Suspend student?',
+    this.confirmationService.confirm({
+      header: 'Suspend student?',
       message: 'Mark this student as suspended? They may lose access until reactivated.',
-      variant: 'primary',
-      confirmLabel: 'Suspend',
-      cancelLabel: 'Cancel',
-      ariaIdPrefix: 'student-suspend',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Suspend',
+      rejectLabel: 'Cancel',
+      accept: () => {
+        this.students
+          .update(this.studentId, { status: 'suspended' })
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.notifySuccess('Updated', 3000);
+              this.student = { ...this.student!, status: 'suspended' };
+            },
+            error: (e: { error?: { message?: string } }) => {
+              this.notifyError(e.error?.message || 'Update failed', 5000);
+            },
+          });
+      },
     });
-    if (!ok) return;
+  }
 
-    this.confirmDialog.setBusy(true);
-    this.students.update(this.studentId, { status: 'suspended' }).subscribe({
-      next: () => {
-        this.confirmDialog.complete();
-        this.toast.open('Updated', 'Dismiss', { duration: 3000 });
-        this.student = { ...this.student!, status: 'suspended' };
-      },
-      error: (e) => {
-        this.confirmDialog.complete();
-        this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 });
-      },
-    });
+  private notifyError(detail: string, life: number): void {
+    this.messages.add({ severity: 'error', summary: 'Error', detail: String(detail), life });
+  }
+
+  private notifySuccess(detail: string, life: number): void {
+    this.messages.add({ severity: 'success', summary: 'Success', detail: String(detail), life });
+  }
+
+  private notifyInfo(detail: string, life: number): void {
+    this.messages.add({ severity: 'info', summary: 'Login', detail: String(detail), life });
   }
 }

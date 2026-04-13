@@ -1,125 +1,229 @@
-<section class="page">
-  <header class="content-area-header mb-4">
-    <div class="content-area-header__main">
-      <h1 class="content-area-header__title">{{ pageTitle() }}</h1>
-      <p class="content-area-header__subtitle">Staff profile and login</p>
+<p-toast position="top-right" />
+
+<section class="page page--teacher-form">
+  <header class="content-area-header sp-page-header" aria-labelledby="teacher-form-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-person-fill-add"></i>
+      </div>
+      <div>
+        <h1 id="teacher-form-title" class="content-area-header__title sp-page-header__title">{{ pageTitle() }}</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Staff profile and login</p>
+      </div>
     </div>
     <div class="content-area-header__end">
-      <a routerLink="/teachers" class="btn btn-outline-secondary">Back to list</a>
+      <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+        <a routerLink="/teachers" class="content-area-header__crumb content-area-header__crumb--parent">Teachers</a>
+        <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        <span class="content-area-header__crumb content-area-header__crumb--current">{{ pageTitle() }}</span>
+      </nav>
     </div>
   </header>
 
-  @if (loading()) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
-    </div>
-  } @else {
-    <form [formGroup]="form" (ngSubmit)="submit()" class="card shadow-sm border-0">
-      <div class="card-body">
+  <div class="position-relative">
+    @if (loading()) {
+      <div
+        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-body rounded z-2"
+        style="--bs-bg-opacity: 0.85"
+      >
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }
+
+    <p-card styleClass="shadow-sm border-0">
+      <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label" for="tf-fn">First name</label>
-            <input id="tf-fn" class="form-control" formControlName="first_name" autocomplete="given-name" />
+            <input
+              id="tf-fn"
+              pInputText
+              class="w-100"
+              formControlName="first_name"
+              autocomplete="given-name"
+              [class.p-invalid]="form.controls.first_name.touched && form.controls.first_name.invalid"
+            />
             @if (form.controls.first_name.touched && form.controls.first_name.invalid) {
-              <div class="invalid-feedback d-block">Required</div>
+              <small class="p-error d-block">Required</small>
             }
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-ln">Last name</label>
-            <input id="tf-ln" class="form-control" formControlName="last_name" autocomplete="family-name" />
+            <input
+              id="tf-ln"
+              pInputText
+              class="w-100"
+              formControlName="last_name"
+              autocomplete="family-name"
+              [class.p-invalid]="form.controls.last_name.touched && form.controls.last_name.invalid"
+            />
             @if (form.controls.last_name.touched && form.controls.last_name.invalid) {
-              <div class="invalid-feedback d-block">Required</div>
+              <small class="p-error d-block">Required</small>
             }
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-em">Email</label>
-            <input id="tf-em" class="form-control" type="email" formControlName="email" autocomplete="email" />
+            <input
+              id="tf-em"
+              pInputText
+              type="email"
+              class="w-100"
+              formControlName="email"
+              autocomplete="email"
+              [class.p-invalid]="form.controls.email.touched && form.controls.email.invalid"
+            />
             @if (form.controls.email.touched && form.controls.email.invalid) {
-              <div class="invalid-feedback d-block">Valid email required</div>
+              <small class="p-error d-block">Valid email required</small>
             }
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-mob">Mobile number</label>
-            <input id="tf-mob" class="form-control" formControlName="mobile_number" autocomplete="tel" />
+            <input id="tf-mob" pInputText class="w-100" formControlName="mobile_number" autocomplete="tel" />
           </div>
           <div class="col-12">
             <label class="form-label" for="tf-addr">Address</label>
-            <textarea id="tf-addr" class="form-control" rows="2" formControlName="address"></textarea>
+            <textarea
+              id="tf-addr"
+              pTextarea
+              rows="2"
+              class="w-100"
+              formControlName="address"
+              [autoResize]="true"
+            ></textarea>
           </div>
           <div class="col-md-4">
             <label class="form-label" for="tf-join">Joining date</label>
-            <input id="tf-join" class="form-control" type="date" formControlName="joining_date" />
+            <p-datepicker
+              inputId="tf-join"
+              formControlName="joining_date"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-100"
+            />
           </div>
           <div class="col-md-4">
             <label class="form-label" for="tf-dob">Date of birth</label>
-            <input id="tf-dob" class="form-control" type="date" formControlName="dob" />
+            <p-datepicker
+              inputId="tf-dob"
+              formControlName="dob"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-100"
+            />
           </div>
           <div class="col-md-4">
             <label class="form-label" for="tf-gen">Gender</label>
-            <select id="tf-gen" class="form-select" formControlName="gender">
-              <option value="">—</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+            <p-select
+              inputId="tf-gen"
+              formControlName="gender"
+              [options]="genderOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="—"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-100"
+            />
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-des">Designation</label>
-            <input id="tf-des" class="form-control" formControlName="designation" />
+            <input id="tf-des" pInputText class="w-100" formControlName="designation" />
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-exp">Experience</label>
-            <input id="tf-exp" class="form-control" formControlName="experience" placeholder="e.g. 5 years" />
+            <input id="tf-exp" pInputText class="w-100" formControlName="experience" placeholder="e.g. 5 years" />
           </div>
           <div class="col-12">
             <label class="form-label" for="tf-qual">Qualification</label>
-            <textarea id="tf-qual" class="form-control" rows="2" formControlName="qualification"></textarea>
+            <textarea
+              id="tf-qual"
+              pTextarea
+              rows="2"
+              class="w-100"
+              formControlName="qualification"
+              [autoResize]="true"
+            ></textarea>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Profile photo</label>
+            <span class="form-label d-block" id="tf-photo-lbl">Profile photo</span>
             @if (photoDataUrl()) {
               <div class="mb-2">
                 <img [src]="photoDataUrl()!" alt="" class="img-thumbnail" style="max-height: 120px" />
               </div>
             }
-            <input type="file" class="form-control" accept="image/*" (change)="onPhotoSelected($event)" />
+            <input
+              id="tf-photo"
+              class="visually-hidden"
+              type="file"
+              [accept]="photoInputAccept"
+              (change)="onPhotoSelected($event)"
+              aria-labelledby="tf-photo-lbl"
+            />
+            <label for="tf-photo" class="btn btn-outline-secondary btn-sm">Choose file</label>
             @if (photoDataUrl() || editId()) {
-              <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhoto()">Remove photo</button>
+              <p-button
+                type="button"
+                label="Remove photo"
+                [text]="true"
+                size="small"
+                styleClass="px-0 d-block mt-1"
+                severity="danger"
+                (onClick)="clearPhoto()"
+              />
             }
           </div>
           <div class="col-md-6">
             <label class="form-label" for="tf-st">Account status</label>
-            <select id="tf-st" class="form-select" formControlName="account_status">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <p-select
+              inputId="tf-st"
+              formControlName="account_status"
+              [options]="accountStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              styleClass="w-100"
+            />
           </div>
           @if (!editId()) {
             <div class="col-12">
               <label class="form-label" for="tf-pw">Initial password (optional)</label>
               <input
                 id="tf-pw"
-                class="form-control"
+                pInputText
                 type="password"
+                class="w-100"
                 formControlName="login_password"
                 autocomplete="new-password"
+                [class.p-invalid]="form.controls.login_password.touched && form.controls.login_password.invalid"
               />
-              <div class="form-text">Leave blank to auto-generate a secure password. You can copy it from the dialog after save.</div>
+              <div class="form-text">
+                Leave blank to auto-generate a secure password. You can copy it from the dialog after save.
+              </div>
               @if (form.controls.login_password.touched && form.controls.login_password.invalid) {
-                <div class="invalid-feedback d-block">Min. 6 characters if set</div>
+                <small class="p-error d-block">Min. 6 characters if set</small>
               }
             </div>
           }
         </div>
-      </div>
-      <div class="card-footer bg-transparent border-0 d-flex gap-2">
-        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-          {{ submitting() ? 'Saving…' : editId() ? 'Save changes' : 'Create teacher' }}
-        </button>
-        <a routerLink="/teachers" class="btn btn-outline-secondary">Cancel</a>
-      </div>
-    </form>
-  }
+
+        <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top">
+          <p-button
+            type="submit"
+            [label]="submitting() ? 'Saving…' : editId() ? 'Save changes' : 'Create teacher'"
+            [disabled]="submitting()"
+            [loading]="submitting()"
+          />
+          <p-button label="Cancel" severity="secondary" [outlined]="true" routerLink="/teachers" />
+        </div>
+      </form>
+    </p-card>
+  </div>
 </section>
 
 @if (postCreateCredentials(); as c) {

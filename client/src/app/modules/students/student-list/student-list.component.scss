@@ -28,3 +28,11 @@
   color: var(--ds-on-surface-variant);
 }
 
+:host ::ng-deep .student-row-actions-menu__item--danger .p-menuitem-link {
+  color: var(--p-red-500, #dc3545);
+}
+
+:host ::ng-deep .student-row-actions-menu__item--danger .p-menuitem-link .p-menuitem-icon {
+  color: inherit;
+}
+

@@ -1,37 +1,79 @@
+<p-toast position="top-right" />
+<p-confirmdialog />
+
 <section class="page">
   @if (loading()) {
     <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
   } @else if (!teacher()) {
     <p class="text-secondary">Teacher not found.</p>
-    <a routerLink="/teachers" class="btn btn-outline-secondary">Back</a>
+    <p-button label="Back" severity="secondary" [outlined]="true" routerLink="/teachers" />
   } @else {
     @let t = teacher()!;
-    <header class="content-area-header mb-4">
+    <header class="content-area-header" aria-labelledby="teacher-detail-title">
       <div class="content-area-header__main">
-        <h1 class="content-area-header__title">{{ displayName(t) }}</h1>
+        <h1 id="teacher-detail-title" class="content-area-header__title">{{ displayName(t) }}</h1>
         <p class="content-area-header__subtitle">{{ t.designation || 'Teacher' }} · {{ t.email }}</p>
       </div>
-      <div class="content-area-header__end d-flex flex-wrap gap-2">
-        <a [routerLink]="['/teachers', teacherId(), 'edit']" class="btn btn-primary">Edit</a>
-        <button type="button" class="btn btn-outline-secondary" (click)="copyUsernameOnly()">Copy username</button>
-        <button type="button" class="btn btn-outline-primary" (click)="generateNewPassword()">
-          Generate new password
-        </button>
-        <label class="btn btn-outline-secondary mb-0">
-          Upload CV
-          <input type="file" class="d-none" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" (change)="onCvSelected($event)" />
-        </label>
-        <button type="button" class="btn btn-outline-danger" (click)="deleteTeacher()">Delete</button>
-        <a routerLink="/teachers" class="btn btn-link">Back to list</a>
+      <div class="content-area-header__end">
+        <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
+          <a routerLink="/teachers" class="content-area-header__crumb content-area-header__crumb--parent">Teachers</a>
+          <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          <span class="content-area-header__crumb content-area-header__crumb--current">Profile</span>
+        </nav>
+        <div class="d-flex flex-wrap gap-2 justify-content-end mt-2 mt-md-0">
+          <p-button label="Edit" icon="pi pi-pencil" [routerLink]="['/teachers', teacherId(), 'edit']" />
+          <p-button
+            type="button"
+            label="Copy username"
+            icon="pi pi-copy"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="copyUsernameOnly()"
+          />
+          <p-button
+            type="button"
+            label="New password"
+            icon="pi pi-key"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="generateNewPassword()"
+          />
+          <p-button
+            type="button"
+            label="Upload CV"
+            icon="pi pi-upload"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="cvInput.click()"
+          />
+          <p-button
+            type="button"
+            label="Delete"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            (onClick)="deleteTeacher()"
+          />
+          <p-button label="Back to list" severity="secondary" [text]="true" routerLink="/teachers" />
+        </div>
       </div>
     </header>
+    <input
+      #cvInput
+      type="file"
+      class="visually-hidden"
+      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      (change)="onCvSelected($event)"
+    />
 
     <div class="row g-4">
       <div class="col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
+        <p-card styleClass="shadow-sm border-0 h-100">
+          <div class="text-center">
             @if (photoSrc(t)) {
               <img [src]="photoSrc(t)!" class="img-fluid rounded mb-3" style="max-height: 220px" alt="" />
             } @else {
@@ -41,49 +83,47 @@
               <dt>Username</dt>
               <dd>{{ t.login_user?.username || '—' }}</dd>
               <p class="small text-secondary mt-2 mb-0">
-                The password cannot be displayed. Use <strong>Generate new password</strong> to create one you can
-                copy and share.
+                The password cannot be displayed. Use <strong>New password</strong> to create one you can copy and
+                share.
               </p>
-              <dt>Account</dt>
+              <dt class="mt-2">Account</dt>
               <dd>
-                <span class="badge" [class.text-bg-success]="t.login_user?.status === 'active'" [class.text-bg-secondary]="t.login_user?.status !== 'active'">
-                  {{ t.login_user?.status || '—' }}
-                </span>
+                <p-tag
+                  [value]="t.login_user?.status || '—'"
+                  [severity]="accountSeverity(t)"
+                />
               </dd>
             </dl>
           </div>
-        </div>
+        </p-card>
       </div>
       <div class="col-lg-8">
-        <div class="card shadow-sm border-0 mb-3">
-          <div class="card-header bg-transparent fw-semibold">Profile</div>
-          <div class="card-body">
-            <dl class="row mb-0">
-              <dt class="col-sm-4">Mobile</dt>
-              <dd class="col-sm-8">{{ t.mobile_number || '—' }}</dd>
-              <dt class="col-sm-4">Address</dt>
-              <dd class="col-sm-8">{{ t.address || '—' }}</dd>
-              <dt class="col-sm-4">Joining date</dt>
-              <dd class="col-sm-8">{{ t.joining_date || '—' }}</dd>
-              <dt class="col-sm-4">Date of birth</dt>
-              <dd class="col-sm-8">{{ t.dob || '—' }}</dd>
-              <dt class="col-sm-4">Gender</dt>
-              <dd class="col-sm-8">{{ t.gender || '—' }}</dd>
-              <dt class="col-sm-4">Qualification</dt>
-              <dd class="col-sm-8">{{ t.qualification || '—' }}</dd>
-              <dt class="col-sm-4">Experience</dt>
-              <dd class="col-sm-8">{{ t.experience || '—' }}</dd>
-              <dt class="col-sm-4">CV</dt>
-              <dd class="col-sm-8">
-                @if (cvHref(t)) {
-                  <a [href]="cvHref(t)!" target="_blank" rel="noopener">{{ t.cv_file_name || 'Download' }}</a>
-                } @else {
-                  —
-                }
-              </dd>
-            </dl>
-          </div>
-        </div>
+        <p-card header="Profile" styleClass="shadow-sm border-0 mb-3">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Mobile</dt>
+            <dd class="col-sm-8">{{ t.mobile_number || '—' }}</dd>
+            <dt class="col-sm-4">Address</dt>
+            <dd class="col-sm-8">{{ t.address || '—' }}</dd>
+            <dt class="col-sm-4">Joining date</dt>
+            <dd class="col-sm-8">{{ t.joining_date || '—' }}</dd>
+            <dt class="col-sm-4">Date of birth</dt>
+            <dd class="col-sm-8">{{ t.dob || '—' }}</dd>
+            <dt class="col-sm-4">Gender</dt>
+            <dd class="col-sm-8">{{ t.gender || '—' }}</dd>
+            <dt class="col-sm-4">Qualification</dt>
+            <dd class="col-sm-8">{{ t.qualification || '—' }}</dd>
+            <dt class="col-sm-4">Experience</dt>
+            <dd class="col-sm-8">{{ t.experience || '—' }}</dd>
+            <dt class="col-sm-4">CV</dt>
+            <dd class="col-sm-8">
+              @if (cvHref(t)) {
+                <a [href]="cvHref(t)!" target="_blank" rel="noopener">{{ t.cv_file_name || 'Download' }}</a>
+              } @else {
+                —
+              }
+            </dd>
+          </dl>
+        </p-card>
       </div>
     </div>
   }

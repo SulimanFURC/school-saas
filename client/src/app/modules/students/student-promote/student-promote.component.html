@@ -1,3 +1,5 @@
+<p-toast position="top-right" />
+
 <section class="page">
   <header class="content-area-header sp-page-header" aria-labelledby="promote-page-title">
     <div class="content-area-header__main sp-page-header__main">
@@ -15,9 +17,7 @@
     </div>
     <div class="content-area-header__end">
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
-        <a routerLink="/students" class="content-area-header__crumb content-area-header__crumb--parent"
-          >Students</a
-        >
+        <a routerLink="/students" class="content-area-header__crumb content-area-header__crumb--parent">Students</a>
         <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
         <span class="content-area-header__crumb content-area-header__crumb--current">Promote students</span>
       </nav>
@@ -26,7 +26,7 @@
 
   @if (loading()) {
     <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
+      <p-progress-spinner styleClass="mx-auto" strokeWidth="4" aria-label="Loading" />
     </div>
   } @else {
     <div class="row g-4">
@@ -45,16 +45,17 @@
             <div class="row g-3 mb-3">
               <div class="col-md-4">
                 <label class="sp-field-label">From class</label>
-                <select
-                  class="form-select sp-control"
+                <p-select
                   [formControl]="form.controls.from_class_id"
-                  (change)="onFromClassChange()"
-                >
-                  <option [ngValue]="null">— Select class —</option>
-                  @for (c of classes(); track c.id) {
-                    <option [ngValue]="c.id">{{ c.name }}</option>
-                  }
-                </select>
+                  [options]="classes()"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="— Select class —"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-100 sp-control"
+                  (onChange)="onFromClassChange()"
+                />
               </div>
               <div class="col-md-8">
                 <label class="sp-field-label d-flex align-items-center gap-1" for="promote-admission-search">
@@ -66,27 +67,22 @@
                   ></i>
                 </label>
                 <div class="d-flex flex-wrap gap-2 align-items-stretch">
-                  <div class="input-group flex-grow-1 sp-admission-input">
-                    <span class="input-group-text sp-input-icon" aria-hidden="true">
-                      <i class="bi bi-search"></i>
-                    </span>
-                    <input
-                      id="promote-admission-search"
-                      class="form-control sp-control"
-                      [formControl]="form.controls.admission_q"
-                      (keyup.enter)="searchByAdmission()"
-                      autocomplete="off"
-                      placeholder="Exact admission number"
-                    />
-                    <button
-                      type="button"
-                      class="btn sp-btn-primary"
-                      [disabled]="!admissionTrim()"
-                      (click)="searchByAdmission()"
-                    >
-                      Search
-                    </button>
-                  </div>
+                  <input
+                    id="promote-admission-search"
+                    pInputText
+                    class="flex-grow-1 sp-control"
+                    [formControl]="form.controls.admission_q"
+                    (keyup.enter)="searchByAdmission()"
+                    autocomplete="off"
+                    placeholder="Exact admission number"
+                  />
+                  <p-button
+                    type="button"
+                    label="Search"
+                    icon="pi pi-search"
+                    [disabled]="!admissionTrim()"
+                    (onClick)="searchByAdmission()"
+                  />
                 </div>
                 <div class="form-text sp-help-muted d-none d-md-block">
                   Search loads the student’s current placement (any active session).
@@ -96,47 +92,27 @@
 
             <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
               <span class="sp-selection-label">Selection mode</span>
-              <div class="btn-group sp-mode-group" role="group" aria-label="Selection mode">
-                <input
-                  type="radio"
-                  class="btn-check"
-                  name="promote-sel-mode"
-                  id="promote-sel-all"
-                  [checked]="selectionMode() === 'all'"
-                  (change)="onSelectionModeChange('all')"
+              <div class="d-flex flex-wrap gap-2" role="group" aria-label="Selection mode">
+                <p-button
+                  type="button"
+                  label="All in table"
+                  [severity]="selectionMode() === 'all' ? 'primary' : 'secondary'"
+                  [outlined]="selectionMode() !== 'all'"
+                  (onClick)="onSelectionModeChange('all')"
                 />
-                <label
-                  class="btn sp-mode-btn"
-                  [class.sp-mode-btn--active]="selectionMode() === 'all'"
-                  for="promote-sel-all"
-                  >All in table</label
-                >
-                <input
-                  type="radio"
-                  class="btn-check"
-                  name="promote-sel-mode"
-                  id="promote-sel-manual"
-                  [checked]="selectionMode() === 'manual'"
-                  (change)="onSelectionModeChange('manual')"
+                <p-button
+                  type="button"
+                  label="Choose manually"
+                  [severity]="selectionMode() === 'manual' ? 'primary' : 'secondary'"
+                  [outlined]="selectionMode() !== 'manual'"
+                  (onClick)="onSelectionModeChange('manual')"
                 />
-                <label
-                  class="btn sp-mode-btn"
-                  [class.sp-mode-btn--active]="selectionMode() === 'manual'"
-                  for="promote-sel-manual"
-                  >Choose manually</label
-                >
               </div>
               <span class="sp-selected-count ms-md-auto">
                 Selected {{ selected().size }}/{{ studentRows().length || 0 }}
               </span>
             </div>
 
-            @if (studentsTableLoading()) {
-              <div class="d-flex align-items-center gap-2 text-secondary small py-2" aria-live="polite">
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-                <span>Loading students…</span>
-              </div>
-            }
             @if (!studentsTableLoading() && studentRows().length === 0 && listEmptyHint(); as hint) {
               <p class="text-secondary small mb-0">{{ hint }}</p>
             }
@@ -149,11 +125,17 @@
                   }
                 }
               </p>
-              <div class="table-responsive sp-table-wrap">
-                <table class="table table-borderless align-middle sp-table mb-0">
-                  <thead>
+              <div class="sp-table-wrap">
+                <p-table
+                  [value]="studentRows()"
+                  [loading]="studentsTableLoading()"
+                  dataKey="id"
+                  styleClass="p-datatable-sm sp-table"
+                  [tableStyle]="{ 'min-width': '100%' }"
+                >
+                  <ng-template pTemplate="header">
                     <tr>
-                      <th class="sp-th" style="width: 44px">
+                      <th style="width: 3rem">
                         <input
                           type="checkbox"
                           class="form-check-input"
@@ -162,58 +144,57 @@
                           (click)="$event.stopPropagation()"
                         />
                       </th>
-                      <th class="sp-th">Adm. no.</th>
-                      <th class="sp-th">Student name</th>
-                      <th class="sp-th">Gender</th>
-                      <th class="sp-th text-nowrap">Date of birth</th>
-                      <th class="sp-th text-nowrap" style="width: 6.5rem">Roll</th>
+                      <th>Adm. no.</th>
+                      <th>Student name</th>
+                      <th>Gender</th>
+                      <th class="text-nowrap">Date of birth</th>
+                      <th class="text-nowrap" style="width: 6.5rem">Roll</th>
                     </tr>
-                  </thead>
-                  <tbody>
-                    @for (r of studentRows(); track r.id) {
-                      <tr
-                        class="sp-tr"
-                        [class.sp-tr--selected]="selected().has(r.id)"
-                        (click)="onRowClick($event, r.id)"
-                      >
-                        <td (click)="$event.stopPropagation()">
-                          <input
-                            type="checkbox"
-                            class="form-check-input"
-                            [checked]="selected().has(r.id)"
-                            (change)="toggle(r.id)"
-                          />
-                        </td>
-                        <td class="sp-td-mono">{{ r.admission_no }}</td>
-                        <td>
-                          <div class="d-flex align-items-center gap-2">
-                            <span class="sp-avatar" [class.sp-avatar--alt]="$even">{{ rowInitials(r) }}</span>
-                            <span class="sp-student-name">{{ r.display_name || r.full_name || '—' }}</span>
-                          </div>
-                        </td>
-                        <td>
-                          @if (r.gender) {
-                            <span class="sp-gender" [ngClass]="genderClass(r)">{{ r.gender | titlecase }}</span>
-                          } @else {
-                            <span class="sp-gender sp-gender--na">—</span>
-                          }
-                        </td>
-                        <td class="sp-td-muted">
-                          {{ r.dob && r.dob.length >= 10 ? r.dob.slice(0, 10) : '—' }}
-                        </td>
-                        <td (click)="$event.stopPropagation()">
-                          <input
-                            type="number"
-                            class="form-control form-control-sm sp-control sp-roll-input"
-                            [value]="rollByStudentId()[r.id] || ''"
-                            (input)="setRollDraft(r.id, $any($event.target).value)"
-                            title="Optional; overrides same-for-all roll below"
-                          />
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-r let-rowIndex="rowIndex">
+                    <tr
+                      class="sp-tr"
+                      [class.sp-tr--selected]="selected().has(r.id)"
+                      (click)="onRowClick($event, r.id)"
+                    >
+                      <td (click)="$event.stopPropagation()">
+                        <input
+                          type="checkbox"
+                          class="form-check-input"
+                          [checked]="selected().has(r.id)"
+                          (change)="toggle(r.id)"
+                        />
+                      </td>
+                      <td class="sp-td-mono">{{ r.admission_no }}</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="sp-avatar" [class.sp-avatar--alt]="rowIndex % 2 === 1">{{ rowInitials(r) }}</span>
+                          <span class="sp-student-name">{{ r.display_name || r.full_name || '—' }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        @if (r.gender) {
+                          <span class="sp-gender" [ngClass]="genderClass(r)">{{ r.gender | titlecase }}</span>
+                        } @else {
+                          <span class="sp-gender sp-gender--na">—</span>
+                        }
+                      </td>
+                      <td class="sp-td-muted">
+                        {{ r.dob && r.dob.length >= 10 ? r.dob.slice(0, 10) : '—' }}
+                      </td>
+                      <td (click)="$event.stopPropagation()">
+                        <input
+                          pInputText
+                          type="number"
+                          class="w-100 sp-roll-input"
+                          [value]="rollByStudentId()[r.id] || ''"
+                          (input)="setRollDraft(r.id, $any($event.target).value)"
+                          title="Optional; overrides same-for-all roll below"
+                        />
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
               </div>
               <p class="sp-table-foot mb-0">
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
@@ -239,23 +220,20 @@
             <form [formGroup]="form" (ngSubmit)="submit()">
               <div class="mb-3">
                 <label class="sp-field-label">Active session (tenant)</label>
-                <div class="sp-readonly-session">
-                  <span class="sp-readonly-session__dot" aria-hidden="true"></span>
-                  <input
-                    class="form-control sp-control sp-readonly-session__input"
-                    readonly
-                    [value]="currentYear()?.name || '—'"
-                  />
-                </div>
+                <input pInputText class="w-100 sp-control" readonly [value]="currentYear()?.name || '—'" />
               </div>
               <div class="mb-3">
                 <label class="sp-field-label">Promote session</label>
-                <select class="form-select sp-control" formControlName="to_academic_year_id">
-                  <option [ngValue]="null">— Select session —</option>
-                  @for (y of allowedTargetYears(); track y.id) {
-                    <option [ngValue]="y.id">{{ y.name || ('Year ' + y.id) }}</option>
-                  }
-                </select>
+                <p-select
+                  formControlName="to_academic_year_id"
+                  [options]="allowedTargetYears()"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="— Select session —"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-100 sp-control"
+                />
                 @if (promoteNextYearMissing()) {
                   <div class="form-text text-warning">
                     Create the next academic year in settings before promoting forward.
@@ -267,21 +245,30 @@
               </div>
               <div class="mb-3">
                 <label class="sp-field-label">Promotion to class</label>
-                <select class="form-select sp-control" formControlName="to_class_id" (change)="onToClassChange()">
-                  <option [ngValue]="null">— Select class —</option>
-                  @for (c of classes(); track c.id) {
-                    <option [ngValue]="c.id">{{ c.name }}</option>
-                  }
-                </select>
+                <p-select
+                  formControlName="to_class_id"
+                  [options]="classes()"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="— Select class —"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-100 sp-control"
+                  (onChange)="onToClassChange()"
+                />
               </div>
               <div class="mb-3">
                 <label class="sp-field-label">Section</label>
-                <select class="form-select sp-control" formControlName="to_section_id">
-                  <option [ngValue]="null">— Select section —</option>
-                  @for (s of sections(); track s.id) {
-                    <option [ngValue]="s.id">{{ s.name }}</option>
-                  }
-                </select>
+                <p-select
+                  formControlName="to_section_id"
+                  [options]="sections()"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="— Select section —"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-100 sp-control"
+                />
               </div>
               <div class="mb-2">
                 <label class="sp-field-label d-flex align-items-center gap-1" for="sp-roll-all">
@@ -292,36 +279,34 @@
                     aria-hidden="true"
                   ></i>
                 </label>
-                <input
-                  id="sp-roll-all"
-                  class="form-control sp-control"
-                  type="number"
+                <p-inputnumber
+                  inputId="sp-roll-all"
                   formControlName="roll_number"
+                  [useGrouping]="false"
+                  [allowEmpty]="true"
+                  [min]="0"
                   placeholder="Default for all"
+                  styleClass="w-100 sp-control"
                 />
                 <p class="sp-roll-hint mb-0">
                   <i class="bi bi-info-circle" aria-hidden="true"></i>
                   Per-student roll in the table overrides this when filled.
                 </p>
               </div>
-              <div class="sp-repeat-box mb-4">
-                <div class="form-check mb-0">
-                  <input class="form-check-input" type="checkbox" formControlName="repeat_class" id="sp-repeat" />
-                  <label class="form-check-label sp-repeat-label" for="sp-repeat"
-                    >Repeat same class (same session)</label
-                  >
-                </div>
+              <div class="sp-repeat-box mb-4 d-flex align-items-center gap-2">
+                <p-checkbox formControlName="repeat_class" [binary]="true" inputId="sp-repeat" />
+                <label class="mb-0 sp-repeat-label" for="sp-repeat">Repeat same class (same session)</label>
               </div>
               <div class="d-grid gap-2">
-                <button
+                <p-button
                   type="submit"
-                  class="btn sp-btn-primary sp-btn-promote"
+                  label="Promote"
+                  icon="pi pi-arrow-up"
+                  styleClass="sp-btn-promote w-100"
                   [disabled]="submitting() || promoteNextYearMissing()"
-                >
-                  <i class="bi bi-arrow-up-short me-1" aria-hidden="true"></i>
-                  Promote
-                </button>
-                <a class="btn sp-btn-cancel" routerLink="/students">Cancel</a>
+                  [loading]="submitting()"
+                />
+                <p-button label="Cancel" severity="secondary" [outlined]="true" routerLink="/students" styleClass="w-100" />
               </div>
             </form>
           </div>

@@ -1,14 +1,21 @@
+<p-toast position="top-right" />
+
 <section class="page page--student-register">
-  <header class="content-area-header" aria-labelledby="register-page-title">
-    <div class="content-area-header__main">
-      <h1 id="register-page-title" class="content-area-header__title">{{ pageTitle() }}</h1>
-      <p class="content-area-header__subtitle">
-        @if (editStudentId()) {
-          Update student records and enrollment
-        } @else {
-          Complete all sections below to register a student
-        }
-      </p>
+  <header class="content-area-header sp-page-header" aria-labelledby="register-page-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-person-plus-fill"></i>
+      </div>
+      <div>
+        <h1 id="register-page-title" class="content-area-header__title sp-page-header__title">{{ pageTitle() }}</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">
+          @if (editStudentId()) {
+            Update student records and enrollment
+          } @else {
+            Complete all sections below to register a student
+          }
+        </p>
+      </div>
     </div>
     <div class="content-area-header__end">
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
@@ -35,523 +42,534 @@
       </div>
     }
 
-    <section class="reg-section reg-section--personal" aria-labelledby="sr-sec-personal">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-personal" class="reg-section__title">Personal</h2>
-        <p class="reg-section__desc">Identity and contact details</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s1" class="grid">
-          <div class="mb-3">
-            <label class="form-label" for="sr-adm">
-              Admission No <span class="text-danger req" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="sr-adm"
-              class="form-control"
-              formControlName="admission_no"
-              [class.is-invalid]="showErr(s1, 'admission_no')"
-              autocomplete="off"
-              aria-required="true"
-            />
-            @if (showErr(s1, 'admission_no')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s1, 'admission_no') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-first">
-              First name <span class="text-danger req" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="sr-first"
-              class="form-control"
-              formControlName="first_name"
-              [class.is-invalid]="showErr(s1, 'first_name')"
-              autocomplete="given-name"
-              aria-required="true"
-            />
-            @if (showErr(s1, 'first_name')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s1, 'first_name') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-last">Last name</label>
-            <input
-              id="sr-last"
-              class="form-control"
-              formControlName="last_name"
-              [class.is-invalid]="showErr(s1, 'last_name')"
-              autocomplete="family-name"
-            />
-            @if (showErr(s1, 'last_name')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s1, 'last_name') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-gender">Gender</label>
-            <select id="sr-gender" class="form-select" formControlName="gender">
-              <option value="">—</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-dob">Date of birth</label>
-            <input id="sr-dob" class="form-control" type="date" formControlName="dob" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-phone">Phone</label>
-            <input
-              id="sr-phone"
-              class="form-control"
-              formControlName="phone"
-              [class.is-invalid]="showErr(s1, 'phone')"
-            />
-            @if (showErr(s1, 'phone')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s1, 'phone') }}</div>
-            }
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-email">Email</label>
-            <input
-              id="sr-email"
-              class="form-control"
-              type="email"
-              formControlName="email"
-              [class.is-invalid]="showErr(s1, 'email')"
-            />
-            @if (showErr(s1, 'email')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s1, 'email') }}</div>
-            }
-          </div>
-          <div class="mb-3 span-2 reg-photo-block">
-            <span class="form-label d-block" id="sr-photo-label-text">Student photo</span>
-            <div class="reg-photo-field">
-              <div class="reg-photo-field__preview">
-                @if (photoPreviewDisplay(); as prev) {
-                  <div class="student-reg-photo-preview">
-                    <img [src]="prev" alt="" />
-                  </div>
-                } @else {
-                  <div class="reg-photo-field__placeholder" aria-hidden="true">
-                    <i class="bi bi-image"></i>
-                  </div>
-                }
-              </div>
-              <div class="reg-photo-field__controls">
-                <input
-                  id="sr-photo"
-                  class="visually-hidden"
-                  type="file"
-                  [accept]="photoInputAccept"
-                  (change)="onPhotoFileChange($event)"
-                  aria-labelledby="sr-photo-label-text"
-                />
-                <label for="sr-photo" class="reg-photo-field__choose">Choose file</label>
-                <div class="form-text reg-hint">PNG or JPEG, up to 5 MB. Stored securely and optimized for display.</div>
-                @if (photoFile) {
-                  <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhotoFile()">
-                    Clear selected file
-                  </button>
-                }
-                @if (editStudentId() && photoPreviewDisplay() && !removeExistingPhoto && !photoFile) {
-                  <button type="button" class="btn btn-link btn-sm text-danger px-0 d-block mt-1" (click)="removeSavedPhoto()">
-                    Remove saved photo
-                  </button>
-                }
-                @if (editStudentId() && removeExistingPhoto && !photoFile) {
-                  <p class="small text-secondary mb-0 mt-1">Saved photo will be removed when you save.</p>
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--guardian" aria-labelledby="sr-sec-guardian">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-guardian" class="reg-section__title">Guardian</h2>
-        <p class="reg-section__desc">Primary guardian and contact</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s2" class="grid">
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-gt">Guardian</label>
-            <select id="sr-gt" class="form-select" formControlName="guardian_type">
-              <option value="father">Father</option>
-              <option value="mother">Mother</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          @if (guardianType() === 'father') {
-            <div class="mb-3">
-              <label class="form-label" for="sr-father">
-                Father name <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-father"
-                class="form-control"
-                formControlName="father_name"
-                [class.is-invalid]="showErr(s2, 'father_name')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'father_name')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'father_name') }}</div>
-              }
-            </div>
-            <div class="mb-3">
-              <label class="form-label" for="sr-fphone">
-                Father phone <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-fphone"
-                class="form-control"
-                formControlName="father_phone"
-                [class.is-invalid]="showErr(s2, 'father_phone')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'father_phone')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'father_phone') }}</div>
-              }
-            </div>
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-focc">Father occupation</label>
-              <input id="sr-focc" class="form-control" formControlName="father_occupation" />
-            </div>
-          }
-          @if (guardianType() === 'mother') {
-            <div class="mb-3">
-              <label class="form-label" for="sr-mother">
-                Mother name <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-mother"
-                class="form-control"
-                formControlName="mother_name"
-                [class.is-invalid]="showErr(s2, 'mother_name')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'mother_name')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'mother_name') }}</div>
-              }
-            </div>
-            <div class="mb-3">
-              <label class="form-label" for="sr-mphone">
-                Mother phone <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-mphone"
-                class="form-control"
-                formControlName="mother_phone"
-                [class.is-invalid]="showErr(s2, 'mother_phone')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'mother_phone')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'mother_phone') }}</div>
-              }
-            </div>
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-mocc">Mother occupation</label>
-              <input id="sr-mocc" class="form-control" formControlName="mother_occupation" />
-            </div>
-          }
-          @if (guardianType() === 'other') {
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-gname">
-                Guardian name <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-gname"
-                class="form-control"
-                formControlName="guardian_name"
-                [class.is-invalid]="showErr(s2, 'guardian_name')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'guardian_name')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_name') }}</div>
-              }
-            </div>
-            <div class="mb-3">
-              <label class="form-label" for="sr-gphone">
-                Guardian phone <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-gphone"
-                class="form-control"
-                formControlName="guardian_phone"
-                [class.is-invalid]="showErr(s2, 'guardian_phone')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'guardian_phone')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_phone') }}</div>
-              }
-            </div>
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-gocc">Guardian occupation</label>
-              <input id="sr-gocc" class="form-control" formControlName="guardian_occupation" />
-            </div>
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-grel">
-                Relation <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <input
-                id="sr-grel"
-                class="form-control"
-                formControlName="guardian_relation"
-                [class.is-invalid]="showErr(s2, 'guardian_relation')"
-                aria-required="true"
-              />
-              @if (showErr(s2, 'guardian_relation')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_relation') }}</div>
-              }
-            </div>
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-gaddr">
-                Guardian address <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <textarea
-                id="sr-gaddr"
-                class="form-control"
-                rows="2"
-                formControlName="guardian_address"
-                [class.is-invalid]="showErr(s2, 'guardian_address')"
-                aria-required="true"
-              ></textarea>
-              @if (showErr(s2, 'guardian_address')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s2, 'guardian_address') }}</div>
-              }
-            </div>
+    <p-card header="Personal" styleClass="mb-3 reg-card">
+      <div [formGroup]="s1" class="grid">
+        <div class="mb-3">
+          <label class="form-label" for="sr-adm">
+            Admission No <span class="text-danger req" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="sr-adm"
+            pInputText
+            class="w-100"
+            formControlName="admission_no"
+            [class.p-invalid]="showErr(s1, 'admission_no')"
+            autocomplete="off"
+            aria-required="true"
+          />
+          @if (showErr(s1, 'admission_no')) {
+            <small class="p-error d-block">{{ errMsg(s1, 'admission_no') }}</small>
           }
         </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--medical" aria-labelledby="sr-sec-medical">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-medical" class="reg-section__title">Medical</h2>
-        <p class="reg-section__desc">Health-related information</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s3" class="grid">
-          <div class="mb-3">
-            <label class="form-label" for="sr-blood">Blood group</label>
-            <select id="sr-blood" class="form-select" formControlName="blood_group">
-              <option value="">—</option>
-              @for (b of bloodOptions; track b) {
-                <option [value]="b">{{ b }}</option>
-              }
-            </select>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--prev-school" aria-labelledby="sr-sec-prev-school">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-prev-school" class="reg-section__title">Previous school</h2>
-        <p class="reg-section__desc">Prior institution, if any</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s4" class="grid">
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-pschool">Previous school name</label>
-            <input id="sr-pschool" class="form-control" formControlName="school_name" />
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-paddr">Previous school address</label>
-            <textarea id="sr-paddr" class="form-control" rows="2" formControlName="school_address"></textarea>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--address" aria-labelledby="sr-sec-address">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-address" class="reg-section__title">Address &amp; additional details</h2>
-        <p class="reg-section__desc">Residence and notes</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s5" class="grid">
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-caddr">Current address</label>
-            <textarea id="sr-caddr" class="form-control" rows="2" formControlName="current_address"></textarea>
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-paddr2">Permanent address</label>
-            <textarea id="sr-paddr2" class="form-control" rows="2" formControlName="permanent_address"></textarea>
-          </div>
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-extra">Details / notes</label>
-            <textarea id="sr-extra" class="form-control" rows="2" formControlName="extra_details"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-rtype">Room type</label>
-            <input id="sr-rtype" class="form-control" formControlName="room_type" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--enrollment" aria-labelledby="sr-sec-enrollment">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-enrollment" class="reg-section__title">Enrollment</h2>
-        <p class="reg-section__desc">Class placement for this admission</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s5" class="grid">
-          <div class="mb-3">
-            <label class="form-label" for="sr-year">
-              Academic year <span class="text-danger req" aria-hidden="true">*</span>
-            </label>
-            <select
-              id="sr-year"
-              class="form-select"
-              formControlName="academic_year_id"
-              [class.is-invalid]="showErr(s5, 'academic_year_id')"
-              aria-required="true"
-            >
-              <option [ngValue]="null">—</option>
-              @for (y of years; track y.id) {
-                <option [ngValue]="y.id">{{ y.name || ('Year ' + y.id) }}</option>
-              }
-            </select>
-            @if (showErr(s5, 'academic_year_id')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s5, 'academic_year_id') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-class">
-              Class <span class="text-danger req" aria-hidden="true">*</span>
-            </label>
-            <select
-              id="sr-class"
-              class="form-select"
-              formControlName="class_id"
-              [class.is-invalid]="showErr(s5, 'class_id')"
-              aria-required="true"
-            >
-              <option [ngValue]="null">—</option>
-              @for (c of classes; track c.id) {
-                <option [ngValue]="c.id">{{ c.name }}</option>
-              }
-            </select>
-            @if (showErr(s5, 'class_id')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s5, 'class_id') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-sec">
-              Section <span class="text-danger req" aria-hidden="true">*</span>
-            </label>
-            <select
-              id="sr-sec"
-              class="form-select"
-              formControlName="section_id"
-              [class.is-invalid]="showErr(s5, 'section_id')"
-              aria-required="true"
-            >
-              <option [ngValue]="null">—</option>
-              @for (s of sections; track s.id) {
-                <option [ngValue]="s.id">{{ s.name }}</option>
-              }
-            </select>
-            @if (showErr(s5, 'section_id')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s5, 'section_id') }}</div>
-            }
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="sr-roll">Roll number</label>
-            <input id="sr-roll" class="form-control" type="number" formControlName="roll_number" />
-          </div>
-          @if (categoryOptions().length) {
-            <div class="mb-3 span-2">
-              <label class="form-label" for="sr-cat">
-                Category <span class="text-danger req" aria-hidden="true">*</span>
-              </label>
-              <select
-                id="sr-cat"
-                class="form-select"
-                formControlName="category"
-                [class.is-invalid]="showErr(s5, 'category')"
-                aria-required="true"
-              >
-                <option value="">—</option>
-                @for (opt of categoryOptions(); track opt) {
-                  <option [value]="opt">{{ opt }}</option>
-                }
-              </select>
-              @if (showErr(s5, 'category')) {
-                <div class="invalid-feedback d-block">{{ errMsg(s5, 'category') }}</div>
-              }
-            </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-first">
+            First name <span class="text-danger req" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="sr-first"
+            pInputText
+            class="w-100"
+            formControlName="first_name"
+            [class.p-invalid]="showErr(s1, 'first_name')"
+            autocomplete="given-name"
+            aria-required="true"
+          />
+          @if (showErr(s1, 'first_name')) {
+            <small class="p-error d-block">{{ errMsg(s1, 'first_name') }}</small>
           }
         </div>
-      </div>
-    </section>
-
-    <section class="reg-section reg-section--account" aria-labelledby="sr-sec-account">
-      <header class="reg-section__header">
-        <h2 id="sr-sec-account" class="reg-section__title">Student account</h2>
-        <p class="reg-section__desc">Optional login credentials</p>
-      </header>
-      <div class="reg-section__body">
-        <div [formGroup]="s5" class="grid">
-          <div class="mb-3 span-2">
-            <label class="form-label" for="sr-login-pw">
-              @if (editStudentId()) {
-                New login password (optional)
+        <div class="mb-3">
+          <label class="form-label" for="sr-last">Last name</label>
+          <input
+            id="sr-last"
+            pInputText
+            class="w-100"
+            formControlName="last_name"
+            [class.p-invalid]="showErr(s1, 'last_name')"
+            autocomplete="family-name"
+          />
+          @if (showErr(s1, 'last_name')) {
+            <small class="p-error d-block">{{ errMsg(s1, 'last_name') }}</small>
+          }
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-gender">Gender</label>
+          <p-select
+            inputId="sr-gender"
+            formControlName="gender"
+            [options]="genderOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="—"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-dob">Date of birth</label>
+          <p-datepicker
+            inputId="sr-dob"
+            formControlName="dob"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-phone">Phone</label>
+          <input
+            id="sr-phone"
+            pInputText
+            class="w-100"
+            formControlName="phone"
+            [class.p-invalid]="showErr(s1, 'phone')"
+          />
+          @if (showErr(s1, 'phone')) {
+            <small class="p-error d-block">{{ errMsg(s1, 'phone') }}</small>
+          }
+        </div>
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-email">Email</label>
+          <input
+            id="sr-email"
+            pInputText
+            type="email"
+            class="w-100"
+            formControlName="email"
+            [class.p-invalid]="showErr(s1, 'email')"
+          />
+          @if (showErr(s1, 'email')) {
+            <small class="p-error d-block">{{ errMsg(s1, 'email') }}</small>
+          }
+        </div>
+        <div class="mb-3 span-2 reg-photo-block">
+          <span class="form-label d-block" id="sr-photo-label-text">Student photo</span>
+          <div class="reg-photo-field">
+            <div class="reg-photo-field__preview">
+              @if (photoPreviewDisplay(); as prev) {
+                <div class="student-reg-photo-preview">
+                  <img [src]="prev" alt="" />
+                </div>
               } @else {
-                Initial password (optional)
+                <div class="reg-photo-field__placeholder" aria-hidden="true">
+                  <i class="bi bi-image"></i>
+                </div>
               }
-            </label>
-            <input
-              id="sr-login-pw"
-              class="form-control"
-              type="password"
-              autocomplete="new-password"
-              formControlName="login_password"
-              [placeholder]="
-                editStudentId()
-                  ? 'Leave blank to keep current password · min 6 characters'
-                  : 'Min 6 chars; random if empty'
-              "
-              [class.is-invalid]="showErr(s5, 'login_password')"
-            />
-            @if (editStudentId() && hasLoginAccount) {
-              <div class="form-text">Only fill this field if you want to change the student&rsquo;s login password.</div>
-            }
-            @if (showErr(s5, 'login_password')) {
-              <div class="invalid-feedback d-block">{{ errMsg(s5, 'login_password') }}</div>
-            }
-          </div>
-          @if (!editStudentId()) {
-            <div class="form-check span-2 mb-0">
-              <input class="form-check-input" type="checkbox" id="sr-login" formControlName="create_student_login" />
-              <label class="form-check-label" for="sr-login">
-                Create student login (username auto-generated; inactive until activated)
-              </label>
             </div>
-          }
+            <div class="reg-photo-field__controls">
+              <input
+                id="sr-photo"
+                class="visually-hidden"
+                type="file"
+                [accept]="photoInputAccept"
+                (change)="onPhotoFileChange($event)"
+                aria-labelledby="sr-photo-label-text"
+              />
+              <label for="sr-photo" class="reg-photo-field__choose">Choose file</label>
+              <div class="form-text reg-hint">PNG or JPEG, up to 5 MB. Stored securely and optimized for display.</div>
+              @if (photoFile) {
+                <p-button
+                  type="button"
+                  label="Clear selected file"
+                  [text]="true"
+                  size="small"
+                  styleClass="px-0 mt-1"
+                  (onClick)="clearPhotoFile()"
+                />
+              }
+              @if (editStudentId() && photoPreviewDisplay() && !removeExistingPhoto && !photoFile) {
+                <p-button
+                  type="button"
+                  label="Remove saved photo"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  styleClass="px-0 d-block mt-1"
+                  (onClick)="removeSavedPhoto()"
+                />
+              }
+              @if (editStudentId() && removeExistingPhoto && !photoFile) {
+                <p class="small text-secondary mb-0 mt-1">Saved photo will be removed when you save.</p>
+              }
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </p-card>
 
-    <div class="reg-actions">
-      <div class="reg-actions__dots" aria-hidden="true">
-        @for (_ of [0, 1, 2, 3, 4, 5, 6]; track $index) {
-          <span class="reg-actions__dot"></span>
+    <p-card header="Guardian" styleClass="mb-3 reg-card">
+      <div [formGroup]="s2" class="grid">
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-gt">Guardian</label>
+          <p-select
+            inputId="sr-gt"
+            formControlName="guardian_type"
+            [options]="guardianTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        @if (guardianType() === 'father') {
+          <div class="mb-3">
+            <label class="form-label" for="sr-father">
+              Father name <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-father"
+              pInputText
+              class="w-100"
+              formControlName="father_name"
+              [class.p-invalid]="showErr(s2, 'father_name')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'father_name')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'father_name') }}</small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-fphone">
+              Father phone <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-fphone"
+              pInputText
+              class="w-100"
+              formControlName="father_phone"
+              [class.p-invalid]="showErr(s2, 'father_phone')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'father_phone')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'father_phone') }}</small>
+            }
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-focc">Father occupation</label>
+            <input id="sr-focc" pInputText class="w-100" formControlName="father_occupation" />
+          </div>
+        }
+        @if (guardianType() === 'mother') {
+          <div class="mb-3">
+            <label class="form-label" for="sr-mother">
+              Mother name <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-mother"
+              pInputText
+              class="w-100"
+              formControlName="mother_name"
+              [class.p-invalid]="showErr(s2, 'mother_name')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'mother_name')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'mother_name') }}</small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-mphone">
+              Mother phone <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-mphone"
+              pInputText
+              class="w-100"
+              formControlName="mother_phone"
+              [class.p-invalid]="showErr(s2, 'mother_phone')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'mother_phone')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'mother_phone') }}</small>
+            }
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-mocc">Mother occupation</label>
+            <input id="sr-mocc" pInputText class="w-100" formControlName="mother_occupation" />
+          </div>
+        }
+        @if (guardianType() === 'other') {
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-gname">
+              Guardian name <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-gname"
+              pInputText
+              class="w-100"
+              formControlName="guardian_name"
+              [class.p-invalid]="showErr(s2, 'guardian_name')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'guardian_name')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'guardian_name') }}</small>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sr-gphone">
+              Guardian phone <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-gphone"
+              pInputText
+              class="w-100"
+              formControlName="guardian_phone"
+              [class.p-invalid]="showErr(s2, 'guardian_phone')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'guardian_phone')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'guardian_phone') }}</small>
+            }
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-gocc">Guardian occupation</label>
+            <input id="sr-gocc" pInputText class="w-100" formControlName="guardian_occupation" />
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-grel">
+              Relation <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="sr-grel"
+              pInputText
+              class="w-100"
+              formControlName="guardian_relation"
+              [class.p-invalid]="showErr(s2, 'guardian_relation')"
+              aria-required="true"
+            />
+            @if (showErr(s2, 'guardian_relation')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'guardian_relation') }}</small>
+            }
+          </div>
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-gaddr">
+              Guardian address <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="sr-gaddr"
+              pTextarea
+              rows="2"
+              class="w-100"
+              formControlName="guardian_address"
+              [class.p-invalid]="showErr(s2, 'guardian_address')"
+              aria-required="true"
+            ></textarea>
+            @if (showErr(s2, 'guardian_address')) {
+              <small class="p-error d-block">{{ errMsg(s2, 'guardian_address') }}</small>
+            }
+          </div>
         }
       </div>
-      <div class="reg-actions__buttons">
-        <a routerLink="/students" class="btn btn-outline-secondary reg-actions__cancel">Cancel</a>
-        <button type="button" class="btn btn-primary reg-actions__submit" (click)="submit()" [disabled]="submitting || loadingEdit()">
-          @if (!editStudentId()) {
-            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+    </p-card>
+
+    <p-card header="Medical" styleClass="mb-3 reg-card">
+      <div [formGroup]="s3" class="grid">
+        <div class="mb-3">
+          <label class="form-label" for="sr-blood">Blood group</label>
+          <p-select
+            inputId="sr-blood"
+            formControlName="blood_group"
+            [options]="bloodSelectItems()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="—"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+      </div>
+    </p-card>
+
+    <p-card header="Previous school" styleClass="mb-3 reg-card">
+      <div [formGroup]="s4" class="grid">
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-pschool">Previous school name</label>
+          <input id="sr-pschool" pInputText class="w-100" formControlName="school_name" />
+        </div>
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-paddr">Previous school address</label>
+          <textarea id="sr-paddr" pTextarea rows="2" class="w-100" formControlName="school_address"></textarea>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card header="Address &amp; additional details" styleClass="mb-3 reg-card">
+      <div [formGroup]="s5" class="grid">
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-caddr">Current address</label>
+          <textarea id="sr-caddr" pTextarea rows="2" class="w-100" formControlName="current_address"></textarea>
+        </div>
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-paddr2">Permanent address</label>
+          <textarea id="sr-paddr2" pTextarea rows="2" class="w-100" formControlName="permanent_address"></textarea>
+        </div>
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-extra">Details / notes</label>
+          <textarea id="sr-extra" pTextarea rows="2" class="w-100" formControlName="extra_details"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-rtype">Room type</label>
+          <input id="sr-rtype" pInputText class="w-100" formControlName="room_type" />
+        </div>
+      </div>
+    </p-card>
+
+    <p-card header="Enrollment" styleClass="mb-3 reg-card">
+      <div [formGroup]="s5" class="grid">
+        <div class="mb-3">
+          <label class="form-label" for="sr-year">
+            Academic year <span class="text-danger req" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            inputId="sr-year"
+            formControlName="academic_year_id"
+            [options]="yearSelectOptions"
+            optionLabel="label"
+            optionValue="id"
+            placeholder="—"
+            [showClear]="true"
+            appendTo="body"
+            [class.p-invalid]="showErr(s5, 'academic_year_id')"
+            styleClass="w-100"
+          />
+          @if (showErr(s5, 'academic_year_id')) {
+            <small class="p-error d-block">{{ errMsg(s5, 'academic_year_id') }}</small>
           }
-          {{ editStudentId() ? 'Save changes' : 'Submit' }}
-        </button>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-class">
+            Class <span class="text-danger req" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            inputId="sr-class"
+            formControlName="class_id"
+            [options]="classes"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="—"
+            [showClear]="true"
+            appendTo="body"
+            [class.p-invalid]="showErr(s5, 'class_id')"
+            styleClass="w-100"
+          />
+          @if (showErr(s5, 'class_id')) {
+            <small class="p-error d-block">{{ errMsg(s5, 'class_id') }}</small>
+          }
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-sec">
+            Section <span class="text-danger req" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            inputId="sr-sec"
+            formControlName="section_id"
+            [options]="sections"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="—"
+            [showClear]="true"
+            appendTo="body"
+            [class.p-invalid]="showErr(s5, 'section_id')"
+            styleClass="w-100"
+          />
+          @if (showErr(s5, 'section_id')) {
+            <small class="p-error d-block">{{ errMsg(s5, 'section_id') }}</small>
+          }
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="sr-roll">Roll number</label>
+          <p-inputnumber
+            inputId="sr-roll"
+            formControlName="roll_number"
+            [useGrouping]="false"
+            [allowEmpty]="true"
+            [min]="0"
+            placeholder="—"
+            styleClass="w-100"
+          />
+        </div>
+        @if (categoryOptions().length) {
+          <div class="mb-3 span-2">
+            <label class="form-label" for="sr-cat">
+              Category <span class="text-danger req" aria-hidden="true">*</span>
+            </label>
+            <p-select
+              inputId="sr-cat"
+              formControlName="category"
+              [options]="categorySelectItems()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="—"
+              [showClear]="true"
+              appendTo="body"
+              [class.p-invalid]="showErr(s5, 'category')"
+              styleClass="w-100"
+            />
+            @if (showErr(s5, 'category')) {
+              <small class="p-error d-block">{{ errMsg(s5, 'category') }}</small>
+            }
+          </div>
+        }
+      </div>
+    </p-card>
+
+    <p-card header="Student account" styleClass="mb-3 reg-card">
+      <div [formGroup]="s5" class="grid">
+        <div class="mb-3 span-2">
+          <label class="form-label" for="sr-login-pw">
+            @if (editStudentId()) {
+              New login password (optional)
+            } @else {
+              Initial password (optional)
+            }
+          </label>
+          <input
+            id="sr-login-pw"
+            pInputText
+            type="password"
+            class="w-100"
+            autocomplete="new-password"
+            formControlName="login_password"
+            [placeholder]="
+              editStudentId()
+                ? 'Leave blank to keep current password · min 6 characters'
+                : 'Min 6 chars; random if empty'
+            "
+            [class.p-invalid]="showErr(s5, 'login_password')"
+          />
+          @if (editStudentId() && hasLoginAccount) {
+            <div class="form-text">Only fill this field if you want to change the student&rsquo;s login password.</div>
+          }
+          @if (showErr(s5, 'login_password')) {
+            <small class="p-error d-block">{{ errMsg(s5, 'login_password') }}</small>
+          }
+        </div>
+        @if (!editStudentId()) {
+          <div class="d-flex align-items-center gap-2 span-2 mb-0">
+            <p-checkbox formControlName="create_student_login" [binary]="true" inputId="sr-login" />
+            <label class="mb-0" for="sr-login">
+              Create student login (username auto-generated; inactive until activated)
+            </label>
+          </div>
+        }
+      </div>
+    </p-card>
+
+    <div class="reg-actions">
+      <div class="reg-actions__buttons d-flex flex-wrap gap-2 align-items-center">
+        <p-button label="Cancel" severity="secondary" [outlined]="true" routerLink="/students" styleClass="reg-actions__cancel" />
+        <p-button
+          type="button"
+          [label]="editStudentId() ? 'Save changes' : 'Submit'"
+          [icon]="editStudentId() ? '' : 'pi pi-check'"
+          [loading]="submitting"
+          [disabled]="submitting || loadingEdit()"
+          (onClick)="submit()"
+          styleClass="reg-actions__submit"
+        />
       </div>
     </div>
   </div>

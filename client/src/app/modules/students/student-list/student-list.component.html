@@ -1,8 +1,23 @@
+<p-toast position="top-right" />
+<p-confirmdialog />
+<p-menu
+  #rowActionMenu
+  [model]="rowActionMenuModel"
+  [popup]="true"
+  appendTo="body"
+  styleClass="student-row-actions-menu"
+/>
+
 <section class="page">
-  <header class="content-area-header" aria-labelledby="students-page-title">
-    <div class="content-area-header__main">
-      <h1 id="students-page-title" class="content-area-header__title">All Students</h1>
-      <p class="content-area-header__subtitle">Admission list for your school</p>
+  <header class="content-area-header sp-page-header" aria-labelledby="students-page-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div>
+        <h1 id="students-page-title" class="content-area-header__title sp-page-header__title">All Students</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Admission list for your school</p>
+      </div>
     </div>
     <div class="content-area-header__end">
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
@@ -14,120 +29,116 @@
   </header>
 
   <div class="card shadow-sm border-0">
-    @if (loading()) {
-      <div class="center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+    <p-table
+      [value]="sortedRows()"
+      [lazy]="true"
+      [lazyLoadOnInit]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [first]="firstIndex()"
+      [totalRecords]="total()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [loading]="loading()"
+      [showLoader]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template pTemplate="caption">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-1">
+          <span class="fw-semibold">Student records</span>
+          <p-iconfield iconPosition="left" class="flex-grow-1" style="max-width: 20rem">
+            <p-inputicon styleClass="pi pi-search" />
+            <input
+              pInputText
+              type="search"
+              placeholder="Search students…"
+              autocomplete="off"
+              class="w-100"
+              (input)="onSearchInput($any($event.target).value)"
+            />
+          </p-iconfield>
         </div>
-      </div>
-    } @else if (rows().length === 0) {
-      <div class="empty text-center py-5">
-        <p class="mb-2 fw-medium">No students found</p>
-        <p class="small text-secondary mb-0">There are no students to show yet. Register a student to get started.</p>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table class="table app-data-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th scope="col" [attr.aria-sort]="sortAria('admission_no')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('admission_no')">
-                  Admission No
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('admission_no')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('name')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
-                  Name
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('class')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('class')">
-                  Class
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('class')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('dob')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('dob')">
-                  DOB
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('dob')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('gender')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('gender')">
-                  Gender
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('gender')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('phone')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('phone')">
-                  Phone
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('phone')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of sortedRows(); track trackRow(row, $index)) {
-              <tr class="row-link" (click)="openProfile(row)">
-                <td>{{ row.admission_no }}</td>
-                <td>{{ displayName(row) }}</td>
-                <td>{{ row.class_name || '—' }}</td>
-                <td>{{ formatDob(row.dob) }}</td>
-                <td>{{ row.gender || '—' }}</td>
-                <td>{{ row.phone || '—' }}</td>
-                <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
-                  <div class="dropdown d-inline-block">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-secondary"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                      aria-label="More actions"
-                      (click)="$event.stopPropagation()"
-                    >
-                      <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <button type="button" class="dropdown-item"  (click)="editStudent(row, $event)">
-                          Edit
-                        </button>
-                      </li>
-                      <li>
-                        <button type="button" class="dropdown-item"  (click)="deleteRow(row, $event)">
-                          Delete
-                        </button>
-                      </li>
-                      <li>
-                        <button type="button" class="dropdown-item" (click)="openProfileFromMenu(row, $event)">
-                          View profile
-                        </button>
-                      </li>
-                      <li>
-                        <button type="button" class="dropdown-item text-secondary" disabled title="Coming soon">
-                          Collect fee
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <app-table-pagination-footer
-        [total]="total()"
-        [page]="page()"
-        [pageSize]="pageSize()"
-        [totalPages]="totalPages()"
-        entryLabel="students"
-        ariaLabel="Students pagination"
-        (pageChange)="setPage($event)"
-      />
-    }
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" [attr.aria-sort]="sortAria('admission_no')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('admission_no')">
+              Admission No
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('admission_no')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('name')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+              Name
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('name')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('class')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('class')">
+              Class
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('class')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('dob')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('dob')">
+              DOB
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('dob')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('gender')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('gender')">
+              Gender
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('gender')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('phone')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('phone')">
+              Phone
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('phone')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" class="text-end">Action</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr class="row-link" (click)="openProfile(row)">
+          <td>{{ row.admission_no }}</td>
+          <td>{{ displayName(row) }}</td>
+          <td>{{ row.class_name || '—' }}</td>
+          <td>{{ formatDob(row.dob) }}</td>
+          <td>{{ row.gender || '—' }}</td>
+          <td>{{ row.phone || '—' }}</td>
+          <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+            <p-button
+              type="button"
+              icon="pi pi-ellipsis-v"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              ariaLabel="Open student actions menu"
+              (onClick)="openRowActionMenu($event, row)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty text-center py-5">
+              <p class="mb-2 fw-medium">No students found</p>
+              <p class="small text-secondary mb-0">
+                There are no students to show yet. Register a student to get started.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </section>

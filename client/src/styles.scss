@@ -2,6 +2,51 @@
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
+/* PrimeNG icons */
+@import 'primeicons/primeicons.css';
+
+/* PrimeNG + Bootstrap coexistence */
+.p-component,
+.p-inputtext,
+.p-select,
+.p-datepicker,
+.p-textarea,
+.p-inputnumber {
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.p-button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.p-dialog-mask {
+  z-index: 1055;
+}
+
+.p-toast {
+  z-index: 1070;
+}
+
+[data-bs-theme='dark'] {
+  .p-datatable .p-datatable-header,
+  .p-datatable .p-datatable-footer {
+    background: transparent;
+  }
+}
+
+/* PrimeNG tables — left-align built-in paginator (Aura theme centers by default) */
+.p-datatable .p-paginator,
+.p-treetable .p-paginator {
+  justify-content: flex-end;
+}
+
+.p-datatable .p-paginator .p-paginator-content,
+.p-treetable .p-paginator .p-paginator-content {
+  justify-content: flex-end;
+}
+
 /* Font stacks */
 :root {
   --font-family--sans-serif: 'Helvetica Neue', helvetica, arial, sans-serif;
@@ -308,6 +353,53 @@ html.theme-dark .content-area-header__crumb--parent {
 
 .content-area-header__sep .bi {
   font-size: 0.7rem;
+}
+
+/* Page header with circular icon — pair with .content-area-header (same layout as Promote Students) */
+.sp-page-header__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.sp-page-header__icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #4f8cff, #2563eb);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+}
+
+.sp-page-header__icon .bi {
+  line-height: 1;
+}
+
+.sp-page-header__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 576px) {
+  .sp-page-header__title {
+    font-size: 1.5rem;
+  }
+}
+
+.sp-page-header__subtitle {
+  max-width: 40rem;
+}
+
+html.theme-dark .sp-page-header__title,
+html[data-bs-theme='dark'] .sp-page-header__title {
+  color: var(--bs-primary) !important;
 }
 
 /* Global Bootstrap .card — unified surface, radius, shadow (all pages) */

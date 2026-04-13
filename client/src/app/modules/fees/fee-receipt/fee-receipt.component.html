@@ -1,23 +1,32 @@
 <section class="page fee-receipt-page">
   <div class="no-print d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-    <a routerLink="/fees/collection" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>
-      Back to collection
-    </a>
-    <button type="button" class="btn btn-primary btn-sm btn-print-hide" (click)="printReceipt()">
-      <i class="bi bi-printer me-1"></i>
-      Print receipt
-    </button>
+    <p-button
+      label="Back to collection"
+      icon="pi pi-arrow-left"
+      [outlined]="true"
+      size="small"
+      [routerLink]="['/fees/collection']"
+    />
+    <p-button
+      label="Print receipt"
+      icon="pi pi-print"
+      size="small"
+      styleClass="btn-print-hide"
+      (onClick)="printReceipt()"
+    />
   </div>
 
   @if (loading()) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
+    <div class="d-flex justify-content-center py-5">
+      <p-progress-spinner
+        ariaLabel="Loading receipt"
+        strokeWidth="4"
+        animationDuration=".65s"
+        [style]="{ width: '3rem', height: '3rem' }"
+      />
     </div>
   } @else if (fees().length === 0) {
-    <div class="alert alert-info">No fee records for this student yet.</div>
+    <p-message severity="info">No fee records for this student yet.</p-message>
   } @else {
     <div class="receipt-container card border-0 shadow-sm">
       <div class="card-body p-4">
@@ -26,66 +35,68 @@
           <span class="small text-secondary">
             {{ latestFee()?.collection_date | date: 'mediumDate' }}
           </span>
-          <span class="small">
+          <span class="small d-flex align-items-center gap-2">
             Status:
-            <strong>{{ latestFee()?.status ?? '—' }}</strong>
+            @if (latestFee()?.status; as st) {
+              <p-tag [value]="st" [severity]="statusSeverity(st)" />
+            } @else {
+              <strong>—</strong>
+            }
           </span>
         </div>
         <hr class="my-3" />
 
         <div class="row g-4 mb-4">
           <div class="col-md-6">
-            <h3 class="h6 text-secondary mb-2">From</h3>
+            <h3 class="h6 text-secondary mb-2">TO</h3>
             <p class="mb-1 fw-semibold">{{ branding.tenantName() || 'School' }}</p>
             @if (branding.tenantAddress()) {
               <p class="mb-1 small text-secondary">{{ branding.tenantAddress() }}</p>
             }
             @if (branding.tenantContactEmail()) {
-              <p class="mb-0 small"><a [href]="'mailto:' + branding.tenantContactEmail()">{{ branding.tenantContactEmail() }}</a></p>
+              <p class="mb-0 small">
+                <a [href]="'mailto:' + branding.tenantContactEmail()">{{ branding.tenantContactEmail() }}</a>
+              </p>
             }
           </div>
           <div class="col-md-6">
-            <h3 class="h6 text-secondary mb-2">To</h3>
+            <h3 class="h6 text-secondary mb-2">FROM</h3>
             <p class="mb-1 fw-semibold">{{ studentDisplayName() }}</p>
             <p class="mb-1 small">Registration No: {{ registrationNo() }}</p>
             <p class="mb-0 small">Class: {{ classLabel() }}</p>
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="table table-bordered align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Fee Type</th>
-                <th scope="col">Month/Year</th>
-                <th scope="col">Invoice Number</th>
-                <th scope="col">Date of Payment</th>
-                <th scope="col" class="text-end">Amount Paid</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (f of fees(); track f.id; let i = $index) {
-                <tr
-                  [class.table-active]="f.is_latest"
-                  [style.background-color]="f.is_latest ? '#e8f4fd' : null"
-                >
-                  <td>{{ i + 1 }}</td>
-                  <td>
-                    {{ f.fee_type }}
-                    @if (f.is_latest) {
-                      <span class="ms-1 fw-semibold text-primary">→ Current Payment</span>
-                    }
-                  </td>
-                  <td>{{ f.collection_date | date: 'MMM yyyy' }}</td>
-                  <td>{{ f.invoice_number }}</td>
-                  <td>{{ f.collection_date | date: 'mediumDate' }}</td>
-                  <td class="text-end">{{ formatMoney(f.amount) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+        <p-table [value]="fees()" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '100%' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Fee Type</th>
+              <th scope="col">Month/Year</th>
+              <th scope="col">Invoice Number</th>
+              <th scope="col">Date of Payment</th>
+              <th scope="col" class="text-end">Amount Paid</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-f let-rowIndex="rowIndex">
+            <tr
+              [class.table-active]="f.is_latest"
+              [style.background-color]="f.is_latest ? 'var(--bs-primary-bg-subtle, #e8f4fd)' : null"
+            >
+              <td>{{ rowIndex + 1 }}</td>
+              <td>
+                {{ f.fee_type }}
+                @if (f.is_latest) {
+                  <span class="ms-1 fw-semibold text-primary">→ Current Payment</span>
+                }
+              </td>
+              <td>{{ f.collection_date | date: 'MMM dd, yyyy' }}</td>
+              <td>{{ f.invoice_number }}</td>
+              <td>{{ f.collection_date | date: 'mediumDate' }}</td>
+              <td class="text-end">{{ formatMoney(f.amount) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
 
         <div class="d-flex justify-content-end mt-4">
           <div class="text-end" style="min-width: 200px">

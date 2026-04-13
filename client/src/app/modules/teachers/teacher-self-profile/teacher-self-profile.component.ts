@@ -1,20 +1,42 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { Textarea } from 'primeng/textarea';
+import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { TeacherDetail, TeacherService } from '../../../services/teacher.service';
-import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-teacher-self-profile',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    CardModule,
+    ButtonModule,
+    InputTextModule,
+    Textarea,
+    ToastModule,
+  ],
+  providers: [MessageService],
   templateUrl: './teacher-self-profile.component.html',
   styleUrl: './teacher-self-profile.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeacherSelfProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(TeacherService);
-  private toast = inject(ToastService);
+  private messages = inject(MessageService);
+
+  readonly photoInputAccept = 'image/png,image/jpeg,image/jpg';
 
   loading = signal(true);
   submitting = signal(false);
@@ -41,8 +63,13 @@ export class TeacherSelfProfileComponent implements OnInit {
     this.api
       .getMe()
       .pipe(
-        catchError((e) => {
-          this.toast.open(e.error?.message || 'Failed to load profile', 'Dismiss', { duration: 5000 });
+        catchError((e: { error?: { message?: string } }) => {
+          this.messages.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: e.error?.message || 'Failed to load profile',
+            life: 5000,
+          });
           return of(null);
         }),
         finalize(() => this.loading.set(false))
@@ -74,7 +101,12 @@ export class TeacherSelfProfileComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      this.toast.open('Please choose an image file', 'Dismiss', { duration: 4000 });
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Invalid file',
+        detail: 'Please choose an image file',
+        life: 4000,
+      });
       return;
     }
     const reader = new FileReader();
@@ -114,12 +146,22 @@ export class TeacherSelfProfileComponent implements OnInit {
       next: (res) => {
         this.submitting.set(false);
         this.teacher.set(res.data as TeacherDetail);
-        this.toast.open('Profile updated', 'Dismiss', { duration: 4000 });
+        this.messages.add({
+          severity: 'success',
+          summary: 'Saved',
+          detail: 'Profile updated',
+          life: 4000,
+        });
         this.photoTouched = false;
       },
-      error: (e) => {
+      error: (e: { error?: { message?: string } }) => {
         this.submitting.set(false);
-        this.toast.open(e.error?.message || 'Update failed', 'Dismiss', { duration: 5000 });
+        this.messages.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: e.error?.message || 'Update failed',
+          life: 5000,
+        });
       },
     });
   }

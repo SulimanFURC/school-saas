@@ -1,15 +1,32 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, finalize, of } from 'rxjs';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { Menu, MenuModule } from 'primeng/menu';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
+import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject } from 'rxjs';
 
 import {
   StudentService,
   StudentListRow,
   resolveStudentDisplayName,
 } from '../../../services/student.service';
-import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { ToastService } from '../../../services/toast.service';
-import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import {
   compareDates,
   compareNullableString,
@@ -29,15 +46,36 @@ function initialsFromName(name: string): string {
 
 @Component({
   selector: 'app-student-list',
-  imports: [RouterLink, TablePaginationFooterComponent],
+  imports: [
+    RouterLink,
+    TableModule,
+    ButtonModule,
+    MenuModule,
+    InputTextModule,
+    ToastModule,
+    ConfirmDialogModule,
+    IconFieldModule,
+    InputIconModule,
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './student-list.component.html',
   styleUrl: './student-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentListComponent implements OnInit {
   private studentsApi = inject(StudentService);
   private router = inject(Router);
-  private toast = inject(ToastService);
-  private confirmDialog = inject(ConfirmDialogService);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+
+  private readonly rowActionMenu = viewChild<Menu>('rowActionMenu');
+
+  /** Bound to popup `p-menu`; refreshed per row before opening (OnPush). */
+  rowActionMenuModel: MenuItem[] = [];
+
+  private readonly searchInput$ = new Subject<string>();
 
   loading = signal(true);
   rows = signal<StudentListRow[]>([]);
@@ -45,6 +83,7 @@ export class StudentListComponent implements OnInit {
   pageSize = signal(20);
   total = signal(0);
   totalPages = signal(1);
+  searchQuery = signal('');
 
   sortKey = signal<StudentSortKey | null>(null);
   sortDir = signal<SortDir>('asc');
@@ -57,24 +96,49 @@ export class StudentListComponent implements OnInit {
     return sortCopy(data, (a, b) => this.compareByKey(a, b, key), dir);
   });
 
+  readonly firstIndex = computed(() => Math.max(0, (this.page() - 1) * this.pageSize()));
+
   ngOnInit(): void {
+    this.searchInput$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((raw) => {
+        const q = raw.trim();
+        this.searchQuery.set(q);
+        this.page.set(1);
+        this.load();
+      });
+  }
+
+  onSearchInput(value: string): void {
+    this.searchInput$.next(value);
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    const rows = event.rows ?? this.pageSize();
+    const first = event.first ?? 0;
+    const nextPage = Math.floor(first / rows) + 1;
+    this.pageSize.set(rows);
+    this.page.set(nextPage);
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
+    const q = this.searchQuery().trim();
     this.studentsApi
       .list({
         page: this.page(),
         pageSize: this.pageSize(),
+        ...(q ? { q } : {}),
       })
       .pipe(
-        catchError((e) => {
-          this.toast.open(
-            e.error?.message || e.message || 'Failed to load students',
-            'Dismiss',
-            { duration: 5000 }
-          );
+        catchError((e: { error?: { message?: string }; message?: string }) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: e.error?.message || e.message || 'Failed to load students',
+            life: 5000,
+          });
           return of({
             data: [] as StudentListRow[],
             total: 0,
@@ -94,12 +158,6 @@ export class StudentListComponent implements OnInit {
       });
   }
 
-  setPage(p: number): void {
-    const next = Math.min(Math.max(1, p), this.totalPages());
-    this.page.set(next);
-    this.load();
-  }
-
   toggleSort(key: StudentSortKey): void {
     if (this.sortKey() === key) {
       this.sortDir.update(nextSortDir);
@@ -115,8 +173,8 @@ export class StudentListComponent implements OnInit {
   }
 
   sortIconClass(key: StudentSortKey): string {
-    if (this.sortKey() !== key) return 'bi bi-arrow-down-up';
-    return this.sortDir() === 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill';
+    if (this.sortKey() !== key) return 'pi pi-arrows-v';
+    return this.sortDir() === 'asc' ? 'pi pi-sort-up-fill' : 'pi pi-sort-down-fill';
   }
 
   private compareByKey(a: StudentListRow, b: StudentListRow, key: StudentSortKey): number {
@@ -149,7 +207,6 @@ export class StudentListComponent implements OnInit {
     return initialsFromName(n);
   }
 
-  /** Avoid DatePipe on raw API values — invalid dates throw and break the whole table. */
   formatDob(value: string | null | undefined): string {
     if (value == null || value === '') return '—';
     const d = new Date(value);
@@ -164,49 +221,72 @@ export class StudentListComponent implements OnInit {
     void this.router.navigate(['/students', row.id]);
   }
 
-  editStudent(row: StudentListRow, ev: Event): void {
-    ev.stopPropagation();
+  editStudent(row: StudentListRow): void {
     void this.router.navigate(['/students', row.id, 'edit']);
   }
 
-  deleteRow(row: StudentListRow, ev: Event): void {
-    ev.stopPropagation();
-    void this.runDeleteStudent(row);
+  deleteRow(row: StudentListRow): void {
+    this.confirmationService.confirm({
+      message: this.deleteConfirmMessage(row),
+      header: 'Delete student?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.studentsApi
+          .delete(row.id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Removed',
+                detail: 'Student removed',
+                life: 3000,
+              });
+              this.load();
+            },
+            error: (e: { error?: { message?: string } }) => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: e.error?.message || 'Delete failed',
+                life: 5000,
+              });
+            },
+          });
+      },
+    });
+  }
+
+  openRowActionMenu(event: MouseEvent, row: StudentListRow): void {
+    event.stopPropagation();
+    this.rowActionMenuModel = [
+      {
+        label: 'View profile',
+        icon: 'pi pi-eye',
+        command: () => this.openProfile(row),
+      },
+      {
+        label: 'Edit',
+        icon: 'pi pi-pencil',
+        command: () => this.editStudent(row),
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        styleClass: 'student-row-actions-menu__item--danger',
+        command: () => this.deleteRow(row),
+      },
+    ];
+    this.cdr.detectChanges();
+    this.rowActionMenu()?.toggle(event);
   }
 
   private deleteConfirmMessage(row: StudentListRow): string {
     const name = this.displayName(row);
     const adm = row.admission_no?.trim() || 'this student';
     return `Remove ${adm} (${name}) from your school? This cannot be undone.`;
-  }
-
-  private async runDeleteStudent(row: StudentListRow): Promise<void> {
-    const ok = await this.confirmDialog.confirm({
-      title: 'Delete student?',
-      message: this.deleteConfirmMessage(row),
-      variant: 'danger',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
-      ariaIdPrefix: 'student-delete',
-    });
-    if (!ok) return;
-
-    this.confirmDialog.setBusy(true);
-    this.studentsApi.delete(row.id).subscribe({
-      next: () => {
-        this.confirmDialog.complete();
-        this.toast.open('Student removed', 'Dismiss', { duration: 3000 });
-        this.load();
-      },
-      error: (e) => {
-        this.confirmDialog.complete();
-        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 5000 });
-      },
-    });
-  }
-
-  openProfileFromMenu(row: StudentListRow, ev: Event): void {
-    ev.stopPropagation();
-    void this.router.navigate(['/students', row.id]);
   }
 }

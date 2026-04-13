@@ -1,7 +1,24 @@
-.fee-form-modal {
-  z-index: 1055;
+/* Fee collection: layout via Bootstrap; PrimeNG handles components. */
+
+:host ::ng-deep .fee-row-actions-menu__item--danger .p-menuitem-link {
+  color: var(--p-red-500, #dc3545);
 }
 
-.fee-form-modal__backdrop {
-  z-index: 1050;
+:host ::ng-deep .fee-row-actions-menu__item--danger .p-menuitem-link .p-menuitem-icon {
+  color: inherit;
+}
+
+.page-header-icon {
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #4f8cff, #2563eb);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    line-height: 1;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
 }

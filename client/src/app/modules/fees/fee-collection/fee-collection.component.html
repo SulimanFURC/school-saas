@@ -1,295 +1,298 @@
+<p-toast />
+<p-menu
+  #rowActionMenu
+  [model]="rowActionMenuModel"
+  [popup]="true"
+  appendTo="body"
+  styleClass="fee-row-actions-menu"
+/>
+
 <section class="page">
-  <header class="content-area-header" aria-labelledby="fees-page-title">
-    <div class="content-area-header__main">
-      <h1 id="fees-page-title" class="content-area-header__title">Fee Collection</h1>
-      <p class="content-area-header__subtitle">Record and manage fee payments</p>
+  <header class="content-area-header sp-page-header" aria-labelledby="fees-page-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div>
+        <h1 id="fees-page-title" class="content-area-header__title sp-page-header__title">Fee Collection</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Record and manage fee payments</p>
+      </div>
     </div>
     <div class="content-area-header__end">
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
-        <span class="content-area-header__crumb content-area-header__crumb--current">Fees</span>
+        <a routerLink="/fees" class="content-area-header__crumb content-area-header__crumb--parent">Fees</a>
         <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
         <span class="content-area-header__crumb content-area-header__crumb--current">Collection</span>
       </nav>
     </div>
   </header>
 
-  @if (successMessage()) {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      {{ successMessage() }}
-      <button type="button" class="btn-close" aria-label="Close" (click)="successMessage.set('')"></button>
-    </div>
-  }
-
   <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body d-flex flex-wrap align-items-end gap-3 justify-content-between">
-      <div class="d-flex flex-wrap gap-2 align-items-end">
-        <div>
-          <label class="form-label small text-secondary mb-0">Status</label>
-          <select
-            class="form-select form-select-sm"
-            [value]="statusFilter()"
-            (change)="statusFilter.set($any($event.target).value); applySearch()"
-          >
-            <option value="">All</option>
-            @for (s of statusOptions; track s) {
-              <option [value]="s">{{ s }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="form-label small text-secondary mb-0">Fee type</label>
-          <select
-            class="form-select form-select-sm"
-            [value]="feeTypeFilter()"
-            (change)="feeTypeFilter.set($any($event.target).value); applySearch()"
-          >
-            <option value="">All</option>
-            @for (t of feeTypeOptions; track t) {
-              <option [value]="t">{{ t }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="form-label small text-secondary mb-0">Show entries</label>
-          <select
-            class="form-select form-select-sm"
-            [value]="pageSize()"
-            (change)="setPageSize(+$any($event.target).value)"
-          >
-            <option [value]="10">10</option>
-            <option [value]="20">20</option>
-            <option [value]="50">50</option>
-          </select>
-        </div>
-      </div>
-      <div class="d-flex flex-wrap gap-2 align-items-end ms-auto">
-        <div class="input-group input-group-sm" style="max-width: 220px">
-          <input
-            type="search"
-            class="form-control"
-            placeholder="Search…"
-            [value]="searchTerm()"
-            (input)="searchTerm.set($any($event.target).value)"
-            (keyup.enter)="applySearch()"
+    <div class="card-body">
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label small text-secondary mb-1 d-block" for="fee-filter-status">Status</label>
+          <p-select
+            inputId="fee-filter-status"
+            [options]="statusSelectItems"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event); applyFilters()"
+            appendTo="body"
+            styleClass="w-100"
           />
-          <button type="button" class="btn btn-outline-secondary" (click)="applySearch()" aria-label="Search">
-            <i class="bi bi-search"></i>
-          </button>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" (click)="openAddModal()">
-          <i class="bi bi-plus-lg me-1"></i>
-          Add fee
-        </button>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label small text-secondary mb-1 d-block" for="fee-filter-type">Fee type</label>
+          <p-select
+            inputId="fee-filter-type"
+            [options]="feeTypeSelectItems"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="feeTypeFilter()"
+            (ngModelChange)="feeTypeFilter.set($event); applyFilters()"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-12 col-md-6 col-lg-4 ms-lg-auto">
+          <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-end">
+            <p-iconfield iconPosition="left" class="flex-grow-1" style="min-width: 12rem">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="search"
+                placeholder="Search…"
+                autocomplete="off"
+                class="w-100"
+                (input)="onSearchInput($any($event.target).value)"
+              />
+            </p-iconfield>
+            <p-button label="Add fee" icon="pi pi-plus" (onClick)="openAddModal()" />
+          </div>
+        </div>
       </div>
+      <div class="card shadow-sm border-0">
+    <p-table
+      [value]="fees()"
+      [lazy]="true"
+      [lazyLoadOnInit]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [first]="firstIndex()"
+      [totalRecords]="total()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [loading]="isLoading()"
+      [showLoader]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Roll No</th>
+          <th scope="col">Student Name</th>
+          <th scope="col">Invoice Number</th>
+          <th scope="col">Fee Type</th>
+          <th scope="col">Payment Method</th>
+          <th scope="col">Status</th>
+          <th scope="col">Date</th>
+          <th scope="col" class="text-end">Amount</th>
+          <th scope="col" class="text-end">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.roll_number ?? '—' }}</td>
+          <td>{{ row.student_name }}</td>
+          <td class="text-nowrap">{{ row.invoice_number }}</td>
+          <td>{{ row.fee_type }}</td>
+          <td>{{ row.payment_method }}</td>
+          <td>
+            <p-tag [value]="row.status" [severity]="statusSeverity(row.status)" />
+          </td>
+          <td>{{ row.collection_date }}</td>
+          <td class="text-end text-nowrap">{{ formatAmount(row.amount) }}</td>
+          <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+            <p-button
+              type="button"
+              icon="pi pi-ellipsis-v"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              ariaLabel="Open fee row actions menu"
+              (onClick)="openRowActionMenu($event, row)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty text-center py-5">
+              <p class="mb-2 fw-medium">No fee records</p>
+              <p class="small text-secondary mb-3">Add a fee collection to get started.</p>
+              <p-button label="Add fee" icon="pi pi-plus" [outlined]="true" (onClick)="openAddModal()" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
     </div>
   </div>
 
-  <div class="card shadow-sm border-0">
-    @if (isLoading()) {
-      <div class="center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    } @else if (fees().length === 0) {
-      <div class="empty text-center py-5">
-        <p class="mb-2 fw-medium">No fee records</p>
-        <p class="small text-secondary mb-0">Add a fee collection to get started.</p>
-      </div>
-    } @else {
-      <div class="table-responsive">
-        <table class="table app-data-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th scope="col">Roll No</th>
-              <th scope="col">Student Name</th>
-              <th scope="col">Invoice Number</th>
-              <th scope="col">Fee Type</th>
-              <th scope="col">Payment Method</th>
-              <th scope="col">Status</th>
-              <th scope="col">Date</th>
-              <th scope="col" class="text-end">Amount</th>
-              <th scope="col" class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of fees(); track row.id) {
-              <tr>
-                <td>{{ row.roll_number ?? '—' }}</td>
-                <td>{{ row.student_name }}</td>
-                <td class="text-nowrap">{{ row.invoice_number }}</td>
-                <td>{{ row.fee_type }}</td>
-                <td>{{ row.payment_method }}</td>
-                <td><span [class]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
-                <td>{{ row.collection_date }}</td>
-                <td class="text-end text-nowrap">{{ formatAmount(row.amount) }}</td>
-                <td class="text-end text-nowrap">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary me-1"
-                    (click)="openEditModal(row)"
-                    aria-label="Edit"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <a
-                    class="btn btn-sm btn-outline-secondary me-1"
-                    [routerLink]="['/fees/receipt', row.student_id]"
-                    aria-label="Receipt"
-                  >
-                    <i class="bi bi-receipt"></i>
-                  </a>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    (click)="deleteFee(row)"
-                    aria-label="Delete"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <app-table-pagination-footer
-        [total]="total()"
-        [page]="currentPage()"
-        [pageSize]="pageSize()"
-        [totalPages]="totalPages()"
-        entryLabel="entries"
-        ariaLabel="Fees pagination"
-        (pageChange)="setPage($event)"
-      />
-    }
-  </div>
+  
 </section>
 
-@if (showForm()) {
-  <div
-    class="modal fade show d-block fee-form-modal"
-    tabindex="-1"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-labelledby]="editingFee() ? 'feeFormEditTitle' : 'feeFormAddTitle'"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" (click)="$event.stopPropagation()">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title fs-5" [id]="editingFee() ? 'feeFormEditTitle' : 'feeFormAddTitle'">
-            {{ editingFee() ? 'Edit fee' : 'Collect fee' }}
-          </h2>
-          <button type="button" class="btn-close" aria-label="Close" (click)="cancelForm()"></button>
+<p-dialog
+  [visible]="showForm()"
+  (visibleChange)="onDialogVisibility($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+  [blockScroll]="true"
+  appendTo="body"
+  position="center"
+  [style]="{ width: 'min(48rem, 96vw)' }"
+  [header]="editingFee() ? 'Edit fee' : 'Collect fee'"
+  closeAriaLabel="Close"
+>
+  @if (errorMessage()) {
+    <p-message severity="error" [closable]="false" styleClass="mb-3 w-100 d-block">{{ errorMessage() }}</p-message>
+  }
+  <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="lookupAdmission">Registration No</label>
+          <div class="input-group">
+            <input
+              id="lookupAdmission"
+              pInputText
+              class="flex-grow-1"
+              [formControl]="lookupAdmission"
+              [readonly]="!!editingFee()"
+            />
+            @if (!editingFee()) {
+              <p-button
+                type="button"
+                label="Lookup"
+                [loading]="isLookupLoading()"
+                [disabled]="isLookupLoading()"
+                (onClick)="lookupStudent()"
+              />
+            }
+          </div>
         </div>
-        <div class="modal-body">
-          @if (errorMessage()) {
-            <div class="alert alert-danger py-2 small mb-3">{{ errorMessage() }}</div>
-          }
-          <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label" for="lookupAdmission">Registration No</label>
-                <div class="input-group">
-                  <input
-                    id="lookupAdmission"
-                    class="form-control"
-                    [formControl]="lookupAdmission"
-                    [readonly]="!!editingFee()"
-                  />
-                  @if (!editingFee()) {
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary"
-                      (click)="lookupStudent()"
-                      [disabled]="isLookupLoading()"
-                    >
-                      @if (isLookupLoading()) {
-                        <span class="spinner-border spinner-border-sm" role="status"></span>
-                      } @else {
-                        Lookup
-                      }
-                    </button>
-                  }
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Student Name</label>
-                <div class="form-control bg-light text-secondary border-0">
-                  {{ displayStudentName() || '—' }}
-                </div>
-              </div>
-              <div class="col-12">
-                <label class="form-label">Class</label>
-                <div class="form-control bg-light text-secondary border-0">
-                  {{ displayClassName() || '—' }}
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label" for="fee_type">Fee Type</label>
-                <select id="fee_type" class="form-select" formControlName="fee_type">
-                  <option value="" disabled>Select…</option>
-                  @for (t of feeTypeOptions; track t) {
-                    <option [value]="t">{{ t }}</option>
-                  }
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="amount">Amount</label>
-                <input id="amount" type="number" class="form-control" formControlName="amount" min="1" step="0.01" />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="collection_date">Collection Date</label>
-                <input id="collection_date" type="date" class="form-control" formControlName="collection_date" />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="payment_method">Payment Method</label>
-                <select id="payment_method" class="form-select" formControlName="payment_method">
-                  <option value="" disabled>Select…</option>
-                  @for (m of paymentMethodOptions; track m) {
-                    <option [value]="m">{{ m }}</option>
-                  }
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="payment_reference_number">Payment Reference</label>
-                <input
-                  id="payment_reference_number"
-                  type="text"
-                  class="form-control"
-                  formControlName="payment_reference_number"
-                />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="status">Status</label>
-                <select id="status" class="form-select" formControlName="status">
-                  @for (s of statusOptions; track s) {
-                    <option [value]="s">{{ s }}</option>
-                  }
-                </select>
-              </div>
-              <div class="col-12">
-                <label class="form-label" for="notes">Notes</label>
-                <textarea id="notes" class="form-control" rows="2" formControlName="notes"></textarea>
-              </div>
-            </div>
-
-            <div class="modal-footer border-0 px-0 pb-0 mt-4">
-              <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
-                @if (isSubmitting()) {
-                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                }
-                {{ editingFee() ? 'Save changes' : 'Save' }}
-              </button>
-            </div>
-          </form>
+        <div class="col-md-6">
+          <label class="form-label" for="fee-display-name">Student Name</label>
+          <input
+            id="fee-display-name"
+            pInputText
+            readonly
+            class="w-100"
+            [value]="displayStudentName() || '—'"
+            tabindex="-1"
+          />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="fee-display-class">Class</label>
+          <input
+            id="fee-display-class"
+            pInputText
+            readonly
+            class="w-100"
+            [value]="displayClassName() || '—'"
+            tabindex="-1"
+          />
         </div>
       </div>
-    </div>
-  </div>
-  <div class="modal-backdrop fade show fee-form-modal__backdrop" aria-hidden="true"></div>
-}
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="fee_type">Fee Type</label>
+          <p-select
+            inputId="fee_type"
+            formControlName="fee_type"
+            [options]="feeTypeFormItems"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select…"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="fee-amount">Amount</label>
+          <p-inputnumber
+            inputId="fee-amount"
+            formControlName="amount"
+            mode="decimal"
+            [min]="1"
+            [maxFractionDigits]="2"
+            [useGrouping]="false"
+            styleClass="w-100"
+            class="w-100 d-block"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="fee-collection-date">Collection Date</label>
+          <p-datepicker
+            inputId="fee-collection-date"
+            formControlName="collection_date"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="payment_method">Payment Method</label>
+          <p-select
+            inputId="payment_method"
+            formControlName="payment_method"
+            [options]="paymentMethodFormItems"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select…"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="payment_reference_number">Payment Reference</label>
+          <input id="payment_reference_number" pInputText class="w-100" formControlName="payment_reference_number" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="status">Status</label>
+          <p-select
+            inputId="status"
+            formControlName="status"
+            [options]="statusFormItems"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="notes">Notes</label>
+          <textarea id="notes" pTextarea rows="2" class="w-100" formControlName="notes"></textarea>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+        <p-button type="button" label="Cancel" severity="secondary" [outlined]="true" (onClick)="cancelForm()" />
+        <p-button type="submit" [label]="editingFee() ? 'Save changes' : 'Save'" [loading]="isSubmitting()" />
+      </div>
+    </form>
+</p-dialog>

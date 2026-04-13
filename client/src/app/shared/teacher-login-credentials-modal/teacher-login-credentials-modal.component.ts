@@ -1,4 +1,7 @@
 import { Component, inject, input, output } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
@@ -6,6 +9,7 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-teacher-login-credentials-modal',
   standalone: true,
+  imports: [DialogModule, ButtonModule, InputTextModule],
   templateUrl: './teacher-login-credentials-modal.component.html',
   styleUrl: './teacher-login-credentials-modal.component.scss',
 })
@@ -21,6 +25,17 @@ export class TeacherLoginCredentialsModalComponent {
   wasReset = input<boolean>(false);
 
   dismissed = output<void>();
+
+  /** Bound to PrimeNG Dialog visibility; closing emits `dismissed` from `onDialogHide`. */
+  dialogVisible = true;
+
+  close(): void {
+    this.dialogVisible = false;
+  }
+
+  onDialogHide(): void {
+    this.dismissed.emit();
+  }
 
   shareSupported(): boolean {
     return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
@@ -97,9 +112,5 @@ export class TeacherLoginCredentialsModalComponent {
       }
     }
     await this.copyLoginDetails();
-  }
-
-  close(): void {
-    this.dismissed.emit();
   }
 }

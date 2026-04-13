@@ -27,17 +27,6 @@
 //   padding-top: 0;
 // }
 
-.page--student-register .content-area-header__title {
-  color: var(--bs-body-color);
-  font-weight: 700;
-  font-size: 1.375rem;
-}
-
-.page--student-register .content-area-header__subtitle {
-  color: var(--ds-on-surface-variant);
-  font-size: 0.8125rem;
-}
-
 .reg-stack {
   display: flex;
   flex-direction: column;
@@ -276,7 +265,10 @@
   border-color: color-mix(in srgb, #a78bfa 45%, var(--bs-border-color) 55%);
   background-color: color-mix(in srgb, var(--bs-body-bg) 94%, #6d28d9 6%);
 }
-
+.reg-photo-field {
+  display: flex;
+  flex-direction: column-reverse;
+}
 .reg-photo-field__preview {
   flex: 0 0 auto;
 }
@@ -294,7 +286,7 @@
 }
 
 .reg-photo-field__controls {
-  flex: 1 1 12rem;
+  flex: 1 1 5rem;
   min-width: 0;
 }
 

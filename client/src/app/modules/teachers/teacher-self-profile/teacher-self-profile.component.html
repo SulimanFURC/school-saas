@@ -1,14 +1,18 @@
+<p-toast position="top-right" />
+
 <section class="page">
-  <header class="content-area-header mb-4">
+  <header class="content-area-header" aria-labelledby="teacher-me-title">
     <div class="content-area-header__main">
-      <h1 class="content-area-header__title">My profile</h1>
+      <h1 id="teacher-me-title" class="content-area-header__title">My profile</h1>
       <p class="content-area-header__subtitle">View and update your details</p>
     </div>
   </header>
 
   @if (loading()) {
     <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
   } @else if (!teacher()) {
     <p class="text-secondary">Unable to load profile.</p>
@@ -16,76 +20,125 @@
     @let t = teacher()!;
     <div class="row g-4">
       <div class="col-lg-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h2 class="h6 text-secondary">School account</h2>
-            <dl class="small mb-0">
-              <dt>Username</dt>
-              <dd>{{ t.login_user?.username || '—' }}</dd>
-              <dt>Work email</dt>
-              <dd>{{ t.email }}</dd>
-              <dt>Designation</dt>
-              <dd>{{ t.designation || '—' }}</dd>
-              <dt>Joining date</dt>
-              <dd>{{ t.joining_date || '—' }}</dd>
-              <dt>Date of birth</dt>
-              <dd>{{ t.dob || '—' }}</dd>
-              <dt>Gender</dt>
-              <dd>{{ t.gender || '—' }}</dd>
-            </dl>
-            <p class="small text-secondary mt-3 mb-0">Contact your administrator to change email, designation, or HR dates.</p>
-          </div>
-        </div>
+        <p-card header="School account" styleClass="shadow-sm border-0">
+          <dl class="small mb-0">
+            <dt>Username</dt>
+            <dd>{{ t.login_user?.username || '—' }}</dd>
+            <dt>Work email</dt>
+            <dd>{{ t.email }}</dd>
+            <dt>Designation</dt>
+            <dd>{{ t.designation || '—' }}</dd>
+            <dt>Joining date</dt>
+            <dd>{{ t.joining_date || '—' }}</dd>
+            <dt>Date of birth</dt>
+            <dd>{{ t.dob || '—' }}</dd>
+            <dt>Gender</dt>
+            <dd>{{ t.gender || '—' }}</dd>
+          </dl>
+          <p class="small text-secondary mt-3 mb-0">
+            Contact your administrator to change email, designation, or HR dates.
+          </p>
+        </p-card>
       </div>
       <div class="col-lg-8">
-        <form [formGroup]="form" (ngSubmit)="submit()" class="card shadow-sm border-0">
-          <div class="card-header bg-transparent fw-semibold">Editable details</div>
-          <div class="card-body">
+        <p-card header="Editable details" styleClass="shadow-sm border-0">
+          <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="sp-fn">First name</label>
-                <input id="sp-fn" class="form-control" formControlName="first_name" />
+                <input
+                  id="sp-fn"
+                  pInputText
+                  class="w-100"
+                  formControlName="first_name"
+                  [class.p-invalid]="form.controls.first_name.touched && form.controls.first_name.invalid"
+                />
+                @if (form.controls.first_name.touched && form.controls.first_name.invalid) {
+                  <small class="p-error d-block">Required</small>
+                }
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="sp-ln">Last name</label>
-                <input id="sp-ln" class="form-control" formControlName="last_name" />
+                <input
+                  id="sp-ln"
+                  pInputText
+                  class="w-100"
+                  formControlName="last_name"
+                  [class.p-invalid]="form.controls.last_name.touched && form.controls.last_name.invalid"
+                />
+                @if (form.controls.last_name.touched && form.controls.last_name.invalid) {
+                  <small class="p-error d-block">Required</small>
+                }
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="sp-mob">Mobile number</label>
-                <input id="sp-mob" class="form-control" formControlName="mobile_number" />
+                <input id="sp-mob" pInputText class="w-100" formControlName="mobile_number" />
               </div>
               <div class="col-12">
                 <label class="form-label" for="sp-addr">Address</label>
-                <textarea id="sp-addr" class="form-control" rows="2" formControlName="address"></textarea>
+                <textarea
+                  id="sp-addr"
+                  pTextarea
+                  rows="2"
+                  class="w-100"
+                  formControlName="address"
+                  [autoResize]="true"
+                ></textarea>
               </div>
               <div class="col-12">
                 <label class="form-label" for="sp-qual">Qualification</label>
-                <textarea id="sp-qual" class="form-control" rows="2" formControlName="qualification"></textarea>
+                <textarea
+                  id="sp-qual"
+                  pTextarea
+                  rows="2"
+                  class="w-100"
+                  formControlName="qualification"
+                  [autoResize]="true"
+                ></textarea>
               </div>
               <div class="col-12">
                 <label class="form-label" for="sp-exp">Experience</label>
-                <input id="sp-exp" class="form-control" formControlName="experience" />
+                <input id="sp-exp" pInputText class="w-100" formControlName="experience" />
               </div>
               <div class="col-12">
-                <label class="form-label">Profile photo</label>
+                <span class="form-label d-block" id="sp-photo-lbl">Profile photo</span>
                 @if (photoDataUrl()) {
                   <div class="mb-2">
                     <img [src]="photoDataUrl()!" alt="" class="img-thumbnail" style="max-height: 120px" />
                   </div>
                 }
-                <input type="file" class="form-control" accept="image/*" (change)="onPhotoSelected($event)" />
+                <input
+                  id="sp-photo"
+                  class="visually-hidden"
+                  type="file"
+                  [accept]="photoInputAccept"
+                  (change)="onPhotoSelected($event)"
+                  aria-labelledby="sp-photo-lbl"
+                />
+                <label for="sp-photo" class="btn btn-outline-secondary btn-sm">Choose file</label>
                 @if (photoDataUrl()) {
-                  <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="clearPhoto()">Remove photo</button>
+                  <p-button
+                    type="button"
+                    label="Remove photo"
+                    [text]="true"
+                    size="small"
+                    styleClass="px-0 d-block mt-1"
+                    severity="danger"
+                    (onClick)="clearPhoto()"
+                  />
                 }
               </div>
             </div>
-          </div>
-          <div class="card-footer bg-transparent border-0">
-            <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-              {{ submitting() ? 'Saving…' : 'Save changes' }}
-            </button>
-          </div>
-        </form>
+            <div class="mt-4 pt-3 border-top">
+              <p-button
+                type="submit"
+                [label]="submitting() ? 'Saving…' : 'Save changes'"
+                [disabled]="submitting()"
+                [loading]="submitting()"
+              />
+            </div>
+          </form>
+        </p-card>
       </div>
     </div>
   }

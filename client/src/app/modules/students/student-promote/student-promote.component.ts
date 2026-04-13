@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
@@ -11,22 +11,45 @@ import {
   StudentListRow,
   StudentService,
 } from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
+import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 
 type LoadSource = 'class' | 'admission' | null;
 type SelectionMode = 'all' | 'manual';
 
 @Component({
   selector: 'app-student-promote',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    RouterLink,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    ToastModule,
+    ProgressSpinnerModule,
+    CheckboxModule,
+  ],
+  providers: [MessageService],
   templateUrl: './student-promote.component.html',
   styleUrl: './student-promote.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentPromoteComponent implements OnInit {
   private fb = inject(FormBuilder);
   private academic = inject(AcademicService);
   private students = inject(StudentService);
-  private toast = inject(ToastService);
+  private messages = inject(MessageService);
   private destroyRef = inject(DestroyRef);
 
   loading = signal(true);
@@ -104,7 +127,7 @@ export class StudentPromoteComponent implements OnInit {
       },
       error: (e) => {
         this.loading.set(false);
-        this.toast.open(e.error?.message || 'Failed to load classes', 'Dismiss', { duration: 4000 });
+        this.notifyError(e.error?.message || 'Failed to load classes', 4000);
       },
     });
   }
@@ -258,7 +281,7 @@ export class StudentPromoteComponent implements OnInit {
             ? e.error?.message || 'No student found with this admission number.'
             : e.error?.message || e.message || 'Lookup failed. Try again.';
         this.listEmptyHint.set(null);
-        this.toast.open(msg, 'Dismiss', { duration: 6000 });
+        this.notifyError(msg, 6000);
         this.afterRowsLoaded();
       },
     });
@@ -317,11 +340,7 @@ export class StudentPromoteComponent implements OnInit {
           this.studentsTableLoading.set(false);
           this.studentRows.set([]);
           this.listEmptyHint.set(null);
-          this.toast.open(
-            e.error?.message || e.message || 'Failed to load students. Try again.',
-            'Dismiss',
-            { duration: 5000 }
-          );
+          this.notifyError(e.error?.message || e.message || 'Failed to load students. Try again.', 5000);
         },
       });
   }
@@ -425,36 +444,28 @@ export class StudentPromoteComponent implements OnInit {
     const v = this.form.getRawValue();
     const ids = [...this.selected()];
     if (!cy) {
-      this.toast.open('No current academic year', 'Dismiss', { duration: 4000 });
+      this.notifyError('No current academic year', 4000);
       return;
     }
     if (ids.length === 0) {
-      this.toast.open('Select at least one student', 'Dismiss', { duration: 4000 });
+      this.notifyError('Select at least one student', 4000);
       return;
     }
     if (!v.to_academic_year_id || !v.to_class_id || !v.to_section_id) {
-      this.toast.open('Select promote session, target class and section', 'Dismiss', { duration: 4000 });
+      this.notifyError('Select promote session, target class and section', 4000);
       return;
     }
     if (!v.from_class_id) {
-      this.toast.open('Select promotion from class', 'Dismiss', { duration: 4000 });
+      this.notifyError('Select promotion from class', 4000);
       return;
     }
     const fromYearId = this.resolveSourceAcademicYearFromSelection();
     if (fromYearId == null) {
-      this.toast.open(
-        'Selected students must share the same session. Reload the list and try again.',
-        'Dismiss',
-        { duration: 6000 }
-      );
+      this.notifyError('Selected students must share the same session. Reload the list and try again.', 6000);
       return;
     }
     if (!v.repeat_class && this.promoteNextYearMissing()) {
-      this.toast.open(
-        'Create the next academic year before promoting to the next session.',
-        'Dismiss',
-        { duration: 6000 }
-      );
+      this.notifyError('Create the next academic year before promoting to the next session.', 6000);
       return;
     }
 
@@ -485,14 +496,14 @@ export class StudentPromoteComponent implements OnInit {
       .subscribe({
         next: () => {
           this.submitting.set(false);
-          this.toast.open('Promotion saved', 'Dismiss', { duration: 4000 });
+          this.notifySuccess('Promotion saved', 4000);
           this.selected.set(new Set());
           this.rollByStudentId.set({});
           this.refreshAfterPromote();
         },
         error: (e) => {
           this.submitting.set(false);
-          this.toast.open(e.error?.message || 'Promotion failed', 'Dismiss', { duration: 6000 });
+          this.notifyError(e.error?.message || 'Promotion failed', 6000);
         },
       });
   }
@@ -508,5 +519,13 @@ export class StudentPromoteComponent implements OnInit {
       this.loadStudentsForClass();
       return;
     }
+  }
+
+  private notifyError(detail: string, life: number): void {
+    this.messages.add({ severity: 'error', summary: 'Error', detail: String(detail), life });
+  }
+
+  private notifySuccess(detail: string, life: number): void {
+    this.messages.add({ severity: 'success', summary: 'Success', detail: String(detail), life });
   }
 }
