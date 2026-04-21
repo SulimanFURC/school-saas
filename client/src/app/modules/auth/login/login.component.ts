@@ -1,6 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
 import { finalize, from, map, of, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
@@ -10,7 +15,16 @@ import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    RouterLink,
+    CardModule,
+    InputTextModule,
+    PasswordModule,
+    ButtonModule,
+    CheckboxModule,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -30,6 +44,9 @@ export class LoginComponent {
   });
 
   submitting = false;
+
+  /** UI-only; not sent with login. */
+  rememberMe = false;
 
   submit(): void {
     if (this.form.invalid || this.submitting) {

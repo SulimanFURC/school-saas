@@ -1,4 +1,5 @@
-import { Component, inject, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, output, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,6 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { DrawerModule } from 'primeng/drawer';
 
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../../services/toast.service';
@@ -21,27 +23,30 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-create-tenant-dialog',
-  imports: [ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, DrawerModule],
   templateUrl: './create-tenant-dialog.component.html',
   styleUrl: './create-tenant-dialog.component.scss',
 })
-export class CreateTenantDialogComponent {
+export class CreateTenantDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   private toast = inject(ToastService);
 
   readonly closed = output<boolean>();
 
+  readonly visible = signal(false);
   submitting = false;
+  private pendingResult: boolean | null = null;
 
   readonly form = this.fb.group(
     {
-      name: ['', [Validators.required, Validators.maxLength(200)]],
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       subdomain: ['', Validators.required],
       contact_email: ['', [Validators.required, Validators.email]],
       phone: ['', Validators.maxLength(50)],
       address: ['', Validators.maxLength(5000)],
-      status: ['active', Validators.required],
+      status: ['', Validators.required],
       adminName: ['', Validators.required],
       adminEmail: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -50,8 +55,19 @@ export class CreateTenantDialogComponent {
     { validators: passwordsMatch }
   );
 
+  ngOnInit(): void {
+    queueMicrotask(() => this.visible.set(true));
+  }
+
+  onHide(): void {
+    this.closed.emit(this.pendingResult === true);
+    this.pendingResult = null;
+  }
+
   cancel(): void {
-    this.closed.emit(false);
+    if (this.submitting) return;
+    this.pendingResult = false;
+    this.visible.set(false);
   }
 
   submit(): void {
@@ -77,7 +93,8 @@ export class CreateTenantDialogComponent {
         next: () => {
           this.submitting = false;
           this.toast.open('Tenant created', 'Dismiss', { duration: 4000 });
-          this.closed.emit(true);
+          this.pendingResult = true;
+          this.visible.set(false);
         },
         error: (err) => {
           this.submitting = false;

@@ -1,0 +1,275 @@
+<p-toast />
+<p-menu
+  #rowActionMenu
+  [model]="rowActionMenuModel"
+  [popup]="true"
+  appendTo="body"
+  styleClass="expense-row-actions-menu"
+/>
+
+<section class="page">
+  <header class="content-area-header sp-page-header" aria-labelledby="expenses-page-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div>
+        <h1 id="expenses-page-title" class="content-area-header__title sp-page-header__title">Expenses</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Track school expenses and receipts</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label small text-secondary mb-1 d-block" for="exp-filter-status">Status</label>
+          <p-select
+            inputId="exp-filter-status"
+            [options]="statusSelectItems"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event); applyFilters()"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+          <label class="form-label small text-secondary mb-1 d-block" for="exp-filter-type">Expense type</label>
+          <p-select
+            inputId="exp-filter-type"
+            [options]="expenseTypeSelectItems"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="expenseTypeFilter()"
+            (ngModelChange)="expenseTypeFilter.set($event); applyFilters()"
+            appendTo="body"
+            styleClass="w-100"
+          />
+        </div>
+        <div class="col-12 col-md-6 col-lg-4 ms-lg-auto">
+          <div class="d-flex flex-wrap gap-2 justify-content-md-end align-items-end">
+            <p-iconfield iconPosition="left" class="flex-grow-1" style="min-width: 12rem">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="search"
+                placeholder="Search…"
+                autocomplete="off"
+                class="w-100"
+                (input)="onSearchInput($any($event.target).value)"
+              />
+            </p-iconfield>
+            <p-button label="Add expense" icon="pi pi-plus" (onClick)="openAddModal()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <p-table
+          [value]="expenses()"
+          [lazy]="true"
+          [lazyLoadOnInit]="true"
+          (onLazyLoad)="onLazyLoad($event)"
+          [paginator]="true"
+          [rows]="pageSize()"
+          [first]="firstIndex()"
+          [totalRecords]="total()"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          [loading]="isLoading()"
+          [showLoader]="true"
+          dataKey="id"
+          [sortField]="sortField()"
+          [sortOrder]="sortOrderPrime()"
+          selectionMode="single"
+          [metaKeySelection]="false"
+          styleClass="p-datatable-sm p-datatable-striped"
+          [tableStyle]="{ 'min-width': '44rem' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col" pSortableColumn="expense_type">Type</th>
+              <th scope="col" class="text-end" pSortableColumn="amount">Amount</th>
+              <th scope="col" pSortableColumn="status">Status</th>
+              <th scope="col" pSortableColumn="expense_date">Date</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.name }}</td>
+              <td>{{ row.expense_type }}</td>
+              <td class="text-end text-nowrap">{{ formatAmount(row.amount) }}</td>
+              <td>
+                <p-tag [value]="row.status" [severity]="statusSeverity(row.status)" />
+              </td>
+              <td>{{ row.expense_date }}</td>
+              <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
+                <p-button
+                  type="button"
+                  icon="pi pi-ellipsis-v"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  ariaLabel="Open expense row actions menu"
+                  (onClick)="openRowActionMenu($event, row)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="empty text-center py-5">
+                  <p class="mb-2 fw-medium">No expenses yet</p>
+                  <p class="small text-secondary mb-3">Add an expense to get started.</p>
+                  <p-button label="Add expense" icon="pi pi-plus" [outlined]="true" (onClick)="openAddModal()" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p-dialog
+  [visible]="showForm()"
+  (visibleChange)="onDialogVisibility($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+  [blockScroll]="true"
+  appendTo="body"
+  position="center"
+  [style]="{ width: 'min(48rem, 96vw)' }"
+  [header]="editingExpense() ? 'Edit expense' : 'Add expense'"
+  closeAriaLabel="Close"
+>
+  @if (errorMessage()) {
+    <p-message severity="error" [closable]="false" styleClass="mb-3 w-100 d-block">{{ errorMessage() }}</p-message>
+  }
+  <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="exp-name">Expense name</label>
+        <input id="exp-name" pInputText class="w-100" formControlName="name" autocomplete="off" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="exp-amount">Amount</label>
+        <p-inputnumber
+          inputId="exp-amount"
+          formControlName="amount"
+          mode="decimal"
+          [min]="0.01"
+          [maxFractionDigits]="2"
+          [useGrouping]="false"
+          styleClass="w-100"
+          class="w-100 d-block"
+        />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="exp-date">Expense date</label>
+        <p-datepicker
+          inputId="exp-date"
+          formControlName="expense_date"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          appendTo="body"
+          styleClass="w-100"
+        />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="exp-type">Expense type</label>
+        <p-select
+          inputId="exp-type"
+          formControlName="expense_type"
+          [options]="expenseTypeFormItems"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select…"
+          appendTo="body"
+          styleClass="w-100"
+        />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="exp-status">Status</label>
+        <p-select
+          inputId="exp-status"
+          formControlName="status"
+          [options]="statusFormItems"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-100"
+        />
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="exp-desc">Description</label>
+        <textarea id="exp-desc" pTextarea rows="2" class="w-100" formControlName="description"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label d-block">Receipt (optional)</label>
+        @if (editingExpense()?.attachment_url && !removeReceiptRequested()) {
+          @if (existingReceiptPreviewUrl(); as currUrl) {
+            <div class="mb-2">
+              <img [src]="currUrl" alt="Current receipt" class="img-thumbnail expense-receipt-thumb" />
+            </div>
+          }
+          <p-button
+            type="button"
+            label="Remove saved receipt"
+            severity="danger"
+            [outlined]="true"
+            size="small"
+            class="mb-2"
+            (onClick)="toggleRemoveServerReceipt()"
+          />
+        }
+        <input
+          #receiptFileInput
+          type="file"
+          class="d-none"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          (change)="onReceiptFileInputChange($event)"
+          aria-hidden="true"
+          tabindex="-1"
+        />
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <p-button
+            type="button"
+            label="Choose image"
+            icon="pi pi-image"
+            [outlined]="true"
+            (onClick)="onChooseReceiptClick()"
+          />
+          @if (selectedReceiptFile() || receiptPreviewUrl()) {
+            <p-button type="button" label="Clear" severity="secondary" [text]="true" (onClick)="onReceiptClear()" />
+          }
+        </div>
+        @if (receiptPreviewUrl()) {
+          <div class="mt-2">
+            <span class="small text-secondary d-block mb-1">Preview</span>
+            <img [src]="receiptPreviewUrl()!" alt="Receipt preview" class="img-thumbnail expense-receipt-thumb" />
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+      <p-button type="button" label="Cancel" severity="secondary" [outlined]="true" (onClick)="cancelForm()" />
+      <p-button type="submit" [label]="editingExpense() ? 'Save changes' : 'Save'" [loading]="isSubmitting()" />
+    </div>
+  </form>
+</p-dialog>

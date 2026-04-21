@@ -2,134 +2,225 @@
   <app-create-tenant-dialog (closed)="onCreateClosed($event)" />
 }
 
-<section class="tenant-list ds-section-pad">
-  <div class="tenant-list__head">
-    <h2 class="ds-headline-md tenant-list__title">Tenants</h2>
-    <p class="ds-body-md ds-on-variant">Enable or disable product modules per school.</p>
-  </div>
-
-  <div class="tenant-list__toolbar">
-    <button type="button" class="btn btn-primary" (click)="openCreateTenant()">
-      <i class="bi bi-plus-lg me-1"></i>
-      Add tenant
-    </button>
-  </div>
-
-  @if (loading) {
-    <p class="ds-body-md ds-on-variant">Loading...</p>
-  } @else if (tenants().length === 0) {
-    <div class="tenant-list__empty ds-body-md ds-on-variant">
-      <p class="tenant-list__empty-title">No tenants yet</p>
-      <p>Create a tenant to get started.</p>
+<section class="platform-overview">
+  <div class="container-fluid platform-overview__inner">
+    <div class="row align-items-start justify-content-between g-3 mb-4">
+      <div class="col">
+        <h1 class="platform-overview__title">Platform Overview</h1>
+        <p class="platform-overview__subtitle mb-0">
+          Manage and monitor all schools across the platform
+        </p>
+      </div>
+      <div class="col-auto">
+        <p-button label="Create New School" icon="pi pi-plus" (onClick)="openCreateTenant()" />
+      </div>
     </div>
-  } @else {
-    <div class="tenant-list__table-wrap">
-      <div class="table-responsive">
-        <table class="table app-data-table align-middle mb-0 tenant-table">
-          <thead>
-            <tr>
-              <th scope="col" [attr.aria-sort]="sortAria('name')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
-                  Tenant
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('status')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('status')">
-                  Status
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('status')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" [attr.aria-sort]="sortAria('updated')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('updated')">
-                  Last updated
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('updated')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" class="text-end tenant-table__th--actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of sortedTenants(); track row.id) {
-              <tr class="tenant-table__data-row">
-                <td class="tenant-table__cell tenant-table__cell--tenant">
-                  <div class="tenant-table__tenant">
-                    <span [class]="avatarToneClass(row.id)" aria-hidden="true">{{ initials(row.name) }}</span>
-                    <div class="tenant-table__tenant-meta">
-                      <span class="tenant-table__name">{{ row.name }}</span>
-                      <span class="tenant-table__sub">ID: {{ row.subdomain }}</span>
-                    </div>
-                  </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="platform-stat-card">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="min-w-0">
+              <p class="platform-stat-card__label">Total Schools</p>
+              <p class="platform-stat-card__value">{{ formatNumber(stats()?.totalSchools ?? 0) }}</p>
+            </div>
+            <div class="platform-stat-card__icon platform-stat-card__icon--blue" aria-hidden="true">
+              <i class="pi pi-building"></i>
+            </div>
+          </div>
+          <p class="platform-stat-card__trend platform-stat-card__trend--muted mb-0">Across the platform</p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="platform-stat-card">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="min-w-0">
+              <p class="platform-stat-card__label">Active Schools</p>
+              <p class="platform-stat-card__value">{{ formatNumber(stats()?.activeSchools ?? 0) }}</p>
+            </div>
+            <div class="platform-stat-card__icon platform-stat-card__icon--teal" aria-hidden="true">
+              <i class="pi pi-check"></i>
+            </div>
+          </div>
+          <p class="platform-stat-card__trend platform-stat-card__trend--success mb-0">
+            {{ activationRate() }}% activation rate
+          </p>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="platform-stat-card">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="min-w-0">
+              <p class="platform-stat-card__label">Pending Approvals</p>
+              <p class="platform-stat-card__value">{{ formatNumber(stats()?.pendingSchools ?? 0) }}</p>
+            </div>
+            <div class="platform-stat-card__icon platform-stat-card__icon--amber" aria-hidden="true">
+              <i class="pi pi-clock"></i>
+            </div>
+          </div>
+          @if ((stats()?.pendingSchools ?? 0) > 0) {
+            <p class="platform-stat-card__trend platform-stat-card__trend--warning mb-0">
+              {{ stats()?.pendingSchools }} need review
+            </p>
+          } @else {
+            <p class="platform-stat-card__trend platform-stat-card__trend--muted mb-0">None pending</p>
+          }
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="platform-stat-card">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="min-w-0">
+              <p class="platform-stat-card__label">Total Students</p>
+              <p class="platform-stat-card__value">{{ formatNumber(stats()?.totalStudents ?? 0) }}</p>
+            </div>
+            <div class="platform-stat-card__icon platform-stat-card__icon--sky" aria-hidden="true">
+              <i class="pi pi-users"></i>
+            </div>
+          </div>
+          <p class="platform-stat-card__trend platform-stat-card__trend--muted mb-0">Across all schools</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card platform-table-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="row align-items-end justify-content-between g-3 mb-3">
+          <div class="col-lg">
+            <h2 class="platform-table-card__title">Recent Schools</h2>
+            <p class="platform-table-card__subtitle mb-0">
+              A list of recently registered schools on the platform
+            </p>
+          </div>
+          <div class="col-lg-auto">
+            <p-iconfield iconPosition="left" class="platform-search w-100" style="min-width: min(100%, 16rem)">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="search"
+                placeholder="Search schools..."
+                autocomplete="off"
+                class="w-100"
+                (input)="onSearchInput($any($event.target).value)"
+              />
+            </p-iconfield>
+          </div>
+        </div>
+
+        @if (loading && tenants().length === 0) {
+          <p class="text-secondary small mb-0 py-4">Loading schools…</p>
+        } @else if (!loading && tenants().length === 0) {
+          <div class="platform-empty text-center py-5">
+            <p class="fw-semibold text-body mb-2">No schools found</p>
+            <p class="small text-secondary mb-3">
+              @if (searchQuery()) {
+                Try a different search or clear filters.
+              } @else {
+                Create a school to get started.
+              }
+            </p>
+            <p-button label="Create New School" icon="pi pi-plus" [outlined]="true" (onClick)="openCreateTenant()" />
+          </div>
+        } @else {
+          <p-table
+            [value]="sortedTenants()"
+            [loading]="loading"
+            [showLoader]="true"
+            dataKey="id"
+            styleClass="p-datatable-sm platform-p-table"
+            [tableStyle]="{ 'min-width': '100%' }"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th scope="col" [attr.aria-sort]="sortAria('name')">
+                  <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+                    School name
+                    <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
+                  </button>
+                </th>
+                <th scope="col">Subdomain</th>
+                <th scope="col" [attr.aria-sort]="sortAria('status')">
+                  <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('status')">
+                    Status
+                    <i class="app-data-table__sort-icon" [class]="sortIconClass('status')" aria-hidden="true"></i>
+                  </button>
+                </th>
+                <th scope="col">Contact email</th>
+                <th scope="col">Modules enabled</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>
+                  <span class="fw-semibold text-body">{{ row.name }}</span>
                 </td>
-                <td class="tenant-table__cell">
-                  <span
-                    class="tenant-status"
-                    [class.tenant-status--active]="statusKind(row.status) === 'active'"
-                    [class.tenant-status--inactive]="statusKind(row.status) === 'inactive'"
-                    [class.tenant-status--pending]="statusKind(row.status) === 'pending' || statusKind(row.status) === 'unknown'"
-                  >
-                    {{ statusLabel(row.status) }}
-                  </span>
+                <td>
+                  <span class="text-secondary small">{{ row.subdomain }}</span>
                 </td>
-                <td class="tenant-table__cell tenant-table__cell--updated">{{ relativeUpdated(row) }}</td>
-                <td class="tenant-table__cell tenant-table__cell--actions text-end">
-                  <div class="dropdown">
-                    <button
+                <td>
+                  <p-tag [value]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
+                </td>
+                <td>
+                  <span class="text-secondary small">{{ contactEmail(row) }}</span>
+                </td>
+                <td>
+                  <span class="platform-modules text-secondary small">{{ row.enabled_modules ?? '—' }}</span>
+                </td>
+                <td class="text-end text-nowrap">
+                  <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+                    <p-button
                       type="button"
-                      class="btn btn-link btn-sm tenant-table__action-btn"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                      aria-label="Open row actions"
-                    >
-                      <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" [routerLink]="['/super-admin/tenants', row.id, 'features']">
-                          <i class="bi bi-sliders me-2"></i>
-                          Manage features
-                        </a>
-                      </li>
-                      <li>
-                        <button type="button" class="dropdown-item" disabled>
-                          <i class="bi bi-pencil me-2"></i>
-                          Edit
-                        </button>
-                      </li>
-                    </ul>
+                      icon="pi pi-eye"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="secondary"
+                      [attr.aria-label]="'View ' + row.name"
+                      [routerLink]="['/super-admin/tenants', row.id, 'features']"
+                    />
+                    <p-button
+                      type="button"
+                      icon="pi pi-pencil"
+                      [text]="true"
+                      [rounded]="true"
+                      severity="secondary"
+                      [disabled]="true"
+                      ariaLabel="Edit school (coming soon)"
+                    />
                   </div>
                 </td>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </ng-template>
+          </p-table>
 
-      <div class="tenant-list__paginator">
-        <div class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-top">
-          <label class="mb-0 small text-secondary" for="tenantPageSize">Rows per page</label>
-          <select
-            id="tenantPageSize"
-            class="form-select form-select-sm"
-            style="width: auto"
-            [value]="pageSize()"
-            (change)="onPageSizeChange(+$any($event.target).value)"
-          >
-            @for (opt of pageSizeOptions; track opt) {
-              <option [value]="opt">{{ opt }}</option>
-            }
-          </select>
-        </div>
-        <app-table-pagination-footer
-          [total]="total()"
-          [page]="pageIndex() + 1"
-          [pageSize]="pageSize()"
-          [totalPages]="totalPages()"
-          entryLabel="tenants"
-          ariaLabel="Tenant pagination"
-          (pageChange)="onFooterPageChange($event)"
-        />
+          <div class="tenant-list__paginator pt-2">
+            <div class="d-flex flex-wrap align-items-center gap-2 px-1 py-2 platform-paginator-toolbar">
+              <label class="mb-0 small text-secondary" for="tenantPageSize">Rows per page</label>
+              <select
+                id="tenantPageSize"
+                class="form-select form-select-sm"
+                style="width: auto"
+                [value]="pageSize()"
+                (change)="onPageSizeChange(+$any($event.target).value)"
+              >
+                @for (opt of pageSizeOptions; track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+            <app-table-pagination-footer
+              [total]="total()"
+              [page]="pageIndex() + 1"
+              [pageSize]="pageSize()"
+              [totalPages]="totalPages()"
+              entryLabel="schools"
+              ariaLabel="Schools pagination"
+              (pageChange)="onFooterPageChange($event)"
+            />
+          </div>
+        }
       </div>
     </div>
-  }
+  </div>
 </section>

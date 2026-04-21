@@ -1,65 +1,192 @@
-.branding-settings {
-  max-width: 40rem;
+.tb-page {
+  color: var(--ds-on-surface);
 }
 
-.branding-settings__intro {
-  margin: 0 0 1.25rem;
+.tb-page__inner {
+  max-width: 96rem;
+  margin: 0 auto;
+  padding: 0 0 1.5rem;
+}
+
+.tb-card__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ds-on-surface);
+}
+
+.tb-card__desc {
+  color: var(--ds-on-surface-variant);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.tb-field-hint {
+  margin-top: 0.1rem;
+}
+
+.tb-hex-input {
+  max-width: 11rem;
+  font-family: ui-monospace, monospace;
+  text-transform: uppercase;
+}
+
+.tb-palette__dot {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ds-on-surface) 14%, transparent);
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 25%, transparent);
+}
+
+.tb-palette__dot:hover {
+  filter: brightness(1.08);
+}
+
+/* Color picker trigger — large swatch */
+:host ::ng-deep .tb-swatch-picker .p-colorpicker-preview {
+  width: 2.85rem !important;
+  height: 2.85rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid var(--ds-outline-variant) !important;
+}
+
+:host ::ng-deep .tb-fileupload.p-fileupload {
+  border: none;
+  background: transparent;
+}
+
+:host ::ng-deep .tb-fileupload .p-fileupload-content {
+  border: 1px dashed var(--ds-outline-variant);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--ds-surface-container-low) 70%, transparent);
+  padding: 1.5rem 1rem;
+}
+
+:host ::ng-deep .tb-fileupload .p-fileupload-buttonbar {
+  background: transparent;
+  border: none;
+  padding: 0 0 0.75rem;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .tb-fileupload .p-fileupload-files {
+  display: none;
+}
+
+.tb-file-row {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ds-outline-variant);
+  background: var(--ds-surface-container-low);
+}
+
+.tb-file-row__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
+  color: var(--bs-primary);
+  font-size: 1.15rem;
+}
+
+/* Live preview shell */
+.tb-mini-app {
+  border-color: var(--ds-outline-variant) !important;
+  background: var(--ds-surface-container-low);
+}
+
+.tb-mini-app__body {
+  min-height: 14rem;
+}
+
+.tb-mini-nav {
+  width: 42%;
+  min-width: 7.5rem;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.65rem;
+}
+
+.tb-mini-nav__logo {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+  border-radius: 0.2rem;
+  flex-shrink: 0;
+}
+
+.tb-mini-nav__logo-fallback {
+  font-size: 1.25rem;
+  opacity: 0.95;
+}
+
+.tb-mini-nav__list {
+  padding-left: 0;
+}
+
+.tb-mini-nav__item {
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-mini-nav__item--active {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.tb-mini-main {
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--ds-surface) 92%, var(--ds-on-surface));
+  font-size: 0.65rem;
+}
+
+.tb-mini-main__header {
+  font-size: 0.75rem;
+  color: var(--ds-on-surface);
+}
+
+.tb-mini-tile {
+  background: color-mix(in srgb, var(--ds-surface-bright) 96%, transparent);
+  border: 1px solid var(--ds-outline-variant);
+}
+
+.tb-mini-tile__lbl {
+  font-size: 0.6rem;
+}
+
+.tb-mini-chart {
+  background: color-mix(in srgb, var(--ds-surface-bright) 96%, transparent);
+  border: 1px solid var(--ds-outline-variant);
+}
+
+.tb-mini-chart__bars {
+  gap: 3px;
+}
+
+.tb-mini-chart__bar {
+  min-height: 4px;
+}
+
+:host ::ng-deep .tb-preview-note.p-message {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+:host ::ng-deep .tb-preview-note .p-message-text {
   color: var(--ds-on-surface-variant);
 }
 
-.branding-settings__form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.branding-settings__field--tenant {
-  width: 100%;
-}
-
-.branding-settings__colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.branding-settings__color-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  input[type='color'] {
-    width: 100%;
-    max-width: 12rem;
-    height: 2.75rem;
-    padding: 0.2rem;
-    border-radius: var(--ds-radius-default, 0.5rem);
-    border: 1px solid var(--ds-outline-variant);
-    cursor: pointer;
-    background: var(--ds-surface-container-low);
-  }
-}
-
-.branding-settings__logo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  input[type='file'] {
-    max-width: 100%;
-  }
-}
-
-.branding-settings__preview {
-  margin-top: 0.25rem;
-
-  img {
-    max-height: 64px;
-    max-width: 240px;
-    object-fit: contain;
-    border-radius: var(--ds-radius-default, 0.5rem);
-    border: 1px solid var(--ds-outline-variant);
-    padding: 0.25rem;
-    background: var(--ds-surface-container-low);
-  }
+/* Card surfaces — align with global Bootstrap cards in both themes */
+:host ::ng-deep .tb-card.p-card,
+:host ::ng-deep .tb-card .p-card-body {
+  background: transparent;
 }

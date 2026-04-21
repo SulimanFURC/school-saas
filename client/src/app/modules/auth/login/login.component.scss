@@ -1,1 +1,365 @@
-@use '../auth-shared';
+/* Login — EduCore split layout; scoped light panel overrides global dark theme */
+
+$login-navy: #0a0e1a;
+$login-navy-accent: #3b82f6;
+$login-panel-bg: #ffffff;
+$login-text: #111827;
+$login-muted: #6b7280;
+$login-input-bg: #f3f4f6;
+$login-error: #dc2626;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+}
+
+.login-page__brand {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 2rem;
+  background: $login-navy;
+  color: #fff;
+  text-align: center;
+  min-height: 40vh;
+
+  @media (min-width: 768px) {
+    flex: 1 1 50%;
+    min-height: 100vh;
+    padding: 3rem 2rem;
+  }
+}
+
+.login-page__brand-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 22rem;
+}
+
+.login-page__logo {
+  margin-bottom: 1.25rem;
+}
+
+.login-page__logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, $login-navy-accent 18%, $login-navy);
+  border: 1px solid color-mix(in srgb, $login-navy-accent 45%, transparent);
+
+  .pi {
+    font-size: 1.75rem;
+    color: $login-navy-accent;
+  }
+}
+
+.login-page__title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.login-page__tagline {
+  margin: 0;
+  font-size: 1rem;
+  color: color-mix(in srgb, #fff 72%, transparent);
+  font-weight: 400;
+}
+
+.login-page__features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.25rem 2rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  width: 100%;
+  max-width: 26rem;
+
+  @media (min-width: 768px) {
+    margin-top: auto;
+    padding-top: 2rem;
+  }
+}
+
+.login-page__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 5rem;
+}
+
+.login-page__feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, $login-navy-accent 55%, transparent);
+  color: $login-navy-accent;
+
+  .pi {
+    font-size: 1.1rem;
+  }
+}
+
+.login-page__feature-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: color-mix(in srgb, #fff 88%, transparent);
+}
+
+.login-page__panel {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 2.5rem;
+  background: $login-panel-bg;
+  color: $login-text;
+
+  @media (min-width: 768px) {
+    flex: 1 1 50%;
+    min-height: 100vh;
+    padding: 2rem 2.5rem;
+  }
+}
+
+/* PrimeNG Card — light surface */
+:host ::ng-deep .login-card {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.08),
+    0 10px 24px -4px rgb(0 0 0 / 0.1);
+  background: $login-panel-bg;
+  color: $login-text;
+
+  .p-card-body {
+    padding: 1.75rem 1.75rem 1.25rem;
+  }
+
+  .p-card-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: $login-text;
+    letter-spacing: -0.02em;
+  }
+
+  .p-card-subtitle {
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+    color: $login-muted;
+    font-weight: 400;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+
+  .p-card-footer {
+    padding: 0 1.75rem 1.75rem;
+    background: transparent;
+    border: none;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.login-field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $login-text;
+}
+
+.login-field__label--mb-0 {
+  margin-bottom: 0;
+}
+
+.login-field__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.375rem;
+}
+
+.login-field__forgot {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $login-navy-accent;
+  cursor: default;
+  user-select: none;
+}
+
+.login-field__input-wrap {
+  position: relative;
+  width: 100%;
+
+  .p-inputtext {
+    width: 100%;
+    padding-right: 2.25rem;
+    background: $login-input-bg;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    color: $login-text;
+
+    &:focus {
+      box-shadow: 0 0 0 2px color-mix(in srgb, $login-navy-accent 25%, transparent);
+      border-color: color-mix(in srgb, $login-navy-accent 45%, transparent);
+    }
+
+    &.p-invalid {
+      border-color: $login-error;
+    }
+  }
+}
+
+.login-field__invalid-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $login-error;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* Subdomain input (no icon column) */
+:host ::ng-deep .login-field .p-inputtext {
+  width: 100%;
+  background: $login-input-bg;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: $login-text;
+
+  &:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, $login-navy-accent 25%, transparent);
+    border-color: color-mix(in srgb, $login-navy-accent 45%, transparent);
+  }
+
+  &.p-invalid {
+    border-color: $login-error;
+  }
+}
+
+.login-field__error {
+  font-size: 0.8125rem;
+  color: $login-error;
+  margin: 0;
+}
+
+/* Password */
+:host ::ng-deep .login-password {
+  width: 100%;
+
+  .p-password-input {
+    width: 100%;
+    background: $login-input-bg;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    color: $login-text;
+
+    &:focus {
+      box-shadow: 0 0 0 2px color-mix(in srgb, $login-navy-accent 25%, transparent);
+      border-color: color-mix(in srgb, $login-navy-accent 45%, transparent);
+    }
+
+    &.p-invalid {
+      border-color: $login-error;
+    }
+  }
+
+}
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: -0.25rem;
+}
+
+.login-remember__label {
+  font-size: 0.875rem;
+  color: $login-muted;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+:host ::ng-deep .login-remember {
+  .p-checkbox .p-checkbox-box {
+    border-radius: 0.25rem;
+  }
+}
+
+:host ::ng-deep .login-submit {
+  margin-top: 0.25rem;
+  width: 100%;
+  justify-content: center;
+  font-weight: 600;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: $login-navy !important;
+  color: #fff !important;
+
+  &:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.85;
+  }
+}
+
+.login-footer {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: $login-muted;
+}
+
+.login-footer__link {
+  color: $login-navy-accent;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -1,9 +1,17 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { formatRelativeTime } from '../../../utils/relative-time';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
 import { ToastService } from '../../../services/toast.service';
 import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
@@ -15,6 +23,15 @@ export interface TenantRow {
   subdomain: string;
   status: string;
   updatedAt?: string;
+  contact_email?: string | null;
+  enabled_modules?: string;
+}
+
+export interface TenantListStats {
+  totalSchools: number;
+  activeSchools: number;
+  pendingSchools: number;
+  totalStudents: number;
 }
 
 export interface TenantListResponse {
@@ -23,27 +40,44 @@ export interface TenantListResponse {
   page: number;
   limit: number;
   totalPages: number;
+  stats?: TenantListStats;
 }
 
 export type TenantStatusKind = 'active' | 'inactive' | 'pending' | 'unknown';
 
-export type TenantSortKey = 'name' | 'status' | 'updated';
+export type TenantSortKey = 'name' | 'status';
 
 @Component({
   selector: 'app-tenant-list',
-  imports: [RouterLink, CreateTenantDialogComponent, TablePaginationFooterComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    CreateTenantDialogComponent,
+    TablePaginationFooterComponent,
+    TableModule,
+    ButtonModule,
+    TagModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule,
+  ],
   templateUrl: './tenant-list.component.html',
   styleUrl: './tenant-list.component.scss',
 })
 export class TenantListComponent implements OnInit {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
+
+  private readonly searchInput$ = new Subject<string>();
 
   readonly tenants = signal<TenantRow[]>([]);
   readonly total = signal(0);
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly showCreate = signal(false);
+  readonly stats = signal<TenantListStats | null>(null);
+  readonly searchQuery = signal('');
 
   readonly pageSizeOptions = [5, 10, 25, 50];
 
@@ -59,19 +93,41 @@ export class TenantListComponent implements OnInit {
 
   loading = true;
 
+  readonly activationRate = computed(() => {
+    const s = this.stats();
+    if (!s || s.totalSchools <= 0) return 0;
+    return Math.round((s.activeSchools / s.totalSchools) * 1000) / 10;
+  });
+
   ngOnInit(): void {
+    this.searchInput$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((raw) => {
+        this.searchQuery.set(raw.trim());
+        this.pageIndex.set(0);
+        this.loadTenants();
+      });
     this.loadTenants();
+  }
+
+  onSearchInput(value: string): void {
+    this.searchInput$.next(value);
   }
 
   loadTenants(): void {
     this.loading = true;
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', String(this.pageIndex() + 1))
       .set('limit', String(this.pageSize()));
+    const q = this.searchQuery();
+    if (q) {
+      params = params.set('q', q);
+    }
     this.http.get<TenantListResponse>(`${environment.apiBaseUrl}/super-admin/tenants`, { params }).subscribe({
       next: (res) => {
         this.tenants.set(res.data ?? []);
         this.total.set(res.total ?? 0);
+        this.stats.set(res.stats ?? null);
         this.loading = false;
       },
       error: () => {
@@ -124,8 +180,6 @@ export class TenantListComponent implements OnInit {
         return compareNullableString(a.name, b.name);
       case 'status':
         return compareNullableString(a.status, b.status);
-      case 'updated':
-        return compareNullableString(a.updatedAt ?? '', b.updatedAt ?? '');
       default:
         return 0;
     }
@@ -147,25 +201,6 @@ export class TenantListComponent implements OnInit {
     }
   }
 
-  relativeUpdated(row: TenantRow): string {
-    return formatRelativeTime(row.updatedAt ?? null);
-  }
-
-  initials(name: string): string {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '?';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-
-  avatarToneClass(id: string): string {
-    let n = 0;
-    for (let i = 0; i < id.length; i++) {
-      n += id.charCodeAt(i);
-    }
-    return `tenant-table__avatar tenant-table__avatar--t${n % 5}`;
-  }
-
   statusKind(status: string): TenantStatusKind {
     const s = String(status ?? '')
       .trim()
@@ -180,5 +215,25 @@ export class TenantListComponent implements OnInit {
     const s = String(status ?? '').trim();
     if (!s) return 'Unknown';
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+
+  statusSeverity(
+    status: string
+  ): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined {
+    const k = this.statusKind(status);
+    if (k === 'active') return 'info';
+    if (k === 'pending') return 'warn';
+    if (k === 'inactive') return 'secondary';
+    return 'secondary';
+  }
+
+  formatNumber(n: number): string {
+    return new Intl.NumberFormat().format(n);
+  }
+
+  contactEmail(row: TenantRow): string {
+    const e = row.contact_email;
+    if (e == null || String(e).trim() === '') return '—';
+    return String(e).trim();
   }
 }

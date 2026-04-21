@@ -1,51 +1,282 @@
-<div class="branding-settings">
-  <p class="ds-body-md branding-settings__intro">
-    Select a tenant, set primary and secondary colors, and upload a PNG logo (max 1MB). Changes apply only to that tenant’s school app — not this super admin panel.
-  </p>
-
+<div class="tb-page">
   @if (loadingList()) {
-    <p class="ds-body-sm ds-on-variant">Loading tenants…</p>
+    <p class="text-secondary small">Loading schools…</p>
   } @else {
-    <form class="branding-settings__form" [formGroup]="form" (ngSubmit)="save()">
-      <div class="mb-3 branding-settings__field branding-settings__field--tenant">
-        <label class="form-label" for="br-tenant">Tenant</label>
-        <select
-          id="br-tenant"
-          class="form-select"
-          formControlName="tenantId"
-          (change)="onTenantChange($any($event.target).value)"
-        >
-          <option value="">— Select —</option>
-          @for (t of tenants(); track t.id) {
-            <option [value]="t.id">{{ t.name }} ({{ t.subdomain }})</option>
-          }
-        </select>
-      </div>
+    <div class="container-fluid tb-page__inner">
+      <div class="row g-4 align-items-stretch">
+        <!-- Brand configuration -->
+        <div class="col-lg-8">
+          <p-card styleClass="tb-card tb-card--main shadow-sm border-0 h-100">
+            <div class="tb-card__head mb-4">
+              <h1 class="tb-card__title">Brand Configuration</h1>
+              <p class="tb-card__desc mb-0">
+                Customize the look and feel for this tenant&apos;s portal experience.
+              </p>
+            </div>
 
-      <div class="branding-settings__colors">
-        <label class="branding-settings__color-field">
-          <span class="ds-label-sm">Primary color</span>
-          <input type="color" class="form-control form-control-color" formControlName="primaryColor" />
-        </label>
-        <label class="branding-settings__color-field">
-          <span class="ds-label-sm">Secondary color</span>
-          <input type="color" class="form-control form-control-color" formControlName="secondaryColor" />
-        </label>
-      </div>
+            <form [formGroup]="form" (ngSubmit)="$event.preventDefault()">
+              <div class="mb-4">
+                <label class="form-label fw-semibold d-block mb-2" for="tb-school">School</label>
+                <p-select
+                  inputId="tb-school"
+                  formControlName="tenantId"
+                  [options]="tenantOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select a school"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-100"
+                />
+              </div>
 
-      <div class="branding-settings__logo mb-3">
-        <span class="ds-label-sm d-block mb-1">Logo (PNG only)</span>
-        <input type="file" class="form-control" accept=".png,image/png" (change)="onFileSelected($event)" />
-        @if (logoPreview()) {
-          <div class="branding-settings__preview mt-2">
-            <img [src]="logoPreview()!" alt="Logo preview" />
-          </div>
-        }
-      </div>
+              <!-- Primary color -->
+              <div class="mb-4">
+                <div class="fw-semibold text-body">Primary Color</div>
+                <p class="tb-field-hint text-secondary small mb-2">
+                  Used for headers, buttons, and key UI elements.
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                  <p-colorPicker
+                    [formControl]="form.controls.primaryColor"
+                    format="hex"
+                    styleClass="tb-swatch-picker"
+                    inputId="tb-primary-cp"
+                  />
+                  <input
+                    id="tb-primary-hex"
+                    type="text"
+                    pInputText
+                    class="flex-grow-1 tb-hex-input"
+                    [formControl]="form.controls.primaryColor"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-describedby="tb-primary-cp"
+                  />
+                  <div class="d-flex gap-1 flex-wrap tb-palette" aria-hidden="true">
+                    @for (c of primaryPalette(); track c) {
+                      <button
+                        type="button"
+                        class="tb-palette__dot"
+                        [style.background]="c"
+                        (click)="pickPrimary(c)"
+                        tabindex="-1"
+                      ></button>
+                    }
+                  </div>
+                </div>
+              </div>
 
-      <button class="btn btn-primary" type="submit" [disabled]="saving() || form.invalid">
-        {{ saving() ? 'Saving…' : 'Save changes' }}
-      </button>
-    </form>
+              <!-- Secondary color -->
+              <div class="mb-4">
+                <div class="fw-semibold text-body">Secondary Color</div>
+                <p class="tb-field-hint text-secondary small mb-2">
+                  Used for accents, links, and secondary actions.
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                  <p-colorPicker
+                    [formControl]="form.controls.secondaryColor"
+                    format="hex"
+                    styleClass="tb-swatch-picker"
+                    inputId="tb-secondary-cp"
+                  />
+                  <input
+                    id="tb-secondary-hex"
+                    type="text"
+                    pInputText
+                    class="flex-grow-1 tb-hex-input"
+                    [formControl]="form.controls.secondaryColor"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <div class="d-flex gap-1 flex-wrap tb-palette" aria-hidden="true">
+                    @for (c of secondaryPalette(); track c) {
+                      <button
+                        type="button"
+                        class="tb-palette__dot"
+                        [style.background]="c"
+                        (click)="pickSecondary(c)"
+                        tabindex="-1"
+                      ></button>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Logo -->
+              <div class="mb-2">
+                <div class="fw-semibold text-body">School Logo</div>
+                <p class="tb-field-hint text-secondary small mb-2">
+                  This logo will appear in the sidebar and login page.
+                </p>
+
+                <p class="text-secondary small text-center mb-2">Click to upload or drag and drop · PNG only, max 1MB</p>
+                <p-fileUpload
+                  mode="advanced"
+                  [auto]="false"
+                  [customUpload]="true"
+                  [showUploadButton]="false"
+                  [showCancelButton]="false"
+                  accept="image/png,.png"
+                  [maxFileSize]="1048576"
+                  chooseLabel="Browse files"
+                  chooseIcon="pi pi-upload"
+                  invalidFileSizeMessageSummary="File too large"
+                  invalidFileSizeMessageDetail="Maximum size is 1MB."
+                  invalidFileTypeMessageSummary="Invalid file type"
+                  invalidFileTypeMessageDetail="PNG only."
+                  styleClass="tb-fileupload w-100"
+                  (onSelect)="onLogoSelect($event)"
+                  (uploadHandler)="onCustomLogoUpload($event)"
+                />
+
+                @if (showLogoFileCard()) {
+                  <div class="tb-file-row d-flex align-items-center gap-3 mt-3">
+                    <div class="tb-file-row__icon" aria-hidden="true">
+                      <i class="pi pi-image"></i>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="fw-semibold text-body text-truncate">{{ currentLogoLabel() }}</div>
+                      <div class="small text-secondary">
+                        @if (pendingFileMeta(); as m) {
+                          {{ formatFileSize(m.size) }}
+                          <span class="text-secondary"> · </span>
+                          <span>Pending upload</span>
+                        } @else {
+                          <span>Current logo on server</span>
+                        }
+                      </div>
+                    </div>
+                    @if (pendingFileMeta()) {
+                      <p-button
+                        type="button"
+                        icon="pi pi-trash"
+                        [rounded]="true"
+                        [text]="true"
+                        severity="danger"
+                        ariaLabel="Remove selected file"
+                        (onClick)="clearPendingLogo()"
+                      />
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 pt-2">
+                <p-button
+                  type="button"
+                  label="Reset to Default"
+                  icon="pi pi-refresh"
+                  [outlined]="true"
+                  [disabled]="!hasTenant()"
+                  (onClick)="resetToDefaults()"
+                />
+                <p-button
+                  type="button"
+                  label="Save configuration"
+                  icon="pi pi-save"
+                  [loading]="saving()"
+                  [disabled]="form.invalid || !hasTenant()"
+                  (onClick)="save()"
+                />
+              </div>
+            </form>
+          </p-card>
+        </div>
+
+        <!-- Live preview -->
+        <div class="col-lg-4">
+          <p-card styleClass="tb-card tb-card--preview shadow-sm border-0 h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+              <div>
+                <h2 class="tb-card__title h5 mb-1">Live Preview</h2>
+                <p class="tb-card__desc small mb-0">See how the branding will appear to users.</p>
+              </div>
+              <p-button label="Preview Mode" icon="pi pi-eye" [outlined]="true" size="small" type="button" />
+            </div>
+
+            <div
+              class="tb-mini-app rounded-3 overflow-hidden border"
+              [style.--tb-prim]="previewPrimary()"
+              [style.--tb-sec]="previewSecondary()"
+            >
+              <div class="tb-mini-app__body d-flex">
+                <aside
+                  class="tb-mini-nav"
+                  [style.background]="previewSecondary()"
+                  [style.color]="previewSidebarFg()"
+                >
+                  <div class="tb-mini-nav__brand d-flex align-items-center gap-2 mb-3">
+                    @if (logoPreview()) {
+                      <img [src]="logoPreview()!" alt="" class="tb-mini-nav__logo" />
+                    } @else {
+                      <i class="pi pi-graduation-cap tb-mini-nav__logo-fallback"></i>
+                    }
+                    <span class="fw-semibold text-truncate">{{ selectedTenantName() }}</span>
+                  </div>
+                  <ul class="list-unstyled small mb-0 tb-mini-nav__list">
+                    <li
+                      class="tb-mini-nav__item tb-mini-nav__item--active mb-1"
+                      [style.background]="previewPrimary()"
+                    >
+                      <i class="pi pi-home me-2" aria-hidden="true"></i>
+                      Dashboard
+                    </li>
+                    <li
+                      class="tb-mini-nav__item mb-1"
+                      [style.color]="previewSidebarMuted()"
+                    >
+                      <i class="pi pi-users me-2" aria-hidden="true"></i>
+                      Students
+                    </li>
+                    <li class="tb-mini-nav__item" [style.color]="previewSidebarMuted()">
+                      <i class="pi pi-book me-2" aria-hidden="true"></i>
+                      Courses
+                    </li>
+                  </ul>
+                </aside>
+                <main class="tb-mini-main flex-grow-1">
+                  <div class="tb-mini-main__header fw-semibold mb-2">Dashboard</div>
+                  <div class="row g-1 mb-2">
+                    <div class="col-6">
+                      <div class="tb-mini-tile rounded-2 p-2 small">
+                        <div class="text-secondary tb-mini-tile__lbl">Students</div>
+                        <div class="fw-bold">128</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="tb-mini-tile rounded-2 p-2 small">
+                        <div class="text-secondary tb-mini-tile__lbl">Courses</div>
+                        <div class="fw-bold">42</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tb-mini-chart rounded-2 p-2">
+                    <div class="small text-secondary mb-1">Enrollment</div>
+                    <div class="d-flex align-items-end gap-1 tb-mini-chart__bars" style="height: 3.25rem">
+                      @for (h of [40, 65, 45, 80, 55, 70]; track h) {
+                        <span
+                          class="tb-mini-chart__bar rounded-top flex-grow-1"
+                          [style.height.%]="h"
+                          [style.background]="previewPrimary()"
+                        ></span>
+                      }
+                    </div>
+                  </div>
+                </main>
+              </div>
+            </div>
+
+            <p-message
+              class="tb-preview-note d-block mt-3"
+              severity="secondary"
+              icon="pi pi-info-circle"
+              [closable]="false"
+              text="This preview is an approximation. Actual rendering may vary slightly across devices and browsers."
+            />
+          </p-card>
+        </div>
+      </div>
+    </div>
   }
 </div>

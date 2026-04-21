@@ -1,9 +1,11 @@
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 const sequelize = require('../../config/db');
 const Tenant = require('../tenant/tenant.model');
 const User = require('../users/user.model');
 const Module = require('../module/module.model');
 const TenantModule = require('../tenant-module/tenantModule.model');
+const Student = require('../students/student.model');
 const { seedTenantModulesForTenant } = require('../../seed/moduleSeed');
 const { seedCanonicalClassesForTenant } = require('../../seed/canonicalClasses');
 const { seedAcademicYearsForTenant } = require('../../seed/academicYearsSeed');
@@ -16,6 +18,12 @@ const {
 const ALLOWED_STATUS = new Set(['active', 'inactive', 'pending']);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function humanizeModuleKey(key) {
+  if (!key) return '';
+  const s = String(key).replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 function parsePagination(req) {
   const pageRaw = parseInt(req.query.page, 10);
@@ -30,32 +38,85 @@ function parsePagination(req) {
 exports.listTenants = async (req, res) => {
   try {
     const { page, limit, offset } = parsePagination(req);
-    const { rows, count } = await Tenant.findAndCountAll({
-      attributes: [
-        'id',
-        'name',
-        'subdomain',
-        'status',
-        'contact_email',
-        'phone',
-        'address',
-        'createdAt',
-        'updatedAt',
-      ],
-      order: [['updatedAt', 'DESC']],
-      limit,
-      offset,
-    });
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const where = {};
+    if (q) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${q}%` } },
+        { subdomain: { [Op.iLike]: `%${q}%` } },
+        { contact_email: { [Op.iLike]: `%${q}%` } },
+      ];
+    }
+
+    const [listResult, activeSchools, pendingSchools, totalStudents, totalSchools] = await Promise.all([
+      Tenant.findAndCountAll({
+        where,
+        attributes: [
+          'id',
+          'name',
+          'subdomain',
+          'status',
+          'contact_email',
+          'phone',
+          'address',
+          'createdAt',
+          'updatedAt',
+        ],
+        order: [['updatedAt', 'DESC']],
+        limit,
+        offset,
+      }),
+      Tenant.count({ where: { status: 'active' } }),
+      Tenant.count({ where: { status: 'pending' } }),
+      Student.count(),
+      Tenant.count(),
+    ]);
+
+    const { rows, count } = listResult;
     const totalPages = Math.max(1, Math.ceil(count / limit));
+
+    const tenantIds = rows.map((r) => r.id);
+    let modulesByTenant = new Map();
+    if (tenantIds.length > 0) {
+      const tmRows = await TenantModule.findAll({
+        where: { tenant_id: { [Op.in]: tenantIds } },
+        attributes: ['tenant_id', 'module_key', 'is_enabled'],
+      });
+      modulesByTenant = tmRows.reduce((m, row) => {
+        const tid = row.tenant_id;
+        const list = m.get(tid) || [];
+        list.push(row);
+        m.set(tid, list);
+        return m;
+      }, new Map());
+    }
+
+    const data = rows.map((r) => {
+      const j = r.toJSON();
+      const modules = (modulesByTenant.get(j.id) || [])
+        .filter((tm) => tm.is_enabled)
+        .map((tm) => tm.module_key);
+      j.enabled_modules =
+        modules.map(humanizeModuleKey).filter(Boolean).join(', ') || '—';
+      return j;
+    });
+
     res.json({
-      data: rows.map((r) => r.toJSON()),
+      data,
       total: count,
       page,
       limit,
       totalPages,
+      stats: {
+        totalSchools,
+        activeSchools,
+        pendingSchools,
+        totalStudents,
+      },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('listTenants error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -81,6 +142,11 @@ exports.createTenant = async (req, res) => {
       });
     }
 
+    if (status == null || String(status).trim() === '') {
+      await t.rollback();
+      return res.status(400).json({ message: 'status is required' });
+    }
+
     const nameTrim = String(name).trim();
     if (nameTrim.length < 2 || nameTrim.length > 200) {
       await t.rollback();
@@ -104,7 +170,7 @@ exports.createTenant = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const statusVal = status != null ? String(status).trim().toLowerCase() : 'active';
+    const statusVal = String(status).trim().toLowerCase();
     if (!ALLOWED_STATUS.has(statusVal)) {
       await t.rollback();
       return res.status(400).json({ message: 'status must be active, inactive, or pending' });

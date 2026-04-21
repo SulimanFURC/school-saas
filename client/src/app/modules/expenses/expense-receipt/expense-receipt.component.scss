@@ -1,0 +1,15 @@
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .expense-receipt-page .receipt-container {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+
+.receipt-attachment-img {
+  max-height: 320px;
+  object-fit: contain;
+}

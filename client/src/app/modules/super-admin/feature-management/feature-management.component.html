@@ -1,59 +1,107 @@
-<section class="fm ds-section-pad">
+<section class="fm">
   @if (loading) {
-    <p class="ds-body-md ds-on-variant">Loading…</p>
+    <p class="text-secondary">Loading…</p>
   } @else if (!tenant()) {
-    <p class="ds-body-md ds-on-variant">Tenant not found.</p>
+    <p class="text-secondary">Tenant not found.</p>
   } @else {
-    <div class="fm__head">
-      <h2 class="ds-headline-md fm__title">Tenant: {{ tenant()!.name }}</h2>
-      <p class="ds-body-sm ds-on-variant">{{ tenant()!.subdomain }} · {{ tenant()!.status }}</p>
-    </div>
+    <div class="container-fluid fm__container">
+      <!-- Header -->
+      <div class="row align-items-start align-items-md-center g-3 mb-3">
+        <div class="col">
+          <h1 class="fm__page-title h3 mb-2">Feature Management — {{ tenant()!.name }}</h1>
+          <p class="fm__portal-line text-secondary small mb-0 d-flex align-items-center flex-wrap gap-1">
+            <i class="pi pi-globe" aria-hidden="true"></i>
+            <span>{{ tenantPortalLabel(tenant()!.subdomain) }}</span>
+          </p>
+        </div>
+        <div class="col-auto d-flex flex-wrap align-items-center justify-content-end gap-2">
+          @if (unsavedCount() > 0) {
+            <p-tag
+              severity="warn"
+              [value]="unsavedCount() + ' unsaved changes'"
+              icon="pi pi-exclamation-triangle"
+            />
+          }
+          <p-button
+            label="Save Changes"
+            icon="pi pi-save"
+            type="button"
+            [disabled]="!hasChanges() || saving"
+            [loading]="saving"
+            (onClick)="save()"
+          />
+        </div>
+      </div>
 
-    <div class="fm__groups">
-      @for (g of grouped(); track g.key) {
-        <div class="card shadow-sm mb-3 fm-card">
-          <div class="card-header">
-            <h3 class="ds-headline-sm mb-0">{{ g.label }}</h3>
-          </div>
-          <div class="card-body">
-            @for (m of g.items; track m.module_key) {
-              <div class="fm-row d-flex align-items-center justify-content-between gap-3 py-2 border-bottom">
-                <div class="fm-row__meta">
-                  <span class="ds-body-md">{{ m.name }}</span>
-                  <span
-                    class="ds-label-sm"
-                    [class.fm-status--on]="m.is_enabled"
-                    [class.fm-status--off]="!m.is_enabled"
-                  >
-                    {{ m.is_enabled ? 'Enabled' : 'Disabled' }}
-                  </span>
+      <!-- Info banner -->
+      <p-message
+        class="fm__info d-block mb-4"
+        severity="secondary"
+        icon="pi pi-info-circle"
+        [closable]="false"
+        text="Toggle features on or off for this tenant. Changes will take effect immediately after saving."
+      />
+
+      <!-- Feature grid -->
+      <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+        @for (m of modules(); track m.module_key) {
+          @let meta = metaFor(m);
+          <div class="col">
+            <p-card styleClass="fm-feature-card border shadow-sm h-100">
+              <div class="d-flex align-items-start gap-3">
+                <div
+                  class="fm-feature-card__icon flex-shrink-0"
+                  [ngClass]="'fm-feature-card__icon--' + meta.tone"
+                >
+                  <i [class]="meta.icon" aria-hidden="true"></i>
                 </div>
-                <div class="form-check form-switch">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    [id]="'mod-' + m.module_key"
+                <div class="flex-grow-1 min-w-0">
+                  <div class="fw-semibold text-body mb-1">{{ m.name }}</div>
+                  <p class="text-secondary small mb-0 fm-feature-card__desc">
+                    {{ meta.description }}
+                  </p>
+                </div>
+                <div class="flex-shrink-0 pt-1">
+                  <p-inputSwitch
+                    [inputId]="'fm-mod-' + m.module_key"
                     [ngModel]="m.is_enabled"
                     (ngModelChange)="onToggle(m.module_key, $event)"
                   />
                 </div>
               </div>
-            }
+            </p-card>
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
 
-    <div class="fm__actions">
-      <button
-        class="btn btn-primary"
-        type="button"
-        [disabled]="!hasChanges() || saving"
-        (click)="save()"
-      >
-        {{ saving ? 'Saving…' : 'Save changes' }}
-      </button>
+      <!-- Footer -->
+      <div class="row align-items-center g-3 fm__footer pt-2 border-top">
+        <div class="col-12 col-md">
+          @if (lastSavedLine(); as line) {
+            <p class="text-secondary small mb-0">{{ line }}</p>
+          } @else {
+            <p class="text-secondary small mb-0">Save to record when features were last updated.</p>
+          }
+        </div>
+        <div class="col-12 col-md-auto d-flex flex-wrap justify-content-md-end gap-2">
+          <p-button
+            label="Discard changes"
+            icon="pi pi-refresh"
+            type="button"
+            [outlined]="true"
+            [disabled]="!hasChanges() || saving"
+            (onClick)="discard()"
+          />
+          <p-button
+            label="Save Changes"
+            icon="pi pi-save"
+            type="button"
+            [disabled]="!hasChanges() || saving"
+            [loading]="saving"
+            (onClick)="save()"
+          />
+        </div>
+      </div>
     </div>
   }
 </section>

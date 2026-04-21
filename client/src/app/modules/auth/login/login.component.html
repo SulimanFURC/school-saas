@@ -1,43 +1,124 @@
-<div class="auth-shell">
-  <div class="auth-card card shadow-sm border">
-    <div class="auth-card__header">
-      <h1 class="ds-headline-md auth-card__title">Sign in</h1>
-      <p class="ds-body-md ds-on-variant">Use your school subdomain and account.</p>
+<div class="login-page">
+  <aside class="login-page__brand" aria-label="EduCore branding">
+    <div class="login-page__brand-inner">
+      <div class="login-page__logo">
+        <span class="login-page__logo-icon" aria-hidden="true">
+          <i class="pi pi-building"></i>
+        </span>
+      </div>
+      <h1 class="login-page__title">EduCore</h1>
+      <p class="login-page__tagline">One Platform, Every School</p>
     </div>
-
-    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
-      <div class="mb-3">
-        <label class="form-label" for="login-subdomain">School subdomain</label>
-        <input id="login-subdomain" class="form-control" formControlName="subdomain" autocomplete="organization" />
-        @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
-          <div class="invalid-feedback d-block">Subdomain is required</div>
-        }
+    <div class="login-page__features">
+      <div class="login-page__feature">
+        <span class="login-page__feature-icon" aria-hidden="true"><i class="pi pi-shield"></i></span>
+        <span class="login-page__feature-label">Secure</span>
       </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="login-email">Email or username</label>
-        <input id="login-email" class="form-control" type="text" formControlName="email" autocomplete="username" />
-        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-          <div class="invalid-feedback d-block">Email or username is required</div>
-        }
+      <div class="login-page__feature">
+        <span class="login-page__feature-icon" aria-hidden="true"><i class="pi pi-building"></i></span>
+        <span class="login-page__feature-label">Multi-Tenant</span>
       </div>
-
-      <div class="mb-3">
-        <label class="form-label" for="login-password">Password</label>
-        <input id="login-password" class="form-control" type="password" formControlName="password" autocomplete="current-password" />
-        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-          <div class="invalid-feedback d-block">Password is required</div>
-        }
+      <div class="login-page__feature">
+        <span class="login-page__feature-icon" aria-hidden="true"><i class="pi pi-cloud"></i></span>
+        <span class="login-page__feature-label">Cloud-Based</span>
       </div>
+    </div>
+  </aside>
 
-      <button class="btn btn-primary auth-submit" type="submit" [disabled]="submitting">
-        {{ submitting ? 'Signing in…' : 'Sign in' }}
-      </button>
-    </form>
+  <section class="login-page__panel">
+    <p-card
+      class="card-login"
+      styleClass="login-card"
+      [style.width.%]="85"
+      header="Welcome back"
+      subheader="Sign in to your EduCore account"
+    >
+      <form class="login-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="login-field">
+          <label class="login-field__label" for="login-subdomain">School subdomain</label>
+          <input
+            id="login-subdomain"
+            pInputText
+            [fluid]="true"
+            formControlName="subdomain"
+            autocomplete="organization"
+            [class.p-invalid]="form.controls.subdomain.invalid && form.controls.subdomain.touched"
+          />
+          @if (form.controls.subdomain.touched && form.controls.subdomain.hasError('required')) {
+            <div class="login-field__error">Subdomain is required</div>
+          }
+        </div>
 
-    <p class="ds-body-sm ds-on-variant auth-footer">
-      New school?
-      <a routerLink="/signup" class="auth-link">Create an account</a>
-    </p>
-  </div>
+        <div class="login-field">
+          <label class="login-field__label" for="login-email">Email address</label>
+          <div class="login-field__input-wrap">
+            <input
+              id="login-email"
+              pInputText
+              [fluid]="true"
+              type="text"
+              formControlName="email"
+              autocomplete="username"
+              [class.p-invalid]="form.controls.email.invalid && form.controls.email.touched"
+            />
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <i class="pi pi-exclamation-circle login-field__invalid-icon" aria-hidden="true"></i>
+            }
+          </div>
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <div class="login-field__error">Email or username is required</div>
+          }
+        </div>
+
+        <div class="login-field">
+          <div class="login-field__label-row">
+            <label class="login-field__label login-field__label--mb-0" for="login-password">Password</label>
+            <span class="login-field__forgot" tabindex="-1">Forgot password?</span>
+          </div>
+          <p-password
+            inputId="login-password"
+            formControlName="password"
+            [toggleMask]="true"
+            [feedback]="false"
+            [fluid]="true"
+            variant="filled"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            [inputStyleClass]="
+              form.controls.password.invalid && form.controls.password.touched ? 'login-password-input p-invalid' : 'login-password-input'
+            "
+            styleClass="login-password"
+          />
+          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+            <div class="login-field__error">Password is required</div>
+          }
+        </div>
+
+        <div class="login-remember">
+          <p-checkbox
+            [(ngModel)]="rememberMe"
+            [ngModelOptions]="{ standalone: true }"
+            [binary]="true"
+            inputId="login-remember"
+          ></p-checkbox>
+          <label class="login-remember__label" for="login-remember">Remember me</label>
+        </div>
+
+        <p-button
+          type="submit"
+          [label]="submitting ? 'Signing in…' : 'Sign In'"
+          [loading]="submitting"
+          [disabled]="submitting"
+          styleClass="login-submit w-100"
+        />
+      </form>
+
+      <ng-template pTemplate="footer">
+        <p class="login-footer">
+          New school?
+          <a routerLink="/signup" class="login-footer__link">Sign up</a>
+        </p>
+      </ng-template>
+    </p-card>
+  </section>
 </div>

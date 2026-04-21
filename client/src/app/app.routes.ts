@@ -180,11 +180,21 @@ export const routes: Routes = [
         redirectTo: 'fees/collection',
       },
       {
-        path: 'expenses',
+        path: 'expenses/receipt/:id',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/expenses/expense-receipt/expense-receipt.component').then(
+            (m) => m.ExpenseReceiptComponent
+          ),
+        data: { title: 'Expense receipt', moduleKey: 'expenses' },
+      },
+      {
+        path: 'expenses',
+        pathMatch: 'full',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/expenses/expense-list/expense-list.component').then(
+            (m) => m.ExpenseListComponent
           ),
         data: { title: 'Expenses', moduleKey: 'expenses' },
       },

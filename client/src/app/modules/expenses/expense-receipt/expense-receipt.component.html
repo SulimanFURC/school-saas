@@ -1,0 +1,84 @@
+<section class="page expense-receipt-page">
+  <div class="no-print d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+    <p-button
+      label="Back to expenses"
+      icon="pi pi-arrow-left"
+      [outlined]="true"
+      size="small"
+      [routerLink]="['/expenses']"
+    />
+    <p-button
+      label="Print"
+      icon="pi pi-print"
+      size="small"
+      (onClick)="printReceipt()"
+      [disabled]="!expense()"
+    />
+  </div>
+
+  @if (loading()) {
+    <div class="d-flex justify-content-center py-5">
+      <p-progress-spinner
+        ariaLabel="Loading"
+        strokeWidth="4"
+        animationDuration=".65s"
+        [style]="{ width: '3rem', height: '3rem' }"
+      />
+    </div>
+  } @else if (!expense()) {
+    <p-message severity="warn">Expense not found.</p-message>
+  } @else {
+    <div class="receipt-container card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <span class="fw-semibold text-uppercase small text-secondary">Expense receipt</span>
+          <span class="small text-secondary">{{ expense()!.expense_date | date: 'mediumDate' }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="small text-secondary">Status:</span>
+          <p-tag [value]="expense()!.status" [severity]="statusSeverity(expense()!.status)" />
+        </div>
+        <hr class="my-3" />
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <h3 class="h6 text-secondary mb-2">School</h3>
+            <p class="mb-1 fw-semibold">{{ branding.tenantName() || 'School' }}</p>
+            @if (branding.tenantAddress()) {
+              <p class="mb-1 small text-secondary">{{ branding.tenantAddress() }}</p>
+            }
+            @if (branding.tenantContactEmail()) {
+              <p class="mb-0 small">
+                <a [href]="'mailto:' + branding.tenantContactEmail()">{{ branding.tenantContactEmail() }}</a>
+              </p>
+            }
+          </div>
+          <div class="col-md-6">
+            <h3 class="h6 text-secondary mb-2">Expense</h3>
+            <p class="mb-1 fw-semibold">{{ expense()!.name }}</p>
+            <p class="mb-1 small">Type: {{ expense()!.expense_type }}</p>
+            @if (expense()!.description) {
+              <p class="mb-0 small text-secondary">{{ expense()!.description }}</p>
+            }
+          </div>
+        </div>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Amount</dt>
+          <dd class="col-sm-8 fw-semibold">{{ formatMoney(expense()!.amount) }}</dd>
+          <dt class="col-sm-4">Date</dt>
+          <dd class="col-sm-8">{{ expense()!.expense_date }}</dd>
+        </dl>
+
+        @if (attachmentUrl(); as img) {
+          <div class="mt-4 pt-3 border-top">
+            <h3 class="h6 text-secondary mb-2">Attachment</h3>
+            <img [src]="img" alt="Receipt attachment" class="img-fluid receipt-attachment-img" />
+          </div>
+        } @else {
+          <p class="small text-secondary mt-4 mb-0">No receipt image on file.</p>
+        }
+      </div>
+    </div>
+  }
+</section>
