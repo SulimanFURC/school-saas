@@ -13,6 +13,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
+import { EditTenantDialogComponent } from './edit-tenant-dialog/edit-tenant-dialog.component';
 import { ToastService } from '../../../services/toast.service';
 import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
@@ -53,6 +54,7 @@ export type TenantSortKey = 'name' | 'status';
     CommonModule,
     RouterLink,
     CreateTenantDialogComponent,
+    EditTenantDialogComponent,
     TablePaginationFooterComponent,
     TableModule,
     ButtonModule,
@@ -76,6 +78,7 @@ export class TenantListComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(10);
   readonly showCreate = signal(false);
+  readonly editTenantId = signal<string | null>(null);
   readonly stats = signal<TenantListStats | null>(null);
   readonly searchQuery = signal('');
 
@@ -197,6 +200,17 @@ export class TenantListComponent implements OnInit {
     this.showCreate.set(false);
     if (created) {
       this.pageIndex.set(0);
+      this.loadTenants();
+    }
+  }
+
+  openEditTenant(id: string): void {
+    this.editTenantId.set(id);
+  }
+
+  onEditClosed(updated: boolean): void {
+    this.editTenantId.set(null);
+    if (updated) {
       this.loadTenants();
     }
   }

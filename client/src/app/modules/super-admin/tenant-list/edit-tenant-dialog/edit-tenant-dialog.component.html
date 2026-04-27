@@ -1,0 +1,172 @@
+<p-drawer
+  [(visible)]="visible"
+  position="right"
+  styleClass="edit-tenant-drawer"
+  [dismissible]="!submitting"
+  [closeOnEscape]="!submitting"
+  [modal]="true"
+  [blockScroll]="true"
+  [closable]="false"
+  (onHide)="onHide()"
+>
+  <ng-template pTemplate="headless">
+    <div class="ct-drawer">
+      <header class="ct-drawer__header">
+        <div class="ct-drawer__header-text">
+          <h2 class="ct-drawer__title">Edit School</h2>
+          <p class="ct-drawer__subtitle">Update tenant details and status</p>
+        </div>
+        <button
+          type="button"
+          class="ct-drawer__close"
+          aria-label="Close"
+          [disabled]="submitting"
+          (click)="cancel()"
+        >
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      @if (loading()) {
+        <div class="ct-drawer__body">
+          <p class="text-secondary small mb-0">Loading tenant…</p>
+        </div>
+      } @else {
+        <form [formGroup]="form" class="ct-drawer__body" (ngSubmit)="submit()">
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-name">School Name</label>
+            <input
+              id="et-name"
+              class="form-control ct-field__input"
+              formControlName="name"
+              autocomplete="organization"
+              placeholder="Enter school name"
+            />
+            <small class="ct-field__hint">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Must be between 2 and 200 characters
+            </small>
+            @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+              <div class="ct-field__error">Name is required</div>
+            }
+            @if (form.controls.name.touched && form.controls.name.hasError('minlength')) {
+              <div class="ct-field__error">At least 2 characters</div>
+            }
+            @if (form.controls.name.touched && form.controls.name.hasError('maxlength')) {
+              <div class="ct-field__error">At most 200 characters</div>
+            }
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-sub">Subdomain</label>
+            <div class="ct-field__input-group">
+              <input
+                id="et-sub"
+                class="form-control ct-field__input ct-field__input--prefix"
+                [value]="subdomain()"
+                readonly
+              />
+              <span class="ct-field__suffix">.eduadmin.com</span>
+            </div>
+            <small class="ct-field__hint">
+              <i class="pi pi-lock" aria-hidden="true"></i>
+              Subdomain cannot be changed after creation
+            </small>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-email">Contact Email</label>
+            <input
+              id="et-email"
+              class="form-control ct-field__input"
+              type="email"
+              formControlName="contact_email"
+              autocomplete="email"
+              placeholder="admin&#64;school.edu"
+            />
+            @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('required')) {
+              <div class="ct-field__error">Contact email is required</div>
+            }
+            @if (form.controls.contact_email.touched && form.controls.contact_email.hasError('email')) {
+              <div class="ct-field__error">Enter a valid email</div>
+            }
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-phone">Phone</label>
+            <input
+              id="et-phone"
+              class="form-control ct-field__input"
+              formControlName="phone"
+              autocomplete="tel"
+              placeholder="+1 (555) 000-0000"
+            />
+            <small class="ct-field__hint">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Include country code for international numbers
+            </small>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-addr">Address</label>
+            <textarea
+              id="et-addr"
+              class="form-control ct-field__input ct-field__textarea"
+              rows="3"
+              formControlName="address"
+              placeholder="Enter full school address"
+            ></textarea>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-field__label" for="et-status">Status</label>
+            <select
+              id="et-status"
+              class="form-select ct-field__input"
+              formControlName="status"
+              [class.ct-field__input--placeholder]="!form.controls.status.value"
+            >
+              <option value="" disabled>Select status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+            </select>
+            @if (form.controls.status.touched && form.controls.status.hasError('required')) {
+              <div class="ct-field__error">Status is required</div>
+            }
+          </div>
+        </form>
+      }
+
+      <footer class="ct-drawer__footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary ct-drawer__btn"
+          (click)="cancel()"
+          [disabled]="submitting"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary ct-drawer__btn ct-drawer__btn--primary"
+          (click)="submit()"
+          [disabled]="submitting || loading()"
+        >
+          <i
+            class="pi"
+            [class.pi-check]="!submitting"
+            [class.pi-spin]="submitting"
+            [class.pi-spinner]="submitting"
+            aria-hidden="true"
+          ></i>
+          @if (submitting) {
+            <span>Saving...</span>
+          } @else {
+            <span>Save Changes</span>
+          }
+        </button>
+      </footer>
+    </div>
+  </ng-template>
+</p-drawer>

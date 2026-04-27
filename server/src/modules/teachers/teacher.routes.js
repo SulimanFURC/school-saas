@@ -43,18 +43,23 @@ const cvUpload = multer({
 });
 
 router.use(authMiddleware);
-router.use(checkFeature('teachers'));
 
+// Self-service endpoints: a logged-in teacher must always be able to read/update
+// their own profile. The `teachers` feature flag gates the admin module
+// (managing staff) and must not lock teachers out of their own account.
 router.get('/teachers/me', authorize('teacher'), controller.getMe);
 router.patch('/teachers/me', authorize('teacher'), controller.updateMe);
 
-router.get('/teachers', authorize('admin', 'super_admin'), controller.list);
-router.post('/teachers', authorize('admin', 'super_admin'), controller.create);
-router.get('/teachers/:id/login-details', authorize('admin', 'super_admin'), controller.getLoginDetails);
-router.patch('/teachers/:id/password', authorize('admin', 'super_admin'), controller.resetPassword);
+// Admin-facing endpoints: gated by the teachers feature flag and admin role.
+const adminTeachers = [checkFeature('teachers'), authorize('admin', 'super_admin')];
+
+router.get('/teachers', adminTeachers, controller.list);
+router.post('/teachers', adminTeachers, controller.create);
+router.get('/teachers/:id/login-details', adminTeachers, controller.getLoginDetails);
+router.patch('/teachers/:id/password', adminTeachers, controller.resetPassword);
 router.post(
   '/teachers/:id/cv',
-  authorize('admin', 'super_admin'),
+  adminTeachers,
   (req, res, next) => {
     cvUpload.single('file')(req, res, (err) => {
       if (err) {
@@ -65,8 +70,8 @@ router.post(
   },
   controller.uploadCv
 );
-router.get('/teachers/:id', authorize('admin', 'super_admin'), controller.getById);
-router.put('/teachers/:id', authorize('admin', 'super_admin'), controller.update);
-router.delete('/teachers/:id', authorize('admin', 'super_admin'), controller.remove);
+router.get('/teachers/:id', adminTeachers, controller.getById);
+router.put('/teachers/:id', adminTeachers, controller.update);
+router.delete('/teachers/:id', adminTeachers, controller.remove);
 
 module.exports = router;

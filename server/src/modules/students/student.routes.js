@@ -6,17 +6,20 @@ const checkFeature = require('../../core/middleware/feature.middleware');
 const studentController = require('./student.controller');
 
 router.use(authMiddleware);
-router.use(checkFeature('students'));
-router.use(authorize('admin', 'super_admin'));
 
-router.post('/students/register', studentController.register);
-router.post('/students/promote', studentController.promote);
-router.get('/students', studentController.list);
-router.get('/students/lookup', studentController.lookupByAdmission);
-router.get('/students/:id/login-details', studentController.getLoginDetails);
-router.get('/students/:id', studentController.getById);
-router.put('/students/:id', studentController.update);
-router.delete('/students/:id', studentController.remove);
-router.get('/enrollments', studentController.listEnrollments);
+// checkFeature + authorize must be per-route (not router.use) because this router is
+// mounted without a path prefix — router.use middleware runs for ALL requests, which
+// would block teachers/students from reaching their own routes.
+const adminStudents = [checkFeature('students'), authorize('admin', 'super_admin')];
+
+router.post('/students/register', adminStudents, studentController.register);
+router.post('/students/promote', adminStudents, studentController.promote);
+router.get('/students', adminStudents, studentController.list);
+router.get('/students/lookup', adminStudents, studentController.lookupByAdmission);
+router.get('/students/:id/login-details', adminStudents, studentController.getLoginDetails);
+router.get('/students/:id', adminStudents, studentController.getById);
+router.put('/students/:id', adminStudents, studentController.update);
+router.delete('/students/:id', adminStudents, studentController.remove);
+router.get('/enrollments', adminStudents, studentController.listEnrollments);
 
 module.exports = router;

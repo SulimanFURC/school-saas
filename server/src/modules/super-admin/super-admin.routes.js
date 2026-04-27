@@ -39,6 +39,8 @@ router.use(authorize('super_admin'));
 
 router.get('/tenants', superAdminController.listTenants);
 router.post('/tenants', superAdminController.createTenant);
+router.get('/tenants/:tenantId', superAdminController.getTenant);
+router.patch('/tenants/:tenantId', superAdminController.updateTenant);
 router.get('/tenants/:tenantId/modules', superAdminController.getTenantModules);
 router.put('/tenants/:tenantId/modules', superAdminController.updateTenantModules);
 

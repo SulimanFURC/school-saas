@@ -2,6 +2,10 @@
   <app-create-tenant-dialog (closed)="onCreateClosed($event)" />
 }
 
+@if (editTenantId(); as editId) {
+  <app-edit-tenant-dialog [tenantId]="editId" (closed)="onEditClosed($event)" />
+}
+
 <section class="platform-overview">
   <div class="container-fluid platform-overview__inner">
     <div class="row align-items-start justify-content-between g-3 mb-4">
@@ -185,8 +189,8 @@
                       [text]="true"
                       [rounded]="true"
                       severity="secondary"
-                      [disabled]="true"
-                      ariaLabel="Edit school (coming soon)"
+                      [attr.aria-label]="'Edit ' + row.name"
+                      (onClick)="openEditTenant(row.id)"
                     />
                   </div>
                 </td>

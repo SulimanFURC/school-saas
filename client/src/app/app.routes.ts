@@ -120,12 +120,12 @@ export const routes: Routes = [
       },
       {
         path: 'teachers/me',
-        canActivate: [featureGuard, teacherRoleGuard],
+        canActivate: [teacherRoleGuard],
         loadComponent: () =>
           import('./modules/teachers/teacher-self-profile/teacher-self-profile.component').then(
             (m) => m.TeacherSelfProfileComponent
           ),
-        data: { title: 'My profile', moduleKey: 'teachers' },
+        data: { title: 'My profile' },
       },
       {
         path: 'teachers/new',

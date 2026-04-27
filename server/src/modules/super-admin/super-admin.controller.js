@@ -270,6 +270,115 @@ exports.createTenant = async (req, res) => {
   }
 };
 
+exports.getTenant = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const tenant = await Tenant.findByPk(tenantId, {
+      attributes: [
+        'id',
+        'name',
+        'subdomain',
+        'status',
+        'contact_email',
+        'phone',
+        'address',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+    return res.status(200).json({ tenant: tenant.toJSON() });
+  } catch (err) {
+    console.error('getTenant error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.updateTenant = async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const tenant = await Tenant.findByPk(tenantId);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    const { name, status, contact_email, phone, address } = req.body || {};
+    const updates = {};
+
+    if (name !== undefined) {
+      const nameTrim = String(name).trim();
+      if (nameTrim.length < 2 || nameTrim.length > 200) {
+        return res
+          .status(400)
+          .json({ message: 'Organization name must be between 2 and 200 characters' });
+      }
+      updates.name = nameTrim;
+    }
+
+    if (status !== undefined) {
+      const statusVal = String(status).trim().toLowerCase();
+      if (!ALLOWED_STATUS.has(statusVal)) {
+        return res.status(400).json({ message: 'status must be active, inactive, or pending' });
+      }
+      updates.status = statusVal;
+    }
+
+    if (contact_email !== undefined) {
+      const emailNorm = String(contact_email).trim().toLowerCase();
+      if (emailNorm === '') {
+        return res.status(400).json({ message: 'Contact email is required' });
+      }
+      if (!EMAIL_RE.test(emailNorm)) {
+        return res.status(400).json({ message: 'Invalid contact email format' });
+      }
+      updates.contact_email = emailNorm;
+    }
+
+    if (phone !== undefined) {
+      let phoneTrim = phone == null ? '' : String(phone).trim();
+      if (phoneTrim.length > 50) {
+        return res.status(400).json({ message: 'Phone must be at most 50 characters' });
+      }
+      updates.phone = phoneTrim === '' ? null : phoneTrim;
+    }
+
+    if (address !== undefined) {
+      let addressTrim = address == null ? '' : String(address).trim();
+      if (addressTrim.length > 5000) {
+        return res.status(400).json({ message: 'Address is too long' });
+      }
+      updates.address = addressTrim === '' ? null : addressTrim;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid fields provided to update' });
+    }
+
+    await tenant.update(updates);
+
+    const fresh = await Tenant.findByPk(tenant.id, {
+      attributes: [
+        'id',
+        'name',
+        'subdomain',
+        'status',
+        'contact_email',
+        'phone',
+        'address',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+
+    return res.status(200).json({ message: 'Tenant updated', tenant: fresh.toJSON() });
+  } catch (err) {
+    console.error('updateTenant error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 exports.getTenantModules = async (req, res) => {
   try {
     const { tenantId } = req.params;
