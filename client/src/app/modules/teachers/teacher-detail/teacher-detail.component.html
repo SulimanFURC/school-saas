@@ -124,10 +124,144 @@
             </dd>
           </dl>
         </p-card>
+
+        <p-card header="Teaching assignments" styleClass="shadow-sm border-0">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="small text-secondary">Academic year</span>
+              <p-select
+                [options]="academicYears()"
+                [ngModel]="selectedAcademicYearId()"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Select year"
+                appendTo="body"
+                styleClass="w-100"
+                [style]="{ 'min-width': '12rem' }"
+                (ngModelChange)="onAcademicYearChange($event)"
+              />
+            </div>
+            <p-button label="Assign subject" icon="pi pi-plus" (onClick)="openAssignmentDialog()" />
+          </div>
+
+          <p-table
+            [value]="assignments()"
+            [loading]="loadingAssignments()"
+            dataKey="id"
+            styleClass="p-datatable-sm p-datatable-striped"
+            responsiveLayout="scroll"
+            emptyMessage="No teaching assignments for this year."
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Subject</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.class_name }}</td>
+                <td>{{ row.section_name }}</td>
+                <td>{{ row.subject_name }}</td>
+                <td class="text-end text-nowrap">
+                  <p-button
+                    type="button"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    ariaLabel="Remove assignment"
+                    (onClick)="removeAssignment(row.id)"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <p class="small text-secondary mt-2 mb-0">
+            If a subject slot is already taken for the same class & section, saving will reassign it to this teacher.
+          </p>
+        </p-card>
       </div>
     </div>
   }
 </section>
+
+<p-dialog
+  header="Assign subject"
+  [visible]="assignmentDialogVisible()"
+  (visibleChange)="assignmentDialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(520px, 96vw)' }"
+  (onHide)="closeAssignmentDialog()"
+>
+  <div class="d-flex flex-column gap-3">
+    <div>
+      <label class="form-label fw-medium">Subject</label>
+      <p-select
+        [options]="subjectOptions()"
+        [ngModel]="assignSubjectId()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select subject"
+        appendTo="body"
+        styleClass="w-100"
+        (ngModelChange)="assignSubjectId.set($event)"
+      />
+    </div>
+
+    <div>
+      <label class="form-label fw-medium">Class</label>
+      <p-select
+        [options]="classOptions()"
+        [ngModel]="assignClassId()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select class"
+        appendTo="body"
+        styleClass="w-100"
+        (ngModelChange)="onAssignClassChange($event)"
+      />
+    </div>
+
+    <div>
+      <label class="form-label fw-medium">Section</label>
+      <p-select
+        [options]="sectionOptions()"
+        [ngModel]="assignSectionId()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select section"
+        appendTo="body"
+        styleClass="w-100"
+        [disabled]="assignClassId() == null"
+        (ngModelChange)="assignSectionId.set($event)"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="d-flex justify-content-end gap-2">
+      <p-button
+        type="button"
+        label="Cancel"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="closeAssignmentDialog()"
+      />
+      <p-button
+        type="button"
+        label="Save"
+        icon="pi pi-check"
+        [loading]="creatingAssignment()"
+        [disabled]="creatingAssignment()"
+        (onClick)="saveAssignment()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
 
 @if (loginCredentials(); as cred) {
   <app-teacher-login-credentials-modal

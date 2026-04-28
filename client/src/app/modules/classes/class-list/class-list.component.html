@@ -1,3 +1,13 @@
+<p-toast position="top-right" />
+<p-confirmdialog />
+<p-menu
+  #rowActionMenu
+  [model]="rowActionMenuModel"
+  [popup]="true"
+  appendTo="body"
+  styleClass="class-row-actions-menu"
+/>
+
 <section class="page">
   <header class="content-area-header sp-page-header" aria-labelledby="classes-page-title">
     <div class="content-area-header__main sp-page-header__main">
@@ -6,10 +16,12 @@
       </div>
       <div>
         <h1 id="classes-page-title" class="content-area-header__title sp-page-header__title">All Classes</h1>
-        <p class="content-area-header__subtitle sp-page-header__subtitle">Grades and sections for your school</p>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">
+          Grades, sections and class teachers for your school
+        </p>
       </div>
     </div>
-    <div class="content-area-header__end">
+    <div class="content-area-header__end d-flex flex-wrap align-items-center justify-content-end gap-2">
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
         <a routerLink="/classes" class="content-area-header__crumb content-area-header__crumb--parent">Classes</a>
         <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
@@ -19,56 +31,92 @@
   </header>
 
   <div class="card shadow-sm border-0">
-    @if (loading()) {
-      <div class="center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+    <p-table
+      [value]="sortedRows()"
+      [loading]="loading()"
+      [showLoader]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template pTemplate="caption">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-1">
+          <span class="fw-semibold">Class records</span>
+          <p-button label="Add class" icon="pi pi-plus" routerLink="/classes/new" />
         </div>
-      </div>
-    } @else if (rows().length === 0) {
-      <p class="empty mb-0">No classes yet. Add a class or complete onboarding.</p>
-    } @else {
-      <div class="table-responsive">
-        <table class="table app-data-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th scope="col" [attr.aria-sort]="sortAria('name')">
-                <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
-                  Name
-                  <i class="app-data-table__sort-icon" [class]="sortIconClass('name')" aria-hidden="true"></i>
-                </button>
-              </th>
-              <th scope="col" class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of pagedRows(); track c.id) {
-              <tr>
-                <td>{{ c.name }}</td>
-                <td class="text-end">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-danger"
-                    aria-label="Delete class"
-                    (click)="deleteClass(c, $event)"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" [attr.aria-sort]="sortAria('name')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('name')">
+              Name
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('name')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('teacher')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('teacher')">
+              Class teacher
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('teacher')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="sortAria('sections')">
+            <button type="button" class="app-data-table__sort-btn" (click)="toggleSort('sections')">
+              Sections
+              <i class="app-data-table__sort-icon pi" [class]="sortIconClass('sections')" aria-hidden="true"></i>
+            </button>
+          </th>
+          <th scope="col" class="text-end">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="fw-medium">{{ row.name }}</td>
+          <td>
+            @if (teacherName(row); as name) {
+              {{ name || '—' }}
+            } @else {
+              —
             }
-          </tbody>
-        </table>
-      </div>
-      <app-table-pagination-footer
-        [total]="totalCount()"
-        [page]="page()"
-        [pageSize]="pageSize"
-        [totalPages]="totalPages()"
-        entryLabel="classes"
-        ariaLabel="Classes pagination"
-        (pageChange)="setPage($event)"
-      />
-    }
+          </td>
+          <td>
+            <div class="d-flex flex-wrap gap-1">
+              @for (s of row.sections ?? []; track s.id) {
+                <p-tag [value]="s.name" severity="secondary" />
+              } @empty {
+                <span class="text-secondary">—</span>
+              }
+            </div>
+          </td>
+          <td class="text-end text-nowrap">
+            <p-button
+              type="button"
+              icon="pi pi-ellipsis-v"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              ariaLabel="Open class actions menu"
+              (onClick)="openRowActionMenu($event, row)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4">
+            <div class="empty text-center py-5">
+              <p class="mb-2 fw-medium">No classes yet</p>
+              <p class="small text-secondary mb-3">
+                Add a class with a class teacher and at least one section.
+              </p>
+              <p-button label="Add class" icon="pi pi-plus" routerLink="/classes/new" [outlined]="true" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </section>

@@ -3,11 +3,19 @@ import { Injectable, inject } from '@angular/core';
 
 import { environment } from '../../environments/environment';
 
+export interface ClassTeacherSummary {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  designation?: string | null;
+}
+
 export interface SchoolClassDto {
   id: number;
   name: string;
-  display_order: number | null;
-  code?: string | null;
+  class_teacher_id: string;
+  classTeacher?: ClassTeacherSummary | null;
   is_active?: boolean;
   sections?: SectionDto[];
 }
@@ -16,6 +24,25 @@ export interface SectionDto {
   id: number;
   class_id: number;
   name: string;
+}
+
+export interface SectionInput {
+  id?: number;
+  name: string;
+}
+
+export interface CreateClassPayload {
+  name: string;
+  class_teacher_id: string;
+  sections: SectionInput[];
+  is_active?: boolean;
+}
+
+export interface UpdateClassPayload {
+  name?: string;
+  class_teacher_id?: string;
+  is_active?: boolean;
+  sections?: SectionInput[];
 }
 
 export interface AcademicYearDto {
@@ -34,19 +61,15 @@ export class AcademicService {
     return this.http.get<SchoolClassDto[]>(`${this.base}/classes`, { params });
   }
 
-  createClass(body: {
-    name: string;
-    display_order?: number | null;
-    code?: string | null;
-    is_active?: boolean;
-  }) {
+  getClass(id: number) {
+    return this.http.get<SchoolClassDto>(`${this.base}/classes/${id}`);
+  }
+
+  createClass(body: CreateClassPayload) {
     return this.http.post<SchoolClassDto>(`${this.base}/classes`, body);
   }
 
-  updateClass(
-    id: number,
-    body: Partial<{ name: string; display_order: number | null; code: string | null; is_active: boolean }>
-  ) {
+  updateClass(id: number, body: UpdateClassPayload) {
     return this.http.patch<SchoolClassDto>(`${this.base}/classes/${id}`, body);
   }
 

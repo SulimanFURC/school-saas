@@ -10,11 +10,11 @@ const User = require('./modules/users/user.model');
 require('./modules/module/module.model');
 require('./modules/tenant-module/tenantModule.model');
 require('./modules/tenant-branding/tenantBranding.model');
+require('./modules/subjects/subject.model');
 const {
   seedModuleCatalog,
   backfillAllTenantModules,
 } = require('./seed/moduleSeed');
-const { seedCanonicalClassesForTenant } = require('./seed/canonicalClasses');
 const { backfillAcademicYearsAllTenants } = require('./seed/academicYearsSeed');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
 const authRoutes = require('./modules/auth/auth.routes');
@@ -45,9 +45,20 @@ const StudentDocument = require('./modules/students/studentDocument.model');
 const FeeCollection = require('./modules/fees/feeCollection.model');
 const Expense = require('./modules/expenses/expense.model');
 const Teacher = require('./modules/teachers/teacher.model');
+const TeacherAcademicAssignment = require('./modules/teachers/teacherAcademicAssignment.model');
+const Subject = require('./modules/subjects/subject.model');
 User.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 User.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 Teacher.hasOne(User, { foreignKey: 'teacher_id', as: 'login_user' });
+SchoolClass.belongsTo(Teacher, { foreignKey: 'class_teacher_id', as: 'classTeacher' });
+Teacher.hasOne(SchoolClass, { foreignKey: 'class_teacher_id', as: 'assignedClass' });
+
+TeacherAcademicAssignment.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
+Teacher.hasMany(TeacherAcademicAssignment, { foreignKey: 'teacher_id', as: 'academic_assignments' });
+TeacherAcademicAssignment.belongsTo(SchoolClass, { foreignKey: 'class_id', as: 'schoolClass' });
+TeacherAcademicAssignment.belongsTo(Section, { foreignKey: 'section_id', as: 'section' });
+TeacherAcademicAssignment.belongsTo(AcademicYear, { foreignKey: 'academic_year_id', as: 'academicYear' });
+TeacherAcademicAssignment.belongsTo(Subject, { foreignKey: 'subject_id', as: 'subject' });
 FeeCollection.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 Student.hasMany(FeeCollection, { foreignKey: 'student_id', as: 'feeCollections' });
 FeeCollection.belongsTo(User, { foreignKey: 'collected_by_user_id', as: 'collectedBy' });
@@ -55,6 +66,7 @@ Expense.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdBy' });
 const academicRoutes = require('./modules/classes/academic.routes');
 const studentApiRoutes = require('./modules/students/student.routes');
 const teacherApiRoutes = require('./modules/teachers/teacher.routes');
+const subjectRoutes = require('./modules/subjects/subject.routes');
 const feeRoutes = require('./modules/fees/fee.routes');
 const expenseRoutes = require('./modules/expenses/expense.routes');
 
@@ -105,6 +117,7 @@ app.get(
 );
 
 app.use(academicRoutes);
+app.use(subjectRoutes);
 app.use(studentApiRoutes);
 app.use(teacherApiRoutes);
 app.use('/fees', tenantMiddleware, feeRoutes);
@@ -145,23 +158,12 @@ async function seedUsers() {
 
 
 
-async function backfillCanonicalClassesAllTenants() {
-  const tenants = await Tenant.findAll();
-  for (const t of tenants) {
-    if (t.subdomain === 'platform') continue;
-    await seedCanonicalClassesForTenant(t.id);
-  }
-  console.log('Canonical classes backfilled for tenants');
-}
-
 async function seedAbcSampleData() {
   const tenant = await Tenant.findOne({ where: { subdomain: 'abc' } });
   if (!tenant) {
     console.log('Skip ABC sample data: tenant not found');
     return;
   }
-
-  await seedCanonicalClassesForTenant(tenant.id);
 
   const [year] = await AcademicYear.findOrCreate({
     where: { tenant_id: tenant.id, name: '2025-2026' },
@@ -173,11 +175,12 @@ async function seedAbcSampleData() {
   );
   await year.update({ is_active: true });
 
+  // Sample class is now admin-created (requires a class teacher); skip enrollment seed if missing.
   const cls = await SchoolClass.findOne({
-    where: { tenant_id: tenant.id, code: 'C10' },
+    where: { tenant_id: tenant.id, name: 'Class 10th' },
   });
   if (!cls) {
-    console.log('Skip ABC enrollment: Class 10th not found');
+    console.log('Skip ABC enrollment: sample class not found (admin must create classes)');
     return;
   }
 
@@ -304,7 +307,6 @@ sequelize
   .then(() => seedUsers())
   .then(() => seedModuleCatalog())
   .then(() => backfillAllTenantModules())
-  .then(() => backfillCanonicalClassesAllTenants())
   .then(() => backfillAcademicYearsAllTenants())
   .then(() => seedAbcSampleData())
   .then(() => {

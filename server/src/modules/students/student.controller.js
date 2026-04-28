@@ -236,11 +236,11 @@ exports.register = async (req, res) => {
     const clsRow = await SchoolClass.findOne({
       where: { id: enrollment.class_id, tenant_id: tenantId },
     });
-    if (!clsRow || !clsRow.code) {
+    if (!clsRow) {
       await t.rollback();
       return res.status(400).json({ message: 'Invalid class for enrollment' });
     }
-    const catCheck = validateEnrollmentCategory(clsRow.code, enrollment.category);
+    const catCheck = validateEnrollmentCategory(clsRow.name, enrollment.category);
     if (!catCheck.ok) {
       await t.rollback();
       return res.status(400).json({ message: catCheck.message });
@@ -566,7 +566,7 @@ exports.lookupByAdmission = async (req, res) => {
       where: { tenant_id: tenantId, student_id: student.id },
       include: [
         { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
-        { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+        { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name'] },
         { model: Section, as: 'section', attributes: ['id', 'name'] },
       ],
     });
@@ -650,7 +650,7 @@ exports.list = async (req, res) => {
               required: true,
               attributes: { exclude: ['photo_base64'] },
             },
-            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name'] },
             { model: Section, as: 'section', attributes: ['id', 'name'] },
             { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
           ],
@@ -697,7 +697,7 @@ exports.list = async (req, res) => {
             status: 'active',
           },
           include: [
-            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name', 'code'] },
+            { model: SchoolClass, as: 'schoolClass', attributes: ['id', 'name'] },
             { model: Section, as: 'section', attributes: ['id', 'name'] },
             { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
           ],
@@ -933,11 +933,11 @@ exports.update = async (req, res) => {
         where: { id: cId, tenant_id: tenantId },
         transaction: t,
       });
-      if (!clsRow || !clsRow.code) {
+      if (!clsRow) {
         await t.rollback();
         return res.status(400).json({ message: 'Invalid class for enrollment' });
       }
-      const catCheck = validateEnrollmentCategory(clsRow.code, e.category);
+      const catCheck = validateEnrollmentCategory(clsRow.name, e.category);
       if (!catCheck.ok) {
         await t.rollback();
         return res.status(400).json({ message: catCheck.message });

@@ -7,7 +7,6 @@ const Module = require('../module/module.model');
 const TenantModule = require('../tenant-module/tenantModule.model');
 const Student = require('../students/student.model');
 const { seedTenantModulesForTenant } = require('../../seed/moduleSeed');
-const { seedCanonicalClassesForTenant } = require('../../seed/canonicalClasses');
 const { seedAcademicYearsForTenant } = require('../../seed/academicYearsSeed');
 const {
   RESERVED_SUBDOMAINS,
@@ -235,7 +234,6 @@ exports.createTenant = async (req, res) => {
     await t.commit();
 
     await seedTenantModulesForTenant(tenant.id, true);
-    await seedCanonicalClassesForTenant(tenant.id);
     await seedAcademicYearsForTenant(tenant.id);
 
     const fresh = await Tenant.findByPk(tenant.id, {

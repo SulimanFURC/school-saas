@@ -97,6 +97,9 @@
               <i class="app-data-table__sort-icon pi" [class]="sortIconClass('account')" aria-hidden="true"></i>
             </button>
           </th>
+          <th scope="col">Classes</th>
+          <th scope="col">Sections</th>
+          <th scope="col">Subjects</th>
           <th scope="col" class="text-end">Actions</th>
         </tr>
       </ng-template>
@@ -110,6 +113,10 @@
           <td>
             <p-tag [value]="accountLabel(row)" [severity]="accountSeverity(row)" />
           </td>
+          @let st = statsFor(row);
+          <td>{{ st?.distinct_class_count ?? 0 }}</td>
+          <td>{{ st?.distinct_section_count ?? 0 }}</td>
+          <td>{{ st?.assignment_count ?? 0 }}</td>
           <td class="text-end text-nowrap" (click)="$event.stopPropagation()">
             <p-button
               type="button"
@@ -127,7 +134,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="6">
+          <td colspan="9">
             <div class="empty text-center py-5">
               <p class="mb-2 fw-medium">No teachers found</p>
               <p class="small text-secondary mb-3">

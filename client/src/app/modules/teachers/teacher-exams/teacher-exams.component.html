@@ -1,0 +1,33 @@
+<section class="page">
+  <header class="content-area-header" aria-labelledby="teacher-exams-title">
+    <div class="content-area-header__main">
+      <h1 id="teacher-exams-title" class="content-area-header__title">Exams</h1>
+      <p class="content-area-header__subtitle">Mark sheets and grade entry workspace</p>
+    </div>
+    <div class="content-area-header__end">
+      <p-button label="Back to dashboard" severity="secondary" [outlined]="true" routerLink="/teachers/dashboard" />
+    </div>
+  </header>
+
+  <p-card styleClass="shadow-sm border-0">
+    <div class="d-flex flex-column gap-3">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="badge text-bg-info-subtle text-info-emphasis border">Coming soon</span>
+        <h2 class="h5 mb-0">Marks entry — preview</h2>
+      </div>
+      <p class="mb-0 text-secondary">
+        Soon you'll be able to enter and submit marks for the classes, sections and subjects assigned to you.
+        Your dashboard already lists everything you teach so the right exams will appear here automatically.
+      </p>
+      <ul class="mb-0 text-secondary small">
+        <li>Marks entry per class &middot; section &middot; subject</li>
+        <li>Per-student grade and remarks</li>
+        <li>Submit / lock workflow with audit trail</li>
+        <li>Read-only result publishing for admin and students</li>
+      </ul>
+      <div>
+        <p-button label="Go to my dashboard" icon="pi pi-arrow-right" routerLink="/teachers/dashboard" />
+      </div>
+    </div>
+  </p-card>
+</section>

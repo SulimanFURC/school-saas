@@ -521,9 +521,9 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
   categoryOptions(): string[] {
     const cid = this.s5.getRawValue().class_id;
     const cls = this.classes.find((c) => c.id === cid);
-    const code = cls?.code?.trim() || '';
-    if (code === 'C9' || code === 'C10') return ['Science', 'Arts'];
-    if (code === 'C11' || code === 'C12') {
+    const name = cls?.name?.toLowerCase().trim() ?? '';
+    if (/\b(class\s*)?(9|10)(th)?\b/.test(name)) return ['Science', 'Arts'];
+    if (/\b(class\s*)?(11|12)(th)?\b/.test(name)) {
       return ['Pre-engineering', 'Medical', 'Computer science'];
     }
     return [];

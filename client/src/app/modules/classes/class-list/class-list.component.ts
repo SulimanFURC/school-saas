@@ -1,29 +1,60 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router, RouterLink } from '@angular/router';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { Menu, MenuModule } from 'primeng/menu';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { catchError, finalize, of } from 'rxjs';
 
 import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
-import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { ToastService } from '../../../services/toast.service';
-import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
 
-export type ClassSortKey = 'name';
+export type ClassSortKey = 'name' | 'teacher' | 'sections';
 
 @Component({
   selector: 'app-class-list',
-  imports: [RouterLink, TablePaginationFooterComponent],
+  imports: [
+    RouterLink,
+    TableModule,
+    ButtonModule,
+    MenuModule,
+    ConfirmDialogModule,
+    ToastModule,
+    TagModule,
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './class-list.component.html',
   styleUrl: './class-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassListComponent implements OnInit {
   private api = inject(AcademicService);
-  private toast = inject(ToastService);
-  private confirmDialog = inject(ConfirmDialogService);
+  private router = inject(Router);
+  private messages = inject(MessageService);
+  private confirmation = inject(ConfirmationService);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+
+  private readonly rowActionMenu = viewChild<Menu>('rowActionMenu');
+
+  rowActionMenuModel: MenuItem[] = [];
 
   loading = signal(true);
   rows = signal<SchoolClassDto[]>([]);
-  page = signal(1);
-  readonly pageSize = 10;
 
   sortKey = signal<ClassSortKey | null>(null);
   sortDir = signal<SortDir>('asc');
@@ -36,38 +67,30 @@ export class ClassListComponent implements OnInit {
     return sortCopy(data, (a, b) => this.compareByKey(a, b, key), dir);
   });
 
-  readonly pagedRows = computed(() => {
-    const sorted = this.sortedRows();
-    const start = (this.page() - 1) * this.pageSize;
-    return sorted.slice(start, start + this.pageSize);
-  });
-
-  readonly totalCount = computed(() => this.rows().length);
-
   ngOnInit(): void {
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
-    this.api.listClasses(true).subscribe({
-      next: (data) => {
-        this.rows.set(data);
-        this.loading.set(false);
-      },
-      error: (e) => {
-        this.loading.set(false);
-        this.toast.open(e.error?.message || 'Failed to load classes', 'Dismiss', { duration: 5000 });
-      },
-    });
-  }
-
-  totalPages(): number {
-    return Math.max(1, Math.ceil(this.rows().length / this.pageSize));
-  }
-
-  setPage(p: number): void {
-    this.page.set(Math.min(Math.max(1, p), this.totalPages()));
+    this.api
+      .listClasses(true)
+      .pipe(
+        catchError((e: { error?: { message?: string } }) => {
+          this.messages.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: e.error?.message || 'Failed to load classes',
+            life: 5000,
+          });
+          return of([] as SchoolClassDto[]);
+        }),
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((data) => {
+        this.rows.set(Array.isArray(data) ? data : []);
+      });
   }
 
   toggleSort(key: ClassSortKey): void {
@@ -85,45 +108,85 @@ export class ClassListComponent implements OnInit {
   }
 
   sortIconClass(key: ClassSortKey): string {
-    if (this.sortKey() !== key) return 'bi bi-arrow-down-up';
-    return this.sortDir() === 'asc' ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill';
+    if (this.sortKey() !== key) return 'pi pi-arrows-v';
+    return this.sortDir() === 'asc' ? 'pi pi-sort-up-fill' : 'pi pi-sort-down-fill';
   }
 
   private compareByKey(a: SchoolClassDto, b: SchoolClassDto, key: ClassSortKey): number {
     switch (key) {
       case 'name':
         return compareNullableString(a.name, b.name);
+      case 'teacher':
+        return compareNullableString(this.teacherName(a), this.teacherName(b));
+      case 'sections':
+        return (a.sections?.length ?? 0) - (b.sections?.length ?? 0);
       default:
         return 0;
     }
   }
 
-  deleteClass(c: SchoolClassDto, ev: Event): void {
-    ev.stopPropagation();
-    void this.runDeleteClass(c);
+  teacherName(c: SchoolClassDto): string {
+    const t = c.classTeacher;
+    if (!t) return '';
+    return `${t.first_name ?? ''} ${t.last_name ?? ''}`.trim() || (t.email ?? '');
   }
 
-  private async runDeleteClass(c: SchoolClassDto): Promise<void> {
-    const ok = await this.confirmDialog.confirm({
-      title: 'Delete class?',
-      message: `Delete class "${c.name}"? This cannot be undone if the server allows removal.`,
-      variant: 'danger',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
-      ariaIdPrefix: 'class-delete',
-    });
-    if (!ok) return;
+  sectionsLabel(c: SchoolClassDto): string {
+    const list = c.sections ?? [];
+    if (list.length === 0) return '—';
+    return list.map((s) => s.name).join(', ');
+  }
 
-    this.confirmDialog.setBusy(true);
-    this.api.deleteClass(c.id).subscribe({
-      next: () => {
-        this.confirmDialog.complete();
-        this.toast.open('Class removed', 'Dismiss', { duration: 3000 });
-        this.load();
+  openRowActionMenu(event: MouseEvent, row: SchoolClassDto): void {
+    event.stopPropagation();
+    this.rowActionMenuModel = [
+      {
+        label: 'Edit',
+        icon: 'pi pi-pencil',
+        command: () => void this.router.navigate(['/classes', row.id, 'edit']),
       },
-      error: (e) => {
-        this.confirmDialog.complete();
-        this.toast.open(e.error?.message || 'Delete failed', 'Dismiss', { duration: 6000 });
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        styleClass: 'class-row-actions-menu__item--danger',
+        command: () => this.confirmDelete(row),
+      },
+    ];
+    this.cdr.detectChanges();
+    this.rowActionMenu()?.toggle(event);
+  }
+
+  confirmDelete(c: SchoolClassDto): void {
+    this.confirmation.confirm({
+      message: `Delete class "${c.name}"? This cannot be undone if the server allows removal.`,
+      header: 'Delete class?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.api
+          .deleteClass(c.id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.messages.add({
+                severity: 'success',
+                summary: 'Removed',
+                detail: 'Class deleted',
+                life: 3000,
+              });
+              this.load();
+            },
+            error: (e: { error?: { message?: string } }) => {
+              this.messages.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: e.error?.message || 'Delete failed',
+                life: 5000,
+              });
+            },
+          });
       },
     });
   }

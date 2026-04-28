@@ -15,7 +15,9 @@ describe('StudentRegisterComponent', () => {
   let toast: jasmine.SpyObj<ToastService>;
   let router: Router;
 
-  const mockClasses = [{ id: 1, name: 'Class 1', code: 'C1', display_order: 1 }];
+  const mockClasses = [
+    { id: 1, name: 'Class 1', class_teacher_id: 'tch-1', is_active: true, sections: [] },
+  ];
   const mockYears = [{ id: 1, name: '2025-2026', is_active: true }];
   const mockSections = [{ id: 1, class_id: 1, name: 'A' }];
 

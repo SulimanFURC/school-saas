@@ -40,6 +40,7 @@ export class TeacherSelfProfileComponent implements OnInit {
 
   loading = signal(true);
   submitting = signal(false);
+  submittingPassword = signal(false);
   teacher = signal<TeacherDetail | null>(null);
 
   photoDataUrl = signal<string | null>(null);
@@ -52,6 +53,12 @@ export class TeacherSelfProfileComponent implements OnInit {
     address: [''],
     qualification: [''],
     experience: [''],
+  });
+
+  passwordForm = this.fb.nonNullable.group({
+    current_password: ['', [Validators.required]],
+    new_password: ['', [Validators.required, Validators.minLength(6)]],
+    confirm_password: ['', [Validators.required]],
   });
 
   ngOnInit(): void {
@@ -164,5 +171,46 @@ export class TeacherSelfProfileComponent implements OnInit {
         });
       },
     });
+  }
+
+  submitPassword(): void {
+    this.passwordForm.markAllAsTouched();
+    if (this.passwordForm.invalid) return;
+    const v = this.passwordForm.getRawValue();
+    if (v.new_password !== v.confirm_password) {
+      this.messages.add({
+        severity: 'warn',
+        summary: 'Password',
+        detail: 'New password and confirmation do not match.',
+        life: 4000,
+      });
+      return;
+    }
+    this.submittingPassword.set(true);
+    this.api
+      .changeMyPassword({
+        current_password: v.current_password,
+        new_password: v.new_password,
+      })
+      .pipe(finalize(() => this.submittingPassword.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.messages.add({
+            severity: 'success',
+            summary: 'Updated',
+            detail: res.message || 'Password updated',
+            life: 4000,
+          });
+          this.passwordForm.reset();
+        },
+        error: (e: { error?: { message?: string } }) => {
+          this.messages.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: e.error?.message || 'Password update failed',
+            life: 5000,
+          });
+        },
+      });
   }
 }

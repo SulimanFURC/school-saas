@@ -681,3 +681,45 @@ exports.updateMe = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+exports.changeMyPassword = async (req, res) => {
+  try {
+    const tenantId = req.tenant.id;
+    const userId = req.user.userId;
+
+    const currentPassword =
+      req.body && req.body.current_password != null ? String(req.body.current_password) : '';
+    const newPassword =
+      req.body && req.body.new_password != null ? String(req.body.new_password) : '';
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'current_password and new_password are required' });
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(409).json({ message: 'New password must be different from current password' });
+    }
+
+    const loginUser = await User.findOne({
+      where: { id: userId, tenant_id: tenantId, role: 'teacher' },
+    });
+    if (!loginUser) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const ok = await bcrypt.compare(currentPassword, loginUser.password);
+    if (!ok) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await loginUser.update({ password: hash });
+
+    res.status(200).json({ message: 'Password updated' });
+  } catch (err) {
+    console.error('teachers.changeMyPassword error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

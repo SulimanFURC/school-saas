@@ -1,8 +1,12 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/db');
 
-const SchoolClass = sequelize.define(
-  'SchoolClass',
+/**
+ * Tenant-scoped subject catalog.
+ * Used for normalized teacher academic assignments.
+ */
+const Subject = sequelize.define(
+  'Subject',
   {
     id: {
       type: DataTypes.INTEGER,
@@ -18,12 +22,10 @@ const SchoolClass = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    class_teacher_id: {
-      type: DataTypes.UUID,
-      // Transitional for existing databases: legacy rows can be null.
-      // API/controller layer still requires class_teacher_id for create/update.
-      allowNull: true,
-      references: { model: 'teachers', key: 'id' },
+    /** Lowercased/trimmed key for case-insensitive uniqueness within a tenant. */
+    name_key: {
+      type: DataTypes.STRING(120),
+      allowNull: false,
     },
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -32,25 +34,25 @@ const SchoolClass = sequelize.define(
     },
   },
   {
-    tableName: 'classes',
+    tableName: 'subjects',
     timestamps: true,
     underscored: true,
     indexes: [
       {
         unique: true,
-        fields: ['tenant_id', 'name'],
-        name: 'classes_tenant_id_name_unique',
+        fields: ['tenant_id', 'name_key'],
+        name: 'subjects_tenant_name_key_unique',
       },
       {
-        unique: true,
-        fields: ['tenant_id', 'class_teacher_id'],
-        name: 'classes_tenant_class_teacher_unique',
+        fields: ['tenant_id', 'is_active'],
+        name: 'subjects_tenant_active_idx',
       },
     ],
   }
 );
 
 const Tenant = require('../tenant/tenant.model');
-SchoolClass.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
+Subject.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
 
-module.exports = SchoolClass;
+module.exports = Subject;
+

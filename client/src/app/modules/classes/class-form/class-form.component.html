@@ -1,3 +1,5 @@
+<p-toast position="top-right" />
+
 <section class="page">
   <header class="content-area-header sp-page-header" aria-labelledby="class-form-page-title">
     <div class="content-area-header__main sp-page-header__main">
@@ -5,9 +7,11 @@
         <i class="bi bi-journal-plus"></i>
       </div>
       <div>
-        <h1 id="class-form-page-title" class="content-area-header__title sp-page-header__title">Add Class</h1>
+        <h1 id="class-form-page-title" class="content-area-header__title sp-page-header__title">
+          {{ pageTitle() }}
+        </h1>
         <p class="content-area-header__subtitle sp-page-header__subtitle">
-          Section A is created automatically. Add more sections from class management later.
+          Assign a class teacher and define one or more sections.
         </p>
       </div>
     </div>
@@ -15,31 +19,134 @@
       <nav class="content-area-header__crumbs" aria-label="Breadcrumb">
         <a routerLink="/classes" class="content-area-header__crumb content-area-header__crumb--parent">Classes</a>
         <span class="content-area-header__sep" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
-        <span class="content-area-header__crumb content-area-header__crumb--current">Add Class</span>
+        <span class="content-area-header__crumb content-area-header__crumb--current">{{ pageTitle() }}</span>
       </nav>
     </div>
   </header>
 
-  <div class="card shadow-sm border-0">
-    <div class="card-body" style="max-width: 520px">
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <div class="mb-3">
-          <label class="form-label" for="cf-name">Class name</label>
-          <input id="cf-name" class="form-control" formControlName="name" placeholder="e.g. Class 5" />
+  <p-card styleClass="class-form-card shadow-sm border-0">
+    @if (loading()) {
+      <div class="text-center py-5">
+        <i class="pi pi-spin pi-spinner" style="font-size: 1.75rem"></i>
+        <p class="mt-2 mb-0 text-secondary">Loading…</p>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="class-form" novalidate>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-medium" for="cf-name">Class name <span class="text-danger">*</span></label>
+            <input
+              pInputText
+              id="cf-name"
+              type="text"
+              class="w-100"
+              formControlName="name"
+              placeholder="e.g. Class 5"
+              maxlength="100"
+              autocomplete="off"
+            />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <small class="text-danger d-block mt-1">Class name is required.</small>
+            }
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-medium" for="cf-teacher">
+              Class teacher <span class="text-danger">*</span>
+            </label>
+            <p-select
+              inputId="cf-teacher"
+              styleClass="w-100"
+              [options]="teacherOptions()"
+              formControlName="class_teacher_id"
+              placeholder="Select a teacher"
+              [filter]="true"
+              filterBy="label"
+              appendTo="body"
+            >
+              <ng-template let-opt pTemplate="item">
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                  <span>{{ opt.label }}</span>
+                  @if (opt.hint) {
+                    <small class="text-secondary">{{ opt.hint }}</small>
+                  }
+                </div>
+              </ng-template>
+            </p-select>
+            @if (form.controls.class_teacher_id.touched && form.controls.class_teacher_id.invalid) {
+              <small class="text-danger d-block mt-1">Class teacher is required.</small>
+            }
+            <small class="text-secondary d-block mt-1">
+              Teachers already assigned to another class are disabled.
+            </small>
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="cf-code">Code (optional)</label>
-          <input id="cf-code" class="form-control" formControlName="code" placeholder="e.g. C5" />
+
+        <hr class="my-4" />
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h6 fw-semibold mb-1">Sections</h2>
+            <p class="text-secondary small mb-0">
+              Add one or more sections (e.g. A, B, C). At least one section is required.
+            </p>
+          </div>
+          <p-button
+            type="button"
+            label="Add section"
+            icon="pi pi-plus"
+            [outlined]="true"
+            size="small"
+            (onClick)="addSection('')"
+          />
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="cf-order">Display order</label>
-          <input id="cf-order" class="form-control" type="number" formControlName="display_order" />
+
+        <div class="row g-2" formArrayName="sections">
+          @for (ctrl of sectionsArray.controls; track trackSection($index); let i = $index) {
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="input-group">
+                <span class="input-group-text">{{ i + 1 }}</span>
+                <input
+                  pInputText
+                  type="text"
+                  class="form-control"
+                  [value]="ctrl.value.name"
+                  (input)="updateSectionName(i, $any($event.target).value)"
+                  placeholder="Section name (e.g. A)"
+                  maxlength="10"
+                  autocomplete="off"
+                />
+                <p-button
+                  type="button"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  ariaLabel="Remove section"
+                  [disabled]="sectionsArray.length <= 1"
+                  (onClick)="removeSection(i)"
+                />
+              </div>
+            </div>
+          }
         </div>
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary" [disabled]="submitting">Save</button>
-          <a class="btn btn-outline-secondary" routerLink="/classes">Cancel</a>
+
+        <div class="d-flex gap-2 mt-4">
+          <p-button
+            type="submit"
+            [label]="editId() ? 'Save changes' : 'Create class'"
+            icon="pi pi-check"
+            [disabled]="submitting()"
+            [loading]="submitting()"
+          />
+          <p-button
+            type="button"
+            label="Cancel"
+            severity="secondary"
+            [outlined]="true"
+            routerLink="/classes"
+          />
         </div>
       </form>
-    </div>
-  </div>
+    }
+  </p-card>
 </section>

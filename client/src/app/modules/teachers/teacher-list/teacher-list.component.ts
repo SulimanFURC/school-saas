@@ -23,7 +23,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject } from 'rxjs';
 
-import { TeacherListRow, TeacherService } from '../../../services/teacher.service';
+import { TeacherAssignmentStatsRow, TeacherListRow, TeacherService } from '../../../services/teacher.service';
 import {
   compareNullableString,
   nextSortDir,
@@ -92,6 +92,9 @@ export class TeacherListComponent implements OnInit {
 
   loginCredentials = signal<{ username: string; password: string } | null>(null);
 
+  /** teacher_id -> stats for current/active academic year */
+  assignmentStats = signal<Record<string, TeacherAssignmentStatsRow>>({});
+
   ngOnInit(): void {
     this.searchInput$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -145,11 +148,31 @@ export class TeacherListComponent implements OnInit {
       )
       .subscribe({
         next: (res) => {
-          this.rows.set(Array.isArray(res.data) ? res.data : []);
+          const data = Array.isArray(res.data) ? res.data : [];
+          this.rows.set(data);
           this.total.set(res.total ?? 0);
           this.totalPages.set(Math.max(1, res.totalPages ?? 1));
+          const ids = data.map((r) => r.id).filter(Boolean);
+          if (ids.length > 0) {
+            this.api.assignmentStats({ teacher_ids: ids }).subscribe({
+              next: (statsRes) => {
+                const map: Record<string, TeacherAssignmentStatsRow> = {};
+                for (const row of statsRes.data || []) {
+                  map[row.teacher_id] = row;
+                }
+                this.assignmentStats.set(map);
+              },
+              error: () => this.assignmentStats.set({}),
+            });
+          } else {
+            this.assignmentStats.set({});
+          }
         },
       });
+  }
+
+  statsFor(row: TeacherListRow): TeacherAssignmentStatsRow | null {
+    return this.assignmentStats()[row.id] ?? null;
   }
 
   toggleSort(key: TeacherSortKey): void {

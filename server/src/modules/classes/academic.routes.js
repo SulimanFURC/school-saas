@@ -14,6 +14,7 @@ const adminClasses = [checkFeature('classes'), authorize('admin', 'super_admin')
 
 router.get('/classes', adminClasses, academicController.listClasses);
 router.post('/classes', adminClasses, academicController.createClass);
+router.get('/classes/:id', adminClasses, academicController.getClass);
 router.patch('/classes/:id', adminClasses, academicController.updateClass);
 router.delete('/classes/:id', adminClasses, academicController.deleteClass);
 router.get('/sections', adminClasses, academicController.listSections);

@@ -1,0 +1,203 @@
+<p-toast position="top-right" />
+
+<section class="page">
+  <header class="content-area-header" aria-labelledby="teacher-dashboard-title">
+    <div class="content-area-header__main">
+      <h1 id="teacher-dashboard-title" class="content-area-header__title">
+        @if (fullName()) { Welcome, {{ fullName() }} } @else { Teacher dashboard }
+      </h1>
+      <p class="content-area-header__subtitle">
+        @if (dashboard()?.academic_year; as yr) {
+          Academic year: <strong>{{ yr.name || '—' }}</strong>
+          @if (!dashboard()?.is_active_year) {
+            <span class="ms-2 badge text-bg-warning">Not active year</span>
+          }
+        } @else {
+          @if (!loadingDashboard()) {
+            <span class="text-secondary">No active academic year is set.</span>
+          }
+        }
+      </p>
+    </div>
+    <div class="content-area-header__end">
+      <div class="d-flex flex-wrap gap-2">
+        <p-button label="My profile" icon="pi pi-user" severity="secondary" [outlined]="true" routerLink="/teachers/me" />
+        @if (examsEnabled()) {
+          <p-button label="Exams" icon="pi pi-list-check" routerLink="/teachers/exams" />
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (loadingDashboard()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (hasNoYear()) {
+    <p-card styleClass="shadow-sm border-0">
+      <p class="mb-0 text-secondary">
+        Your school administrator hasn't activated an academic year yet. Once it is set, your assigned classes and
+        students will appear here.
+      </p>
+    </p-card>
+  } @else if (hasNoAssignments()) {
+    <p-card styleClass="shadow-sm border-0">
+      <p class="mb-2"><strong>No teaching assignments yet.</strong></p>
+      <p class="mb-0 text-secondary">
+        Ask your school administrator to assign you a class teacher role or specific class–section–subject
+        responsibilities. They appear here automatically.
+      </p>
+    </p-card>
+  } @else {
+    @let d = dashboard()!;
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <p-card header="Class teacher of" styleClass="shadow-sm border-0 h-100">
+          @if (d.class_teacher_of.length === 0) {
+            <p class="text-secondary mb-0 small">
+              You are not assigned as a class teacher (homeroom) for any class.
+            </p>
+          } @else {
+            <ul class="list-unstyled mb-0">
+              @for (cls of d.class_teacher_of; track cls.class_id) {
+                <li class="mb-2 d-flex flex-wrap align-items-center gap-2">
+                  <span class="badge text-bg-primary">{{ cls.class_name }}</span>
+                  @for (sec of cls.sections; track sec.section_id) {
+                    <span class="badge text-bg-light border">Section {{ sec.section_name }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </p-card>
+      </div>
+      <div class="col-lg-7">
+        <p-card header="Teaching assignments" styleClass="shadow-sm border-0 h-100">
+          @if (d.summary.length === 0) {
+            <p class="text-secondary mb-0 small">
+              No subject assignments for this academic year.
+            </p>
+          } @else {
+            <div class="d-flex flex-column gap-3">
+              @for (entry of d.summary; track entry.class_id) {
+                <div class="border rounded p-2">
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <strong>{{ entry.class_name }}</strong>
+                  </div>
+                  <div class="d-flex flex-column gap-2">
+                    @for (sec of entry.sections; track sec.section_id) {
+                      <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge text-bg-light border">Section {{ sec.section_name }}</span>
+                        @for (subj of sec.subjects; track subj) {
+                          <span class="badge text-bg-info-subtle text-info-emphasis border">
+                            {{ subj }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </p-card>
+      </div>
+    </div>
+
+    <p-card styleClass="shadow-sm border-0">
+      <ng-template pTemplate="header">
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between p-3 border-bottom">
+          <div>
+            <h2 class="h5 mb-1">My students</h2>
+            <p class="small text-secondary mb-0">
+              Showing students in your assigned classes for the {{ d.academic_year?.name || 'current' }} year.
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <p-iconfield iconPosition="left" styleClass="w-100">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                type="text"
+                placeholder="Search admission no or name"
+                (input)="onSearchInput(($any($event.target)).value)"
+                aria-label="Search students"
+              />
+            </p-iconfield>
+            <p-select
+              [options]="classOptions()"
+              [ngModel]="classFilter()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="All my classes"
+              styleClass="min-w-200"
+              (ngModelChange)="onClassFilterChange($event)"
+            />
+            <p-select
+              [options]="availableSectionOptions()"
+              [ngModel]="sectionFilter()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="All sections"
+              styleClass="min-w-200"
+              [disabled]="classFilter() == null"
+              (ngModelChange)="onSectionFilterChange($event)"
+            />
+          </div>
+        </div>
+      </ng-template>
+
+      <p-table
+        [value]="rows()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [totalRecords]="total()"
+        [first]="(page() - 1) * pageSize()"
+        [loading]="loadingStudents()"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        responsiveLayout="scroll"
+        dataKey="id"
+        emptyMessage="No students found for the current filters."
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} - {last} of {totalRecords}"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 64px"></th>
+            <th>Admission no</th>
+            <th>Student</th>
+            <th>Class</th>
+            <th>Section</th>
+            <th>Roll</th>
+            <th>Gender</th>
+            <th>Status</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>
+              <div class="avatar-initials">{{ initials(row) }}</div>
+            </td>
+            <td><span class="fw-semibold">{{ row.admission_no || '—' }}</span></td>
+            <td>{{ row.display_name || '—' }}</td>
+            <td>{{ row.class_name || '—' }}</td>
+            <td>{{ row.section_name || '—' }}</td>
+            <td>{{ row.roll_number ?? '—' }}</td>
+            <td>{{ row.gender || '—' }}</td>
+            <td>
+              <p-tag
+                [value]="row.status || 'active'"
+                [severity]="row.status === 'active' ? 'success' : 'secondary'"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  }
+</section>

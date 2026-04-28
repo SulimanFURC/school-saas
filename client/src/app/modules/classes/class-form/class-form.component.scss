@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+.class-form-card {
+  max-width: 880px;
+}
+
+.class-form {
+  .input-group .p-button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}

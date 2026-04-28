@@ -4,7 +4,6 @@ const sequelize = require('../../config/db');
 const Tenant = require('../tenant/tenant.model');
 const User = require('../users/user.model');
 const { seedTenantModulesForTenant } = require('../../seed/moduleSeed');
-const { seedCanonicalClassesForTenant } = require('../../seed/canonicalClasses');
 const { seedAcademicYearsForTenant } = require('../../seed/academicYearsSeed');
 const {
   RESERVED_SUBDOMAINS,
@@ -81,7 +80,6 @@ exports.signup = async (req, res) => {
     await t.commit();
 
     await seedTenantModulesForTenant(tenant.id, true);
-    await seedCanonicalClassesForTenant(tenant.id);
     await seedAcademicYearsForTenant(tenant.id);
 
     const token = signToken(user, tenant);

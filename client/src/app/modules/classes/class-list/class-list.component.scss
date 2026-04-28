@@ -4,6 +4,10 @@
   color: var(--bs-secondary);
 }
 
-.center {
-  text-align: center;
+::ng-deep .class-row-actions-menu__item--danger {
+  color: var(--bs-danger, #dc3545);
+}
+
+::ng-deep .class-row-actions-menu__item--danger .p-menuitem-icon {
+  color: var(--bs-danger, #dc3545);
 }

@@ -119,6 +119,24 @@ export const routes: Routes = [
         data: { title: 'Student details', moduleKey: 'students' },
       },
       {
+        path: 'teachers/dashboard',
+        canActivate: [teacherRoleGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-dashboard/teacher-dashboard.component').then(
+            (m) => m.TeacherDashboardComponent
+          ),
+        data: { title: 'Teacher dashboard' },
+      },
+      {
+        path: 'teachers/exams',
+        canActivate: [teacherRoleGuard, featureGuard],
+        loadComponent: () =>
+          import('./modules/teachers/teacher-exams/teacher-exams.component').then(
+            (m) => m.TeacherExamsComponent
+          ),
+        data: { title: 'Exams', moduleKey: 'exams' },
+      },
+      {
         path: 'teachers/me',
         canActivate: [teacherRoleGuard],
         loadComponent: () =>
@@ -206,11 +224,27 @@ export const routes: Routes = [
         data: { title: 'Add class', moduleKey: 'classes' },
       },
       {
+        path: 'classes/:id/edit',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/classes/class-form/class-form.component').then((m) => m.ClassFormComponent),
+        data: { title: 'Edit class', moduleKey: 'classes' },
+      },
+      {
         path: 'classes',
+        pathMatch: 'full',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
           import('./modules/classes/class-list/class-list.component').then((m) => m.ClassListComponent),
         data: { title: 'Classes', moduleKey: 'classes' },
+      },
+      {
+        path: 'subjects',
+        pathMatch: 'full',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/subjects/subject-list/subject-list.component').then((m) => m.SubjectListComponent),
+        data: { title: 'Subjects', moduleKey: 'classes' },
       },
       {
         path: 'attendance',

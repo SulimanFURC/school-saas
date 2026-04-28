@@ -19,8 +19,8 @@ describe('StudentPromoteComponent', () => {
     { id: 2, name: '2025-2026', is_active: false },
   ];
   const mockClasses = [
-    { id: 10, name: 'Class 5', display_order: 5, code: 'C5' },
-    { id: 11, name: 'Class 6', display_order: 6, code: 'C6' },
+    { id: 10, name: 'Class 5', class_teacher_id: 'tch-1', is_active: true, sections: [] },
+    { id: 11, name: 'Class 6', class_teacher_id: 'tch-2', is_active: true, sections: [] },
   ];
   const mockSections = [{ id: 20, class_id: 10, name: 'A' }];
   const mockSectionsClass6 = [{ id: 21, class_id: 11, name: 'A' }];

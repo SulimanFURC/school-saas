@@ -79,22 +79,14 @@ export class MainLayoutComponent {
     });
 
     if (role === 'teacher') {
-      return base
-        .filter((entry) => {
-          if (isNavGroup(entry)) {
-            return entry.moduleKey === 'teachers';
-          }
-          return entry.path === '/' || entry.path === '/teachers/me';
-        })
-        .map((entry) => {
-          if (isNavGroup(entry) && entry.moduleKey === 'teachers') {
-            return {
-              ...entry,
-              children: [{ label: 'My profile', path: '/teachers/me', icon: 'badge' }],
-            };
-          }
-          return entry;
-        });
+      const teacherNav: NavEntry[] = [
+        { label: 'Dashboard', path: '/teachers/dashboard', icon: 'dashboard' },
+      ];
+      if (enabled.has('exams')) {
+        teacherNav.push({ label: 'Exams', path: '/teachers/exams', icon: 'quiz' });
+      }
+      teacherNav.push({ label: 'My profile', path: '/teachers/me', icon: 'badge' });
+      return teacherNav;
     }
 
     if (role === 'student') {

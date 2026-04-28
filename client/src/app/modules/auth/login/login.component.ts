@@ -78,7 +78,7 @@ export class LoginComponent {
           if (role === 'super_admin') {
             target = '/super-admin/tenants';
           } else if (role === 'teacher') {
-            target = '/teachers/me';
+            target = '/teachers/dashboard';
           } else if (
             returnUrl &&
             returnUrl.startsWith('/') &&

@@ -7,6 +7,7 @@ const authMiddleware = require('../../core/middleware/auth.middleware');
 const authorize = require('../../core/middleware/authorize.middleware');
 const checkFeature = require('../../core/middleware/feature.middleware');
 const controller = require('./teacher.controller');
+const assignmentController = require('./teacherAssignment.controller');
 
 const router = express.Router();
 
@@ -45,16 +46,28 @@ const cvUpload = multer({
 router.use(authMiddleware);
 
 // Self-service endpoints: a logged-in teacher must always be able to read/update
-// their own profile. The `teachers` feature flag gates the admin module
-// (managing staff) and must not lock teachers out of their own account.
+// their own profile and view their dashboard. The `teachers` feature flag gates
+// the admin module (managing staff) and must not lock teachers out of their own
+// account or dashboard.
 router.get('/teachers/me', authorize('teacher'), controller.getMe);
 router.patch('/teachers/me', authorize('teacher'), controller.updateMe);
+router.patch('/teachers/me/password', authorize('teacher'), controller.changeMyPassword);
+router.get('/teachers/me/dashboard', authorize('teacher'), assignmentController.getMyDashboard);
+router.get('/teachers/me/students', authorize('teacher'), assignmentController.listMyStudents);
 
 // Admin-facing endpoints: gated by the teachers feature flag and admin role.
 const adminTeachers = [checkFeature('teachers'), authorize('admin', 'super_admin')];
 
 router.get('/teachers', adminTeachers, controller.list);
 router.post('/teachers', adminTeachers, controller.create);
+router.get('/teachers/assignment-stats', adminTeachers, assignmentController.assignmentStats);
+router.get('/teachers/:id/assignments', adminTeachers, assignmentController.listForTeacher);
+router.post('/teachers/:id/assignments', adminTeachers, assignmentController.create);
+router.delete(
+  '/teachers/:id/assignments/:assignmentId',
+  adminTeachers,
+  assignmentController.remove
+);
 router.get('/teachers/:id/login-details', adminTeachers, controller.getLoginDetails);
 router.patch('/teachers/:id/password', adminTeachers, controller.resetPassword);
 router.post(
