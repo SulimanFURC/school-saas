@@ -1,8 +1,13 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ButtonModule } from 'primeng/button';
+import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 
 import { DashboardService, type StudentDashboardPayload } from '../../../services/dashboard.service';
 import { ToastService } from '../../../services/toast.service';
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonCardComponent } from '../../../shared/skeleton-card/skeleton-card.component';
 import { DashboardSectionComponent } from '../components/dashboard-section.component';
 import { RecentTableComponent, type RecentColumn } from '../components/recent-table.component';
 import { StatCardComponent } from '../components/stat-card.component';
@@ -10,16 +15,44 @@ import { StatCardComponent } from '../components/stat-card.component';
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [DecimalPipe, StatCardComponent, DashboardSectionComponent, RecentTableComponent],
+  imports: [
+    DecimalPipe,
+    ButtonModule,
+    StatCardComponent,
+    DashboardSectionComponent,
+    RecentTableComponent,
+    SkeletonCardComponent,
+    InlineErrorComponent,
+  ],
   templateUrl: './student-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudentDashboardComponent implements OnInit {
+export class StudentDashboardComponent {
   private dashboardApi = inject(DashboardService);
   private toast = inject(ToastService);
 
   readonly loading = signal(true);
-  readonly data = signal<StudentDashboardPayload | null>(null);
+  readonly hasError = signal(false);
+  private readonly reloadTick = signal(0);
+  readonly data = toSignal<StudentDashboardPayload | null>(
+    toObservable(this.reloadTick).pipe(
+      tap(() => {
+        this.loading.set(true);
+        this.hasError.set(false);
+      }),
+      switchMap(() =>
+        this.dashboardApi.getStudentDashboard().pipe(
+          catchError(() => {
+            this.hasError.set(true);
+            this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
+            return of(null);
+          }),
+          finalize(() => this.loading.set(false))
+        )
+      )
+    ),
+    { initialValue: null }
+  );
 
   readonly resultColumns: RecentColumn[] = [
     { key: 'exam_name', label: 'Exam' },
@@ -28,12 +61,8 @@ export class StudentDashboardComponent implements OnInit {
     { key: 'date', label: 'Date' },
   ];
 
-  ngOnInit(): void {
-    this.load();
-  }
-
   refresh(): void {
-    this.load();
+    this.reloadTick.update((n) => n + 1);
   }
 
   resultRows(): Record<string, unknown>[] {
@@ -50,17 +79,4 @@ export class StudentDashboardComponent implements OnInit {
     }));
   }
 
-  private load(): void {
-    this.loading.set(true);
-    this.dashboardApi.getStudentDashboard().subscribe({
-      next: (payload) => {
-        this.data.set(payload);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
-      },
-    });
-  }
 }

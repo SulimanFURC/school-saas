@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 const sequelize = require('./config/db');
 const Tenant = require('./modules/tenant/tenant.model');
 const User = require('./modules/users/user.model');
+require('./modules/auth/refreshToken.model');
+require('./modules/auth/tokenBlocklist.model');
+require('./modules/auth/passwordResetToken.model');
 require('./modules/module/module.model');
 require('./modules/tenant-module/tenantModule.model');
 require('./modules/tenant-branding/tenantBranding.model');
@@ -17,6 +20,9 @@ const {
 } = require('./seed/moduleSeed');
 const { backfillAcademicYearsAllTenants } = require('./seed/academicYearsSeed');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
+const requestContextMiddleware = require('./core/middleware/request-context.middleware');
+const logger = require('./core/logger/logger');
+const { sendInternalError } = require('./core/http/response');
 const authRoutes = require('./modules/auth/auth.routes');
 const authController = require('./modules/auth/auth.controller');
 const authMiddleware = require('./core/middleware/auth.middleware');
@@ -48,6 +54,7 @@ const ExamClass = require('./modules/exams/examClass.model');
 const ExamTimetable = require('./modules/exams/examTimetable.model');
 const ExamMark = require('./modules/exams/examMark.model');
 const ExamMarkAudit = require('./modules/exams/examMarkAudit.model');
+require('./modules/audit/auditLog.model');
 const GradingScheme = require('./modules/exams/gradingScheme.model');
 const GradingBand = require('./modules/exams/gradingBand.model');
 const ExamGradingConfig = require('./modules/exams/examGradingConfig.model');
@@ -133,6 +140,7 @@ app.use(
 /** Base64 expands ~33%; allow large phone photos. Override with JSON_BODY_LIMIT in .env */
 const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || '50mb';
 app.use(express.json({ limit: JSON_BODY_LIMIT }));
+app.use(requestContextMiddleware);
 
 const signupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -192,8 +200,7 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  console.error('Unhandled error:', err);
-  return res.status(500).json({ message: 'Internal server error' });
+  return sendInternalError(res, req.log, 'Unhandled error', err);
 });
 
 const PORT = process.env.PORT || 5000;
@@ -214,26 +221,25 @@ async function seedPlatformAndSuperAdmin() {
       status: 'active',
     },
   });
-  console.log('Platform tenant and super admin seeded');
+  logger.info('Platform tenant and super admin seeded');
 }
 
 sequelize
   .authenticate()
-  .then(() => console.log('DB connected'))
-  .then(() => sequelize.sync({ alter: true }))
-  .then(() => console.log('DB synced'))
+  .then(() => logger.info('DB connected'))
+  .then(() => logger.info('DB schema migration expected via CLI'))
   .then(() => seedPlatformAndSuperAdmin())
   .then(() => seedModuleCatalog())
   .then(() => backfillAllTenantModules())
   .then(() => backfillAcademicYearsAllTenants())
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log('Student photo: JSON field photo_base64 on POST /students/register or PUT /students/:id');
+      logger.info({ port: PORT }, 'Server running');
+      logger.info('Student photo: JSON field photo_base64 on POST /students/register or PUT /students/:id');
     });
   })
   .catch((err) => {
-    console.error('Startup error:', err);
+    logger.error({ err }, 'Startup error');
     process.exit(1);
   });
 

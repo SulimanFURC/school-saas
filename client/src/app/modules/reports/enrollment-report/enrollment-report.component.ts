@@ -1,25 +1,33 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
 
-import { AcademicService } from '../../../services/academic.service';
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
+import { LookupService } from '../../../services/lookup.service';
 import { ReportService } from '../../../services/report.service';
 import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-enrollment-report',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ButtonModule, SelectModule, SkeletonTableComponent, InlineErrorComponent],
   templateUrl: './enrollment-report.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnrollmentReportComponent {
   private fb = inject(FormBuilder);
   private reports = inject(ReportService);
-  private academic = inject(AcademicService);
+  private lookup = inject(LookupService);
   private toast = inject(ToastService);
 
   readonly loading = signal(false);
-  readonly years = signal<{ id: number; name: string | null }[]>([]);
+  readonly hasError = signal(false);
+  readonly years = this.lookup.academicYears;
+  readonly yearOptions = computed(() =>
+    this.years().map((year) => ({ label: year.name ?? 'Unnamed year', value: year.id }))
+  );
   readonly summary = signal<{ total_enrolled: number; by_gender: { gender: string; count: number }[] } | null>(
     null
   );
@@ -29,13 +37,14 @@ export class EnrollmentReportComponent {
   });
 
   constructor() {
-    this.academic.listAcademicYears().subscribe({
-      next: (rows) => {
-        this.years.set(rows);
-        const active = rows.find((y) => y.is_active);
-        if (active) this.form.patchValue({ academic_year_id: active.id });
-      },
-      error: () => this.toast.open('Could not load academic years', 'Dismiss', { duration: 5000 }),
+    this.lookup.loadAcademicYears();
+    effect(() => {
+      const current = this.form.controls.academic_year_id.value;
+      if (current != null) return;
+      const active = this.years().find((year) => year.is_active);
+      if (active) {
+        this.form.patchValue({ academic_year_id: active.id }, { emitEvent: false });
+      }
     });
   }
 
@@ -46,6 +55,7 @@ export class EnrollmentReportComponent {
       return;
     }
     this.loading.set(true);
+    this.hasError.set(false);
     this.reports.getEnrollmentSummary({ academic_year_id: ay }).subscribe({
       next: (res: unknown) => {
         const r = res as { data?: { total_enrolled: number; by_gender: { gender: string; count: number }[] } };
@@ -54,6 +64,7 @@ export class EnrollmentReportComponent {
       },
       error: () => {
         this.loading.set(false);
+        this.hasError.set(true);
         this.toast.open('Could not load report', 'Dismiss', { duration: 5000 });
       },
     });

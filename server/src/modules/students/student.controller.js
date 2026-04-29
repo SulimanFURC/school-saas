@@ -10,10 +10,13 @@ const StudentPreviousSchool = require('./studentPreviousSchool.model');
 const StudentDocument = require('./studentDocument.model');
 const StudentPromotion = require('./studentPromotion.model');
 const User = require('../users/user.model');
+const { invalidateUserSessions } = require('../auth/session.service');
 const AcademicYear = require('../classes/academicYear.model');
 const SchoolClass = require('../classes/class.model');
 const Section = require('../classes/section.model');
 const { validateEnrollmentCategory } = require('../../seed/canonicalClasses');
+const { recordAudit } = require('../audit/audit.service');
+const { deleteStudentAggregate } = require('./student.service');
 
 /** Set has_photo for UI (base64, legacy http URL). */
 function sanitizeStudentJson(plain) {
@@ -402,6 +405,15 @@ exports.register = async (req, res) => {
 
     await t.commit();
 
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'student',
+      entityId: student.id,
+      action: 'create',
+      after: { student_id: student.id, admission_no: student.admission_no },
+    });
+
     const full = await exports.loadStudentDetail(tenantId, student.id);
     res.status(201).json({
       student: full,
@@ -424,7 +436,8 @@ exports.register = async (req, res) => {
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Duplicate admission number or constraint violation' });
     }
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.register failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -578,7 +591,8 @@ exports.lookupByAdmission = async (req, res) => {
     const p = student.get({ plain: true });
     res.json({ data: listRowFromStudentAndEnrollmentPlain(p, cePlain) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.lookupByAdmission failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -722,7 +736,8 @@ exports.list = async (req, res) => {
       totalPages: Math.max(1, Math.ceil(count / pageSize)),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.list failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -735,7 +750,8 @@ exports.getById = async (req, res) => {
     }
     res.json(full);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.getById failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -912,8 +928,9 @@ exports.update = async (req, res) => {
           await u.update({ status: loginPatch.status }, { transaction: t });
         }
         if (loginPatch.password && String(loginPatch.password).length >= 6) {
-          const hash = await bcrypt.hash(String(loginPatch.password), 10);
-          await u.update({ password: hash }, { transaction: t });
+          const passHash = await bcrypt.hash(String(loginPatch.password), 10);
+          await u.update({ password: passHash, password_changed_at: new Date() }, { transaction: t });
+          await invalidateUserSessions(u.id, tenantId, t);
         }
       }
     }
@@ -988,11 +1005,20 @@ exports.update = async (req, res) => {
     }
 
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'student',
+      entityId: student.id,
+      action: 'update',
+      after: { student_id: student.id },
+    });
     const full = await exports.loadStudentDetail(tenantId, student.id);
     res.json(full);
   } catch (err) {
     await t.rollback();
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.update failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -1008,18 +1034,21 @@ exports.remove = async (req, res) => {
       await t.rollback();
       return res.status(404).json({ message: 'Student not found' });
     }
-    await StudentPromotion.destroy({ where: { tenant_id: tenantId, student_id: student.id }, transaction: t });
-    await StudentEnrollment.destroy({ where: { tenant_id: tenantId, student_id: student.id }, transaction: t });
-    await StudentGuardian.destroy({ where: { tenant_id: tenantId, student_id: student.id }, transaction: t });
-    await StudentPreviousSchool.destroy({ where: { tenant_id: tenantId, student_id: student.id }, transaction: t });
-    await StudentDocument.destroy({ where: { tenant_id: tenantId, student_id: student.id }, transaction: t });
-    await User.destroy({ where: { student_id: student.id, tenant_id: tenantId }, transaction: t });
-    await student.destroy({ transaction: t });
+    await deleteStudentAggregate({ tenantId, studentId: student.id, student, transaction: t });
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'student',
+      entityId: student.id,
+      action: 'delete',
+      before: { student_id: student.id, admission_no: student.admission_no },
+    });
     res.status(204).send();
   } catch (err) {
     await t.rollback();
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.remove failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -1047,7 +1076,8 @@ exports.listEnrollments = async (req, res) => {
     });
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.listEnrollments failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -1306,6 +1336,14 @@ exports.promote = async (req, res) => {
     }
 
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'student_enrollment',
+      entityId: String(toYearId),
+      action: 'promote',
+      metadata: { created: created.length, updated: updated.length, student_ids: studentIds },
+    });
     res.status(201).json({
       created: created.length,
       updated: updated.length,
@@ -1322,7 +1360,8 @@ exports.promote = async (req, res) => {
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Enrollment conflict' });
     }
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.promote failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -1340,7 +1379,8 @@ exports.getLoginDetails = async (req, res) => {
       has_account: !!u,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'students.getLoginDetails failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

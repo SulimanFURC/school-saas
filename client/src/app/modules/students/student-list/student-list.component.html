@@ -28,7 +28,13 @@
     </div>
   </header>
 
-  <div class="card shadow-sm border-0">
+  @if (hasError() && !loading()) {
+    <app-inline-error message="Failed to load students. Please try again." (retry)="load()" />
+  } @else if (loading() && total() === 0) {
+    <app-skeleton-table [rows]="6" [columns]="7" />
+  }
+
+  <div class="card shadow-sm border-0 mt-3">
     <p-table
       [value]="sortedRows()"
       [lazy]="true"

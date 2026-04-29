@@ -187,7 +187,8 @@ exports.uploadLogo = async (req, res) => {
 
     res.json({ logoUrl: relativePath });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'tenantBranding.uploadLogo failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

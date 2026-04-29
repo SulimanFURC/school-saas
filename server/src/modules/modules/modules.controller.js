@@ -23,6 +23,7 @@ exports.listForTenant = async (req, res) => {
 
     res.json(merged);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'modules.listForTenant failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

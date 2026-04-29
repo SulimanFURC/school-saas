@@ -1,7 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ButtonModule } from 'primeng/button';
+import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 
 import { DashboardService, type TeacherDashboardPayload } from '../../../services/dashboard.service';
 import { ToastService } from '../../../services/toast.service';
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonCardComponent } from '../../../shared/skeleton-card/skeleton-card.component';
 import { DashboardSectionComponent } from '../components/dashboard-section.component';
 import { RecentTableComponent, type RecentColumn } from '../components/recent-table.component';
 import { StatCardComponent } from '../components/stat-card.component';
@@ -9,16 +14,43 @@ import { StatCardComponent } from '../components/stat-card.component';
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [StatCardComponent, DashboardSectionComponent, RecentTableComponent],
+  imports: [
+    ButtonModule,
+    StatCardComponent,
+    DashboardSectionComponent,
+    RecentTableComponent,
+    SkeletonCardComponent,
+    InlineErrorComponent,
+  ],
   templateUrl: './teacher-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TeacherDashboardComponent implements OnInit {
+export class TeacherDashboardComponent {
   private dashboardApi = inject(DashboardService);
   private toast = inject(ToastService);
 
   readonly loading = signal(true);
-  readonly data = signal<TeacherDashboardPayload | null>(null);
+  readonly hasError = signal(false);
+  private readonly reloadTick = signal(0);
+  readonly data = toSignal<TeacherDashboardPayload | null>(
+    toObservable(this.reloadTick).pipe(
+      tap(() => {
+        this.loading.set(true);
+        this.hasError.set(false);
+      }),
+      switchMap(() =>
+        this.dashboardApi.getTeacherDashboard().pipe(
+          catchError(() => {
+            this.hasError.set(true);
+            this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
+            return of(null);
+          }),
+          finalize(() => this.loading.set(false))
+        )
+      )
+    ),
+    { initialValue: null }
+  );
 
   readonly assignmentColumns: RecentColumn[] = [
     { key: 'class_name', label: 'Class' },
@@ -33,12 +65,8 @@ export class TeacherDashboardComponent implements OnInit {
     { key: 'read', label: 'Read' },
   ];
 
-  ngOnInit(): void {
-    this.load();
-  }
-
   refresh(): void {
-    this.load();
+    this.reloadTick.update((n) => n + 1);
   }
 
   notifRows(): Record<string, unknown>[] {
@@ -57,17 +85,4 @@ export class TeacherDashboardComponent implements OnInit {
     return d.my_assignments.map((r) => ({ ...r }));
   }
 
-  private load(): void {
-    this.loading.set(true);
-    this.dashboardApi.getTeacherDashboard().subscribe({
-      next: (payload) => {
-        this.data.set(payload);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
-      },
-    });
-  }
 }

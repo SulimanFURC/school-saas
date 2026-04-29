@@ -4,49 +4,60 @@
     <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
       <div class="col-md-6">
         <label class="form-label" for="enr-ay">Academic year</label>
-        <select id="enr-ay" class="form-select" formControlName="academic_year_id">
-          @for (y of years(); track y.id) {
-            <option [ngValue]="y.id">{{ y.name }}</option>
-          }
-        </select>
+        <p-select
+          inputId="enr-ay"
+          class="w-100"
+          [options]="yearOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select academic year"
+          formControlName="academic_year_id"
+        />
       </div>
       <div class="col-md-6 d-flex gap-2">
-        <button type="submit" class="btn btn-primary" [disabled]="loading()">
-          @if (loading()) {
-            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-          }
-          Apply
-        </button>
-        <button type="button" class="btn btn-outline-secondary" (click)="exportCsv()" [disabled]="!summary()?.by_gender?.length">
-          Export CSV
-        </button>
+        <p-button type="submit" label="Apply" [loading]="loading()" [disabled]="loading()" />
+        <p-button
+          type="button"
+          label="Export CSV"
+          [outlined]="true"
+          (onClick)="exportCsv()"
+          [disabled]="!summary()?.by_gender?.length"
+        />
       </div>
     </form>
 
-    @if (summary(); as s) {
-      <p class="mb-2"><strong>Total enrolled:</strong> {{ s.total_enrolled }}</p>
-      <div class="table-responsive">
-        <table class="table table-sm table-striped">
-          <thead>
-            <tr>
-              <th>Gender</th>
-              <th>Count</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of s.by_gender; track r.gender) {
-              <tr>
-                <td>{{ r.gender }}</td>
-                <td>{{ r.count }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="2" class="text-secondary">No rows</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    @if (loading()) {
+      <app-skeleton-table [rows]="4" [columns]="2" />
+    } @else {
+      @if (hasError()) {
+        <app-inline-error message="Failed to load enrollment report. Please try again." (retry)="apply()" />
+      } @else {
+        @if (summary(); as s) {
+          <p class="mb-2"><strong>Total enrolled:</strong> {{ s.total_enrolled }}</p>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Gender</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of s.by_gender; track r.gender) {
+                  <tr>
+                    <td>{{ r.gender }}</td>
+                    <td>{{ r.count }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="2" class="text-secondary">No rows</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
     }
   </div>
 </div>

@@ -6,6 +6,7 @@ const AcademicYear = require('../classes/academicYear.model');
 const SchoolClass = require('../classes/class.model');
 const Section = require('../classes/section.model');
 const User = require('../users/user.model');
+const { recordAudit } = require('../audit/audit.service');
 
 const FEE_TYPES = new Set([
   'Tuition',
@@ -214,6 +215,14 @@ exports.create = async (req, res) => {
       data: feeRecord.get({ plain: true }),
       invoice_number,
     });
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'fee_collection',
+      entityId: feeRecord.id,
+      action: 'create',
+      after: feeRecord.get({ plain: true }),
+    });
   } catch (err) {
     console.error('fee create error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -385,9 +394,19 @@ exports.update = async (req, res) => {
       patch.notes = notes != null && String(notes).trim() !== '' ? String(notes).trim() : null;
     }
 
+    const before = row.get({ plain: true });
     await row.update(patch);
     const fresh = await FeeCollection.findOne({
       where: { id: row.id, tenant_id: tenantId },
+    });
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'fee_collection',
+      entityId: row.id,
+      action: 'update',
+      before,
+      after: fresh.get({ plain: true }),
     });
     res.status(200).json(fresh.get({ plain: true }));
   } catch (err) {
@@ -408,7 +427,16 @@ exports.remove = async (req, res) => {
     if (!row) {
       return res.status(404).json({ message: 'Not found' });
     }
+    const before = row.get({ plain: true });
     await row.destroy();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'fee_collection',
+      entityId: row.id,
+      action: 'delete',
+      before,
+    });
     res.status(200).json({ message: 'Fee record deleted successfully' });
   } catch (err) {
     console.error('fee remove error:', err);

@@ -1,8 +1,13 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ButtonModule } from 'primeng/button';
+import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 
 import { DashboardService, type AdminDashboardPayload } from '../../../services/dashboard.service';
 import { ToastService } from '../../../services/toast.service';
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonCardComponent } from '../../../shared/skeleton-card/skeleton-card.component';
 import { DashboardSectionComponent } from '../components/dashboard-section.component';
 import { RecentTableComponent } from '../components/recent-table.component';
 import { StatCardComponent } from '../components/stat-card.component';
@@ -10,16 +15,44 @@ import { StatCardComponent } from '../components/stat-card.component';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DecimalPipe, StatCardComponent, DashboardSectionComponent, RecentTableComponent],
+  imports: [
+    DecimalPipe,
+    ButtonModule,
+    StatCardComponent,
+    DashboardSectionComponent,
+    RecentTableComponent,
+    SkeletonCardComponent,
+    InlineErrorComponent,
+  ],
   templateUrl: './admin-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent {
   private dashboardApi = inject(DashboardService);
   private toast = inject(ToastService);
 
   readonly loading = signal(true);
-  readonly data = signal<AdminDashboardPayload | null>(null);
+  readonly hasError = signal(false);
+  private readonly reloadTick = signal(0);
+  readonly data = toSignal<AdminDashboardPayload | null>(
+    toObservable(this.reloadTick).pipe(
+      tap(() => {
+        this.loading.set(true);
+        this.hasError.set(false);
+      }),
+      switchMap(() =>
+        this.dashboardApi.getAdminDashboard().pipe(
+          catchError(() => {
+            this.hasError.set(true);
+            this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
+            return of(null);
+          }),
+          finalize(() => this.loading.set(false))
+        )
+      )
+    ),
+    { initialValue: null }
+  );
 
   readonly admissionColumns = [
     { key: 'name', label: 'Student' },
@@ -53,25 +86,7 @@ export class AdminDashboardComponent implements OnInit {
     })) as Record<string, unknown>[];
   });
 
-  ngOnInit(): void {
-    this.load();
-  }
-
   refresh(): void {
-    this.load();
-  }
-
-  private load(): void {
-    this.loading.set(true);
-    this.dashboardApi.getAdminDashboard().subscribe({
-      next: (payload) => {
-        this.data.set(payload);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.toast.open('Could not load dashboard', 'Dismiss', { duration: 5000 });
-      },
-    });
+    this.reloadTick.update((n) => n + 1);
   }
 }

@@ -13,6 +13,18 @@ import { settingsNotificationsGuard, settingsTenantAdminGuard } from './guards/s
 
 export const routes: Routes = [
   {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./modules/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'reset-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./modules/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () =>
@@ -29,6 +41,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./shared/unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent),
+  },
+  {
+    path: '404',
+    loadComponent: () => import('./shared/error-page/error-page.component').then((m) => m.ErrorPageComponent),
+    data: { code: '404', title: 'Page not found' },
   },
   {
     path: 'super-admin',
@@ -471,5 +488,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '/404' },
 ];

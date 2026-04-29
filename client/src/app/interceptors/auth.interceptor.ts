@@ -1,9 +1,15 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { catchError, switchMap, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { AuthService } from '../services/auth.service';
 
 const LS_TOKEN = 'school_saas_token';
 const LS_SUBDOMAIN = 'school_saas_subdomain';
+
+/** When true, do not attempt refresh+retry (avoids loops). */
+export const AUTH_REFRESH_RETRIED = new HttpContextToken(() => false);
 
 /** Treat localhost and 127.0.0.1 as the same API origin so the interceptor still attaches auth. */
 function sameApiOrigin(url: string): boolean {
@@ -23,43 +29,92 @@ function sameApiOrigin(url: string): boolean {
   }
 }
 
+function isAuthBypassUrl(url: string): boolean {
+  return (
+    url.includes('/auth/signup') ||
+    url.includes('/auth/login') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/forgot-password') ||
+    url.includes('/auth/reset-password')
+  );
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const auth = inject(AuthService);
+
   if (!sameApiOrigin(req.url)) {
     return next(req);
   }
 
-  // Login must not send a stale Bearer token or overwrite x-tenant-id from the form.
-  if (req.url.includes('/auth/signup') || req.url.includes('/auth/login')) {
+  if (isAuthBypassUrl(req.url)) {
     return next(req);
   }
 
   const token = localStorage.getItem(LS_TOKEN);
   const subdomain = localStorage.getItem(LS_SUBDOMAIN);
 
-  // Always attach Bearer when logged in so JWT resolves tenant (admin). Requiring
-  // subdomain blocked auth when localStorage lost subdomain and broke API calls.
-  if (!token) {
-    return next(req);
-  }
-
-  const bearer = `Bearer ${token}`;
-  const headers: Record<string, string> = {
-    Authorization: bearer,
-  };
-  if (subdomain) {
-    headers['x-tenant-id'] = subdomain;
-  }
-
-  // FormData must be sent with a browser-generated multipart boundary. Cloning with
-  // setHeaders can preserve a wrong Content-Type and break multer (no file, 400/500).
-  if (req.body instanceof FormData) {
-    let h = req.headers.set('Authorization', bearer);
-    if (subdomain) {
-      h = h.set('x-tenant-id', subdomain);
+  const attachAuth = (r: typeof req) => {
+    if (!token) {
+      return r;
     }
-    h = h.delete('Content-Type');
-    return next(req.clone({ headers: h }));
-  }
+    const bearer = `Bearer ${token}`;
+    const headers: Record<string, string> = {
+      Authorization: bearer,
+    };
+    if (subdomain) {
+      headers['x-tenant-id'] = subdomain;
+    }
 
-  return next(req.clone({ setHeaders: headers }));
+    if (r.body instanceof FormData) {
+      let h = r.headers.set('Authorization', bearer);
+      if (subdomain) {
+        h = h.set('x-tenant-id', subdomain);
+      }
+      h = h.delete('Content-Type');
+      return r.clone({ headers: h });
+    }
+
+    return r.clone({ setHeaders: headers });
+  };
+
+  return next(attachAuth(req)).pipe(
+    catchError((err: HttpErrorResponse) => {
+      if (err.status !== 401 || req.context.get(AUTH_REFRESH_RETRIED) || isAuthBypassUrl(req.url)) {
+        return throwError(() => err);
+      }
+
+      return auth.refreshSession().pipe(
+        switchMap((ok) => {
+          if (!ok) {
+            auth.logoutLocal();
+            return throwError(() => err);
+          }
+          const nextTok = localStorage.getItem(LS_TOKEN);
+          const nextSub = localStorage.getItem(LS_SUBDOMAIN);
+          if (!nextTok) {
+            auth.logoutLocal();
+            return throwError(() => err);
+          }
+          const bearer = `Bearer ${nextTok}`;
+          const headers: Record<string, string> = { Authorization: bearer };
+          if (nextSub) {
+            headers['x-tenant-id'] = nextSub;
+          }
+          let retried = req.clone({
+            context: req.context.set(AUTH_REFRESH_RETRIED, true),
+            setHeaders: headers,
+          });
+          if (req.body instanceof FormData) {
+            let h = retried.headers.set('Authorization', bearer);
+            if (nextSub) {
+              h = h.set('x-tenant-id', nextSub);
+            }
+            h = h.delete('Content-Type');
+            retried = retried.clone({ headers: h });
+          }
+          return next(retried);
+        })
+      );
+    })
+  );
 };

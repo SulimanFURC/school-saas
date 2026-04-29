@@ -6,8 +6,17 @@ const multer = require('multer');
 const authMiddleware = require('../../core/middleware/auth.middleware');
 const authorize = require('../../core/middleware/authorize.middleware');
 const checkFeature = require('../../core/middleware/feature.middleware');
+const validate = require('../../core/middleware/validate.middleware');
 const controller = require('./teacher.controller');
 const assignmentController = require('./teacherAssignment.controller');
+const {
+  uuidParam,
+  assignmentParam,
+  listQuery,
+  createTeacher,
+  updateTeacher,
+  changePassword,
+} = require('./teacher.schemas');
 
 const router = express.Router();
 
@@ -50,26 +59,27 @@ router.use(authMiddleware);
 // the admin module (managing staff) and must not lock teachers out of their own
 // account or dashboard.
 router.get('/teachers/me', authorize('teacher'), controller.getMe);
-router.patch('/teachers/me', authorize('teacher'), controller.updateMe);
-router.patch('/teachers/me/password', authorize('teacher'), controller.changeMyPassword);
+router.patch('/teachers/me', authorize('teacher'), validate({ body: updateTeacher }), controller.updateMe);
+router.patch('/teachers/me/password', authorize('teacher'), validate({ body: changePassword }), controller.changeMyPassword);
 router.get('/teachers/me/dashboard', authorize('teacher'), assignmentController.getMyDashboard);
 router.get('/teachers/me/students', authorize('teacher'), assignmentController.listMyStudents);
 
 // Admin-facing endpoints: gated by the teachers feature flag and admin role.
 const adminTeachers = [checkFeature('teachers'), authorize('admin', 'super_admin')];
 
-router.get('/teachers', adminTeachers, controller.list);
-router.post('/teachers', adminTeachers, controller.create);
+router.get('/teachers', adminTeachers, validate({ query: listQuery }), controller.list);
+router.post('/teachers', adminTeachers, validate({ body: createTeacher }), controller.create);
 router.get('/teachers/assignment-stats', adminTeachers, assignmentController.assignmentStats);
-router.get('/teachers/:id/assignments', adminTeachers, assignmentController.listForTeacher);
-router.post('/teachers/:id/assignments', adminTeachers, assignmentController.create);
+router.get('/teachers/:id/assignments', adminTeachers, validate({ params: uuidParam }), assignmentController.listForTeacher);
+router.post('/teachers/:id/assignments', adminTeachers, validate({ params: uuidParam, body: updateTeacher }), assignmentController.create);
 router.delete(
   '/teachers/:id/assignments/:assignmentId',
   adminTeachers,
+  validate({ params: assignmentParam }),
   assignmentController.remove
 );
-router.get('/teachers/:id/login-details', adminTeachers, controller.getLoginDetails);
-router.patch('/teachers/:id/password', adminTeachers, controller.resetPassword);
+router.get('/teachers/:id/login-details', adminTeachers, validate({ params: uuidParam }), controller.getLoginDetails);
+router.patch('/teachers/:id/password', adminTeachers, validate({ params: uuidParam }), controller.resetPassword);
 router.post(
   '/teachers/:id/cv',
   adminTeachers,
@@ -83,8 +93,8 @@ router.post(
   },
   controller.uploadCv
 );
-router.get('/teachers/:id', adminTeachers, controller.getById);
-router.put('/teachers/:id', adminTeachers, controller.update);
-router.delete('/teachers/:id', adminTeachers, controller.remove);
+router.get('/teachers/:id', adminTeachers, validate({ params: uuidParam }), controller.getById);
+router.put('/teachers/:id', adminTeachers, validate({ params: uuidParam, body: updateTeacher }), controller.update);
+router.delete('/teachers/:id', adminTeachers, validate({ params: uuidParam }), controller.remove);
 
 module.exports = router;

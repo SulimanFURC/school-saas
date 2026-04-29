@@ -41,6 +41,15 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: 'active',
     },
+    token_version: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    password_changed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     student_id: {
       type: DataTypes.UUID,
       allowNull: true,

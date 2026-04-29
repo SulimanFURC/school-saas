@@ -3,6 +3,15 @@ const multer = require('multer');
 const authMiddleware = require('../../core/middleware/auth.middleware');
 const authorize = require('../../core/middleware/authorize.middleware');
 const checkFeature = require('../../core/middleware/feature.middleware');
+const validate = require('../../core/middleware/validate.middleware');
+const {
+  examIdParam,
+  examEntryParam,
+  examStudentParam,
+  examClassParam,
+  recheckParam,
+  gradesIdParam,
+} = require('./exam.schemas');
 
 const examController = require('./exam.controller');
 const timetableController = require('./examTimetable.controller');
@@ -44,9 +53,9 @@ router.get('/exams', adminExams, examController.list);
 router.post('/exams', adminExams, examController.create);
 router.get('/exams/grading-schemes', adminExams, gradingSchemeController.list);
 router.post('/exams/grading-schemes', adminExams, gradingSchemeController.create);
-router.get('/exams/grading-schemes/:id', adminExams, gradingSchemeController.getById);
-router.patch('/exams/grading-schemes/:id', adminExams, gradingSchemeController.update);
-router.post('/exams/grading-schemes/:id/archive', adminExams, gradingSchemeController.archive);
+router.get('/exams/grading-schemes/:id', adminExams, validate({ params: gradesIdParam }), gradingSchemeController.getById);
+router.patch('/exams/grading-schemes/:id', adminExams, validate({ params: gradesIdParam }), gradingSchemeController.update);
+router.post('/exams/grading-schemes/:id/archive', adminExams, validate({ params: gradesIdParam }), gradingSchemeController.archive);
 
 router.get('/exams/recheck-requests', adminExams, recheckController.list);
 
@@ -60,12 +69,14 @@ router.get(
   '/exams/teachers/me/exams/:id/papers',
   checkFeature('exams'),
   authorize('teacher'),
+  validate({ params: examIdParam }),
   teacherController.getMyExamPapers
 );
 router.get(
   '/exams/teachers/me/exams/:id/summary',
   checkFeature('exams'),
   authorize('teacher'),
+  validate({ params: examIdParam }),
   teacherController.getMyExamSummary
 );
 
@@ -85,61 +96,67 @@ router.get(
   '/exams/students/me/:id/timetable',
   checkFeature('exams'),
   authorize('student'),
+  validate({ params: examIdParam }),
   studentController.getMyTimetable
 );
 router.get(
   '/exams/students/me/:id/result',
   checkFeature('exams'),
   authorize('student'),
+  validate({ params: examIdParam }),
   studentController.getMyResult
 );
 router.post(
   '/exams/students/me/:id/recheck',
   checkFeature('exams'),
   authorize('student'),
+  validate({ params: examIdParam }),
   studentController.createRecheck
 );
 router.get(
   '/exams/students/me/:id/admit-card.pdf',
   checkFeature('exams'),
   authorize('student'),
+  validate({ params: examIdParam }),
   pdfController.studentAdmitCard
 );
 router.get(
   '/exams/students/me/:id/result-card.pdf',
   checkFeature('exams'),
   authorize('student'),
+  validate({ params: examIdParam }),
   pdfController.studentResultCard
 );
 
-router.get('/exams/:id', adminExams, examController.getById);
-router.patch('/exams/:id', adminExams, examController.update);
-router.post('/exams/:id/clone', adminExams, examController.clone);
-router.post('/exams/:id/archive', adminExams, examController.archive);
-router.post('/exams/:id/transition', adminExams, examController.transition);
-router.post('/exams/:id/classes', adminExams, examController.setClasses);
+router.get('/exams/:id', adminExams, validate({ params: examIdParam }), examController.getById);
+router.patch('/exams/:id', adminExams, validate({ params: examIdParam }), examController.update);
+router.post('/exams/:id/clone', adminExams, validate({ params: examIdParam }), examController.clone);
+router.post('/exams/:id/archive', adminExams, validate({ params: examIdParam }), examController.archive);
+router.post('/exams/:id/transition', adminExams, validate({ params: examIdParam }), examController.transition);
+router.post('/exams/:id/classes', adminExams, validate({ params: examIdParam }), examController.setClasses);
 
-router.get('/exams/:id/timetable', examViewers, timetableController.list);
-router.post('/exams/:id/timetable', adminExams, timetableController.create);
-router.patch('/exams/:id/timetable/:entryId', adminExams, timetableController.update);
-router.delete('/exams/:id/timetable/:entryId', adminExams, timetableController.remove);
-router.post('/exams/:id/timetable/finalize', adminExams, timetableController.finalize);
-router.post('/exams/:id/timetable/:entryId/lock', adminExams, timetableController.lock);
+router.get('/exams/:id/timetable', examViewers, validate({ params: examIdParam }), timetableController.list);
+router.post('/exams/:id/timetable', adminExams, validate({ params: examIdParam }), timetableController.create);
+router.patch('/exams/:id/timetable/:entryId', adminExams, validate({ params: examEntryParam }), timetableController.update);
+router.delete('/exams/:id/timetable/:entryId', adminExams, validate({ params: examEntryParam }), timetableController.remove);
+router.post('/exams/:id/timetable/finalize', adminExams, validate({ params: examIdParam }), timetableController.finalize);
+router.post('/exams/:id/timetable/:entryId/lock', adminExams, validate({ params: examEntryParam }), timetableController.lock);
 
-router.get('/exams/:id/marks-sheet', examViewers, marksController.getMarksSheet);
-router.put('/exams/:id/marks', examViewers, marksController.upsertMarks);
-router.get('/exams/:id/progress', adminExams, marksController.adminProgress);
-router.get('/exams/:id/audits', adminExams, marksController.listAudits);
+router.get('/exams/:id/marks-sheet', examViewers, validate({ params: examIdParam }), marksController.getMarksSheet);
+router.put('/exams/:id/marks', examViewers, validate({ params: examIdParam }), marksController.upsertMarks);
+router.get('/exams/:id/progress', adminExams, validate({ params: examIdParam }), marksController.adminProgress);
+router.get('/exams/:id/audits', adminExams, validate({ params: examIdParam }), marksController.listAudits);
 
-router.get('/exams/:id/grading', adminExams, examGradingController.getConfig);
-router.post('/exams/:id/grading', adminExams, examGradingController.setConfig);
-router.get('/exams/:id/grade-distribution', adminExams, examGradingController.distribution);
-router.post('/exams/:id/publish', adminExams, examGradingController.publish);
+router.get('/exams/:id/grading', adminExams, validate({ params: examIdParam }), examGradingController.getConfig);
+router.post('/exams/:id/grading', adminExams, validate({ params: examIdParam }), examGradingController.setConfig);
+router.get('/exams/:id/grade-distribution', adminExams, validate({ params: examIdParam }), examGradingController.distribution);
+router.post('/exams/:id/publish', adminExams, validate({ params: examIdParam }), examGradingController.publish);
 
-router.get('/exams/:id/marks-template.csv', examViewers, importController.template);
+router.get('/exams/:id/marks-template.csv', examViewers, validate({ params: examIdParam }), importController.template);
 router.post(
   '/exams/:id/marks-import/preview',
   examViewers,
+  validate({ params: examIdParam }),
   (req, res, next) => {
     csvUpload.single('file')(req, res, (err) => {
       if (err) return res.status(400).json({ message: err.message || 'Upload failed' });
@@ -151,6 +168,7 @@ router.post(
 router.post(
   '/exams/:id/marks-import/commit',
   examViewers,
+  validate({ params: examIdParam }),
   (req, res, next) => {
     csvUpload.single('file')(req, res, (err) => {
       if (err) return res.status(400).json({ message: err.message || 'Upload failed' });
@@ -163,38 +181,45 @@ router.post(
 router.get(
   '/exams/:id/students/:studentId/admit-card.pdf',
   adminExams,
+  validate({ params: examStudentParam }),
   pdfController.adminAdmitCard
 );
 router.get(
   '/exams/:id/students/:studentId/result-card.pdf',
   adminExams,
+  validate({ params: examStudentParam }),
   pdfController.adminResultCard
 );
 router.get(
   '/exams/:id/classes/:classId/admit-cards.zip',
   adminExams,
+  validate({ params: examClassParam }),
   pdfController.bulkAdmitCards
 );
 router.get(
   '/exams/:id/classes/:classId/result-cards.zip',
   adminExams,
+  validate({ params: examClassParam }),
   pdfController.bulkResultCards
 );
 router.get(
   '/exams/:id/classes/:classId/results',
   adminExams,
+  validate({ params: examClassParam }),
   pdfController.classResults
 );
 
-router.get('/exams/:id/recheck-requests', adminExams, recheckController.list);
+router.get('/exams/:id/recheck-requests', adminExams, validate({ params: examIdParam }), recheckController.list);
 router.post(
   '/exams/recheck-requests/:requestId/assign',
   adminExams,
+  validate({ params: recheckParam }),
   recheckController.assign
 );
 router.post(
   '/exams/recheck-requests/:requestId/resolve',
   adminExams,
+  validate({ params: recheckParam }),
   recheckController.resolve
 );
 

@@ -23,6 +23,8 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject } from 'rxjs';
 
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
 import { TeacherAssignmentStatsRow, TeacherListRow, TeacherService } from '../../../services/teacher.service';
 import {
   compareNullableString,
@@ -48,6 +50,8 @@ export type TeacherSortKey = 'name' | 'email' | 'designation' | 'username' | 'ac
     InputIconModule,
     TagModule,
     TeacherLoginCredentialsModalComponent,
+    SkeletonTableComponent,
+    InlineErrorComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './teacher-list.component.html',
@@ -70,6 +74,7 @@ export class TeacherListComponent implements OnInit {
   private readonly searchInput$ = new Subject<string>();
 
   loading = signal(true);
+  hasError = signal(false);
   rows = signal<TeacherListRow[]>([]);
   page = signal(1);
   pageSize = signal(20);
@@ -121,6 +126,7 @@ export class TeacherListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    this.hasError.set(false);
     const q = this.searchQuery().trim();
     this.api
       .list({
@@ -130,6 +136,7 @@ export class TeacherListComponent implements OnInit {
       })
       .pipe(
         catchError((e: { error?: { message?: string }; message?: string }) => {
+          this.hasError.set(true);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 const sequelize = require('../../config/db');
 const Teacher = require('./teacher.model');
 const User = require('../users/user.model');
+const { invalidateUserSessions } = require('../auth/session.service');
+const { recordAudit } = require('../audit/audit.service');
+const { createTeacherLogin, syncTeacherLogin } = require('./teacher.service');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GENDERS = new Set(['male', 'female', 'other']);
@@ -189,7 +192,7 @@ exports.list = async (req, res) => {
       totalPages: Math.max(1, Math.ceil(count / pageSize)),
     });
   } catch (err) {
-    console.error('teachers.list error:', err);
+    req.log?.error({ err }, 'teachers.list error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -272,22 +275,26 @@ exports.create = async (req, res) => {
     const displayName = `${first_name} ${last_name}`.trim();
     const userEmail = await resolveUserEmailForTeacher(tenantId, email);
 
-    await User.create(
-      {
-        tenant_id: tenantId,
-        name: displayName,
-        email: userEmail,
-        username,
-        password: hash,
-        role: 'teacher',
-        status: account_status,
-        teacher_id: teacher.id,
-        student_id: null,
-      },
-      { transaction: t }
-    );
+    await createTeacherLogin({
+      tenantId,
+      teacherId: teacher.id,
+      displayName,
+      username,
+      passwordHash: hash,
+      accountStatus: account_status,
+      email: userEmail,
+      transaction: t,
+    });
 
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'teacher',
+      entityId: teacher.id,
+      action: 'create',
+      after: { teacher_id: teacher.id, email: teacher.email },
+    });
 
     const full = await exports.loadTeacherDetail(tenantId, teacher.id, { includePhoto: true });
     res.status(201).json({
@@ -300,7 +307,7 @@ exports.create = async (req, res) => {
     });
   } catch (err) {
     await t.rollback();
-    console.error('teachers.create error:', err);
+    req.log?.error({ err }, 'teachers.create error');
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Email or username conflict' });
     }
@@ -321,7 +328,7 @@ exports.getById = async (req, res) => {
     }
     res.status(200).json(full);
   } catch (err) {
-    console.error('teachers.getById error:', err);
+    req.log?.error({ err }, 'teachers.getById error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -440,25 +447,32 @@ exports.update = async (req, res) => {
     });
     if (loginUser) {
       await teacher.reload({ transaction: t });
-      const updates = {};
-      if (body.account_status === 'inactive' || body.account_status === 'active') {
-        updates.status = body.account_status;
-      }
-      if (patch.first_name != null || patch.last_name != null) {
-        const fn = patch.first_name != null ? patch.first_name : teacher.first_name;
-        const ln = patch.last_name != null ? patch.last_name : teacher.last_name;
-        updates.name = `${fn} ${ln}`.trim();
-      }
-      updates.email = await resolveUserEmailForTeacher(tenantId, teacher.email, loginUser.id);
-      await loginUser.update(updates, { transaction: t });
+      await syncTeacherLogin({
+        tenantId,
+        teacherId: id,
+        loginUserId: loginUser.id,
+        accountStatus: body.account_status,
+        firstName: patch.first_name != null ? patch.first_name : teacher.first_name,
+        lastName: patch.last_name != null ? patch.last_name : teacher.last_name,
+        email: await resolveUserEmailForTeacher(tenantId, teacher.email, loginUser.id),
+        transaction: t,
+      });
     }
 
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'teacher',
+      entityId: id,
+      action: 'update',
+      after: { teacher_id: id },
+    });
     const full = await exports.loadTeacherDetail(tenantId, id, { includePhoto: true });
     res.status(200).json({ message: 'Teacher updated', data: full });
   } catch (err) {
     await t.rollback();
-    console.error('teachers.update error:', err);
+    req.log?.error({ err }, 'teachers.update error');
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Email or username conflict' });
     }
@@ -490,10 +504,18 @@ exports.remove = async (req, res) => {
     await User.destroy({ where: { teacher_id: id, tenant_id: tenantId }, transaction: t });
     await teacher.destroy({ transaction: t });
     await t.commit();
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'teacher',
+      entityId: id,
+      action: 'delete',
+      before: { teacher_id: id, email: plain.email },
+    });
     res.status(204).send();
   } catch (err) {
     await t.rollback();
-    console.error('teachers.remove error:', err);
+    req.log?.error({ err }, 'teachers.remove error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -516,7 +538,7 @@ exports.getLoginDetails = async (req, res) => {
       has_account: !!u,
     });
   } catch (err) {
-    console.error('teachers.getLoginDetails error:', err);
+    req.log?.error({ err }, 'teachers.getLoginDetails error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -536,14 +558,25 @@ exports.resetPassword = async (req, res) => {
     }
     const plaintextPassword = randomPassword(14);
     const hash = await bcrypt.hash(plaintextPassword, 10);
-    await loginUser.update({ password: hash });
+    await sequelize.transaction(async (trx) => {
+      await loginUser.update({ password: hash, password_changed_at: new Date() }, { transaction: trx });
+      await invalidateUserSessions(loginUser.id, tenantId, trx);
+    });
+    await recordAudit({
+      tenantId,
+      actorUserId: req.user?.userId || null,
+      entityType: 'teacher_login',
+      entityId: id,
+      action: 'password_reset',
+      metadata: { user_id: loginUser.id },
+    });
     res.status(200).json({
       message: 'Password reset',
       username: loginUser.username,
       password: plaintextPassword,
     });
   } catch (err) {
-    console.error('teachers.resetPassword error:', err);
+    req.log?.error({ err }, 'teachers.resetPassword error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -577,7 +610,7 @@ exports.uploadCv = async (req, res) => {
       cv_file_url: relativePath,
     });
   } catch (err) {
-    console.error('teachers.uploadCv error:', err);
+    req.log?.error({ err }, 'teachers.uploadCv error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -598,7 +631,7 @@ exports.getMe = async (req, res) => {
     }
     res.status(200).json(full);
   } catch (err) {
-    console.error('teachers.getMe error:', err);
+    req.log?.error({ err }, 'teachers.getMe error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -677,7 +710,7 @@ exports.updateMe = async (req, res) => {
     const full = await exports.loadTeacherDetail(tenantId, teacherId, { includePhoto: true });
     res.status(200).json({ message: 'Profile updated', data: full });
   } catch (err) {
-    console.error('teachers.updateMe error:', err);
+    req.log?.error({ err }, 'teachers.updateMe error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -715,11 +748,17 @@ exports.changeMyPassword = async (req, res) => {
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
-    await loginUser.update({ password: hash });
+    await sequelize.transaction(async (trx) => {
+      await loginUser.update(
+        { password: hash, password_changed_at: new Date() },
+        { transaction: trx }
+      );
+      await invalidateUserSessions(loginUser.id, tenantId, trx);
+    });
 
     res.status(200).json({ message: 'Password updated' });
   } catch (err) {
-    console.error('teachers.changeMyPassword error:', err);
+    req.log?.error({ err }, 'teachers.changeMyPassword error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };

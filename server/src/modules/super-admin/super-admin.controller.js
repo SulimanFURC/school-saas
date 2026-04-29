@@ -13,6 +13,7 @@ const {
   normalizeSubdomain,
   isValidSubdomain,
 } = require('../../core/utils/subdomain');
+const { recordAudit } = require('../audit/audit.service');
 
 const ALLOWED_STATUS = new Set(['active', 'inactive', 'pending']);
 
@@ -232,6 +233,14 @@ exports.createTenant = async (req, res) => {
     );
 
     await t.commit();
+    await recordAudit({
+      tenantId: tenant.id,
+      actorUserId: req.user?.userId || null,
+      entityType: 'tenant',
+      entityId: tenant.id,
+      action: 'create',
+      after: { tenant_id: tenant.id, subdomain: tenant.subdomain },
+    });
 
     await seedTenantModulesForTenant(tenant.id, true);
     await seedAcademicYearsForTenant(tenant.id);
@@ -264,7 +273,8 @@ exports.createTenant = async (req, res) => {
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Duplicate value (subdomain or email for tenant)' });
     }
-    return res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'superAdmin.createTenant failed');
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -354,6 +364,7 @@ exports.updateTenant = async (req, res) => {
       return res.status(400).json({ message: 'No valid fields provided to update' });
     }
 
+    const before = tenant.toJSON();
     await tenant.update(updates);
 
     const fresh = await Tenant.findByPk(tenant.id, {
@@ -370,6 +381,15 @@ exports.updateTenant = async (req, res) => {
       ],
     });
 
+    await recordAudit({
+      tenantId: tenant.id,
+      actorUserId: req.user?.userId || null,
+      entityType: 'tenant',
+      entityId: tenant.id,
+      action: 'update',
+      before,
+      after: fresh.toJSON(),
+    });
     return res.status(200).json({ message: 'Tenant updated', tenant: fresh.toJSON() });
   } catch (err) {
     console.error('updateTenant error:', err);
@@ -413,7 +433,8 @@ exports.getTenantModules = async (req, res) => {
       modules: merged,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'superAdmin.getTenantModules failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -448,10 +469,20 @@ exports.updateTenantModules = async (req, res) => {
     await seedTenantModulesForTenant(tenant.id, true);
 
     for (const row of body) {
+      const existing = await TenantModule.findOne({ where: { tenant_id: tenantId, module_key: row.module_key } });
       await TenantModule.update(
         { is_enabled: row.is_enabled },
         { where: { tenant_id: tenantId, module_key: row.module_key } }
       );
+      await recordAudit({
+        tenantId,
+        actorUserId: req.user?.userId || null,
+        entityType: 'tenant_module',
+        entityId: `${tenantId}:${row.module_key}`,
+        action: 'toggle',
+        before: existing ? { is_enabled: existing.is_enabled } : null,
+        after: { is_enabled: row.is_enabled },
+      });
     }
 
     const toggles = await TenantModule.findAll({
@@ -470,7 +501,8 @@ exports.updateTenantModules = async (req, res) => {
 
     res.json({ modules: merged });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    req.log?.error({ err }, 'superAdmin.updateTenantModules failed');
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

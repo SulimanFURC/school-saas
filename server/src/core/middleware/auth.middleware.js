@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
+const User = require('../../modules/users/user.model');
+const TokenBlocklist = require('../../modules/auth/tokenBlocklist.model');
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(' ')[1];
@@ -9,11 +11,48 @@ const authMiddleware = (req, res, next) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    if (!decoded.jti || decoded.ver === undefined || decoded.ver === null) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    if (!decoded.tenant_id || !decoded.userId) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    const blocked = await TokenBlocklist.findOne({
+      where: {
+        tenant_id: decoded.tenant_id,
+        access_jti: String(decoded.jti),
+      },
+    });
+    if (blocked) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    const user = await User.findOne({
+      where: { id: decoded.userId, tenant_id: decoded.tenant_id },
+      attributes: ['id', 'token_version'],
+    });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    if (Number(user.token_version) !== Number(decoded.ver)) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('authMiddleware error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 

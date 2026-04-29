@@ -22,6 +22,8 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject } from 'rxjs';
 
+import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
+import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
 import {
   StudentService,
   StudentListRow,
@@ -56,6 +58,8 @@ function initialsFromName(name: string): string {
     ConfirmDialogModule,
     IconFieldModule,
     InputIconModule,
+    SkeletonTableComponent,
+    InlineErrorComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './student-list.component.html',
@@ -78,6 +82,7 @@ export class StudentListComponent implements OnInit {
   private readonly searchInput$ = new Subject<string>();
 
   loading = signal(true);
+  hasError = signal(false);
   rows = signal<StudentListRow[]>([]);
   page = signal(1);
   pageSize = signal(20);
@@ -124,6 +129,7 @@ export class StudentListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    this.hasError.set(false);
     const q = this.searchQuery().trim();
     this.studentsApi
       .list({
@@ -133,6 +139,7 @@ export class StudentListComponent implements OnInit {
       })
       .pipe(
         catchError((e: { error?: { message?: string }; message?: string }) => {
+          this.hasError.set(true);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
+const sequelize = require('../../config/db');
 const User = require('../users/user.model');
+const { invalidateUserSessions } = require('../auth/session.service');
 const Tenant = require('../tenant/tenant.model');
 const AcademicYear = require('../classes/academicYear.model');
 const PlatformSetting = require('./platformSetting.model');
@@ -184,7 +186,13 @@ exports.changePassword = async (req, res) => {
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
-    await user.update({ password: hash });
+    await sequelize.transaction(async (trx) => {
+      await user.update(
+        { password: hash, password_changed_at: new Date() },
+        { transaction: trx }
+      );
+      await invalidateUserSessions(user.id, req.tenant.id, trx);
+    });
 
     res.status(200).json({ message: 'Password updated' });
   } catch (err) {

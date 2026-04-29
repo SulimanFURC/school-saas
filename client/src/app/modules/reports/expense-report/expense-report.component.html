@@ -4,35 +4,43 @@
     <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
       <div class="col-md-4">
         <label class="form-label" for="ex-from">From</label>
-        <input id="ex-from" class="form-control" type="date" formControlName="date_from" />
+        <input id="ex-from" class="w-100" pInputText type="date" formControlName="date_from" />
       </div>
       <div class="col-md-4">
         <label class="form-label" for="ex-to">To</label>
-        <input id="ex-to" class="form-control" type="date" formControlName="date_to" />
+        <input id="ex-to" class="w-100" pInputText type="date" formControlName="date_to" />
       </div>
       <div class="col-md-4">
-        <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">Apply</button>
+        <p-button type="submit" label="Apply" styleClass="w-100" [loading]="loading()" [disabled]="loading()" />
       </div>
     </form>
 
-    @if (result(); as r) {
-      <p><strong>Total:</strong> {{ r.total }}</p>
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of r.by_category; track row.category) {
-            <tr>
-              <td>{{ row.category }}</td>
-              <td>{{ row.total }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    @if (loading()) {
+      <app-skeleton-table [rows]="4" [columns]="2" />
+    } @else {
+      @if (hasError()) {
+        <app-inline-error message="Failed to load expense report. Please try again." (retry)="apply()" />
+      } @else {
+        @if (result(); as r) {
+          <p><strong>Total:</strong> {{ r.total }}</p>
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of r.by_category; track row.category) {
+                <tr>
+                  <td>{{ row.category }}</td>
+                  <td>{{ row.total }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
     }
   </div>
 </div>

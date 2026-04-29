@@ -3,25 +3,20 @@
     <h1 class="h4 mb-0">School overview</h1>
     <p class="text-secondary small mb-0">Key metrics for your institution</p>
   </div>
-  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="refresh()" [disabled]="loading()">
-    @if (loading()) {
-      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-    }
-    <i class="bi bi-arrow-clockwise"></i>
-    <span class="ms-1">Refresh</span>
-  </button>
+  <p-button
+    label="Refresh"
+    icon="bi bi-arrow-clockwise"
+    [outlined]="true"
+    size="small"
+    [loading]="loading()"
+    (onClick)="refresh()"
+  />
 </div>
 
 @if (loading() && !data()) {
-  <div class="placeholder-glow">
-    <div class="row g-3">
-      @for (i of [1, 2, 3, 4]; track i) {
-        <div class="col-12 col-md-6 col-xl-3">
-          <div class="card"><div class="card-body"><span class="placeholder col-12"></span></div></div>
-        </div>
-      }
-    </div>
-  </div>
+  <app-skeleton-card [count]="4" />
+} @else if (hasError() && !data()) {
+  <app-inline-error message="Failed to load dashboard data. Please try again." (retry)="refresh()" />
 }
 
 @if (data(); as d) {

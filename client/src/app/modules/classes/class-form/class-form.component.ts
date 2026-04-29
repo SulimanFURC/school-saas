@@ -31,6 +31,7 @@ import {
   SectionInput,
   UpdateClassPayload,
 } from '../../../services/academic.service';
+import { LookupService } from '../../../services/lookup.service';
 import { TeacherListRow, TeacherService } from '../../../services/teacher.service';
 
 interface TeacherOption {
@@ -60,6 +61,7 @@ export class ClassFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(AcademicService);
   private teachers = inject(TeacherService);
+  private lookup = inject(LookupService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private messages = inject(MessageService);
@@ -281,6 +283,7 @@ export class ClassFormComponent implements OnInit {
         )
         .subscribe({
           next: () => {
+            this.lookup.invalidateClasses();
             this.messages.add({
               severity: 'success',
               summary: 'Saved',
@@ -315,6 +318,7 @@ export class ClassFormComponent implements OnInit {
       )
       .subscribe({
         next: () => {
+          this.lookup.invalidateClasses();
           this.messages.add({
             severity: 'success',
             summary: 'Created',

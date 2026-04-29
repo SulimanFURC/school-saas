@@ -4,39 +4,49 @@
     <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
       <div class="col-md-8">
         <label class="form-label" for="fd-ay">Academic year</label>
-        <select id="fd-ay" class="form-select" formControlName="academic_year_id">
-          @for (y of years(); track y.id) {
-            <option [ngValue]="y.id">{{ y.name }}</option>
-          }
-        </select>
+        <p-select
+          inputId="fd-ay"
+          class="w-100"
+          [options]="yearOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select academic year"
+          formControlName="academic_year_id"
+        />
       </div>
       <div class="col-md-4">
-        <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">Apply</button>
+        <p-button type="submit" label="Apply" styleClass="w-100" [loading]="loading()" [disabled]="loading()" />
       </div>
     </form>
     <div class="table-responsive">
-      <table class="table table-sm table-striped">
-        <thead>
-          <tr>
-            <th>Admission</th>
-            <th>Name</th>
-            <th>Last payment</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of rows(); track r.student_id) {
+      @if (loading()) {
+        <app-skeleton-table [rows]="6" [columns]="3" />
+      } @else if (hasError()) {
+        <app-inline-error message="Failed to load fee defaulters report. Please try again." (retry)="apply()" />
+      } @else {
+        <table class="table table-sm table-striped">
+          <thead>
             <tr>
-              <td>{{ r.admission_no }}</td>
-              <td>{{ r.student_name }}</td>
-              <td>{{ r.last_payment_date ?? '—' }}</td>
+              <th>Admission</th>
+              <th>Name</th>
+              <th>Last payment</th>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="3" class="text-secondary">No rows — run Apply</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (r of rows(); track r.student_id) {
+              <tr>
+                <td>{{ r.admission_no }}</td>
+                <td>{{ r.student_name }}</td>
+                <td>{{ r.last_payment_date ?? '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="text-secondary">No rows — run Apply</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
     </div>
   </div>
 </div>
