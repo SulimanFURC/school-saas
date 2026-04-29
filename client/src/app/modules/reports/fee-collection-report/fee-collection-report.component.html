@@ -1,0 +1,43 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Fee collection summary</h2>
+    <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
+      <div class="col-md-4">
+        <label class="form-label" for="fc-from">From</label>
+        <input id="fc-from" class="form-control" type="date" formControlName="date_from" />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="fc-to">To</label>
+        <input id="fc-to" class="form-control" type="date" formControlName="date_to" />
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          }
+          Apply
+        </button>
+      </div>
+    </form>
+
+    @if (result(); as r) {
+      <p><strong>Total:</strong> {{ r.total_collected }}</p>
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of r.by_payment_mode; track row.mode) {
+            <tr>
+              <td>{{ row.mode }}</td>
+              <td>{{ row.total }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

@@ -17,10 +17,10 @@ export const adminRoleGuard: CanActivateFn = (route) => {
     return true;
   }
   if (r === 'teacher') {
-    return router.createUrlTree(['/teachers/dashboard']);
+    return router.createUrlTree(['/home']);
   }
   if (r === 'student') {
-    if (path === '' || path === 'profile') {
+    if (path === 'home' || path === 'profile') {
       return true;
     }
     return router.createUrlTree(['/unauthorized']);

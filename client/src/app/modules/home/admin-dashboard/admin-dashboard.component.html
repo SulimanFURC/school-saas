@@ -1,0 +1,90 @@
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 mb-0">School overview</h1>
+    <p class="text-secondary small mb-0">Key metrics for your institution</p>
+  </div>
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="refresh()" [disabled]="loading()">
+    @if (loading()) {
+      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+    }
+    <i class="bi bi-arrow-clockwise"></i>
+    <span class="ms-1">Refresh</span>
+  </button>
+</div>
+
+@if (loading() && !data()) {
+  <div class="placeholder-glow">
+    <div class="row g-3">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card"><div class="card-body"><span class="placeholder col-12"></span></div></div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (data(); as d) {
+  <app-dashboard-section title="At a glance">
+    <div class="row g-3 mb-2">
+      <div class="col-12 col-md-6 col-xl-3">
+        <app-stat-card label="Total students" [value]="d.students.total" icon="bi-people" routerLink="/students" />
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <app-stat-card label="Teachers" [value]="d.teachers.total" icon="bi-person-badge" routerLink="/teachers" />
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <app-stat-card
+          label="Fees this month"
+          [value]="d.fees.collected_this_month | number: '1.0-2'"
+          icon="bi-currency-dollar"
+          routerLink="/fees/collection"
+        />
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <app-stat-card
+          label="Expenses this month"
+          [value]="d.expenses.total_this_month | number: '1.0-2'"
+          icon="bi-receipt"
+          routerLink="/expenses"
+        />
+      </div>
+    </div>
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <app-stat-card label="Upcoming exams" [value]="d.exams.upcoming" icon="bi-calendar-event" routerLink="/exams" />
+      </div>
+      <div class="col-12 col-md-4">
+        <app-stat-card label="Active classes" [value]="d.classes.total" icon="bi-collection" routerLink="/classes" />
+      </div>
+      <div class="col-12 col-md-4">
+        <app-stat-card
+          label="Fee defaulters (est.)"
+          [value]="d.fees.pending_defaulters"
+          icon="bi-exclamation-triangle"
+          [variant]="d.fees.pending_defaulters > 0 ? 'warning' : 'default'"
+          routerLink="/reports/fee-defaulters"
+        />
+      </div>
+    </div>
+  </app-dashboard-section>
+
+  <app-dashboard-section title="Recent activity">
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <app-recent-table
+          title="Recent admissions"
+          [columns]="admissionColumns"
+          [rows]="admissionRows()"
+        />
+      </div>
+      <div class="col-12 col-lg-6">
+        <app-recent-table
+          title="Recent fee collections"
+          [columns]="feeColumns"
+          [rows]="feeRows()"
+        />
+      </div>
+    </div>
+  </app-dashboard-section>
+}

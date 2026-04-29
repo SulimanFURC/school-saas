@@ -9,6 +9,7 @@ import { guestGuard } from './guards/guest.guard';
 import { studentRoleGuard } from './guards/student-role.guard';
 import { superAdminGuard } from './guards/super-admin.guard';
 import { teacherRoleGuard } from './guards/teacher-role.guard';
+import { settingsNotificationsGuard, settingsTenantAdminGuard } from './guards/settings.guard';
 
 export const routes: Routes = [
   {
@@ -34,7 +35,15 @@ export const routes: Routes = [
     component: SuperAdminLayoutComponent,
     canActivate: [superAdminGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'tenants' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./modules/super-admin/super-admin-dashboard/super-admin-dashboard.component').then(
+            (m) => m.SuperAdminDashboardComponent
+          ),
+        data: { title: 'Platform dashboard' },
+      },
       {
         path: 'tenants',
         loadComponent: () =>
@@ -52,12 +61,20 @@ export const routes: Routes = [
         data: { title: 'Feature management' },
       },
       {
+        path: 'platform-settings',
+        loadComponent: () =>
+          import('./modules/super-admin/platform-settings/platform-settings.component').then(
+            (m) => m.PlatformSettingsComponent
+          ),
+        data: { title: 'Platform settings' },
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./modules/super-admin/tenant-branding-settings/tenant-branding-settings.component').then(
             (m) => m.TenantBrandingSettingsComponent
           ),
-        data: { title: 'Settings' },
+        data: { title: 'Tenant branding' },
       },
     ],
   },
@@ -68,7 +85,11 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        canActivate: [adminRoleGuard],
+        pathMatch: 'full',
+        redirectTo: 'home',
+      },
+      {
+        path: 'home',
         loadComponent: () =>
           import('./modules/home/home.component').then((m) => m.HomeComponent),
         data: { title: 'Dashboard' },
@@ -121,12 +142,8 @@ export const routes: Routes = [
       },
       {
         path: 'teachers/dashboard',
-        canActivate: [teacherRoleGuard],
-        loadComponent: () =>
-          import('./modules/teachers/teacher-dashboard/teacher-dashboard.component').then(
-            (m) => m.TeacherDashboardComponent
-          ),
-        data: { title: 'Teacher dashboard' },
+        pathMatch: 'full',
+        redirectTo: 'home',
       },
       {
         path: 'teachers/exams',
@@ -345,19 +362,103 @@ export const routes: Routes = [
         path: 'reports',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/reports/reports-layout/reports-layout.component').then(
+            (m) => m.ReportsLayoutComponent
           ),
         data: { title: 'Reports', moduleKey: 'reports' },
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'enrollment' },
+          {
+            path: 'enrollment',
+            loadComponent: () =>
+              import('./modules/reports/enrollment-report/enrollment-report.component').then(
+                (m) => m.EnrollmentReportComponent
+              ),
+            data: { title: 'Enrollment report' },
+          },
+          {
+            path: 'fee-collection',
+            loadComponent: () =>
+              import('./modules/reports/fee-collection-report/fee-collection-report.component').then(
+                (m) => m.FeeCollectionReportComponent
+              ),
+            data: { title: 'Fee collection' },
+          },
+          {
+            path: 'fee-defaulters',
+            loadComponent: () =>
+              import('./modules/reports/fee-defaulters-report/fee-defaulters-report.component').then(
+                (m) => m.FeeDefaultersReportComponent
+              ),
+            data: { title: 'Fee defaulters' },
+          },
+          {
+            path: 'expenses',
+            loadComponent: () =>
+              import('./modules/reports/expense-report/expense-report.component').then(
+                (m) => m.ExpenseReportComponent
+              ),
+            data: { title: 'Expense report' },
+          },
+        ],
       },
       {
         path: 'settings',
-        canActivate: [adminRoleGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/settings/settings-layout/settings-layout.component').then(
+            (m) => m.SettingsLayoutComponent
           ),
         data: { title: 'Settings' },
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./modules/settings/settings-home-redirect/settings-home-redirect.component').then(
+                (m) => m.SettingsHomeRedirectComponent
+              ),
+          },
+          {
+            path: 'school-profile',
+            canActivate: [settingsTenantAdminGuard],
+            loadComponent: () =>
+              import('./modules/settings/school-profile-settings/school-profile-settings.component').then(
+                (m) => m.SchoolProfileSettingsComponent
+              ),
+            data: { title: 'School profile' },
+          },
+          {
+            path: 'academic',
+            canActivate: [settingsTenantAdminGuard],
+            loadComponent: () =>
+              import('./modules/settings/academic-settings/academic-settings.component').then(
+                (m) => m.AcademicSettingsComponent
+              ),
+            data: { title: 'Academic year' },
+          },
+          {
+            path: 'grading',
+            pathMatch: 'full',
+            redirectTo: '/exams/grading-schemes',
+          },
+          {
+            path: 'notifications',
+            canActivate: [settingsNotificationsGuard],
+            loadComponent: () =>
+              import(
+                './modules/settings/notification-preferences-settings/notification-preferences-settings.component'
+              ).then((m) => m.NotificationPreferencesSettingsComponent),
+            data: { title: 'Notifications' },
+          },
+          {
+            path: 'password',
+            loadComponent: () =>
+              import('./modules/settings/change-password-settings/change-password-settings.component').then(
+                (m) => m.ChangePasswordSettingsComponent
+              ),
+            data: { title: 'Password' },
+          },
+        ],
       },
       {
         path: 'profile',

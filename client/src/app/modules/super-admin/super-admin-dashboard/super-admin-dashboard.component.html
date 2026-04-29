@@ -1,0 +1,61 @@
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 mb-0">Platform overview</h1>
+    <p class="text-secondary small mb-0">Schools, users, and module adoption</p>
+  </div>
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="refresh()" [disabled]="loading()">
+    @if (loading()) {
+      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+    }
+    <i class="bi bi-arrow-clockwise"></i>
+    <span class="ms-1">Refresh</span>
+  </button>
+</div>
+
+@if (loading() && !data()) {
+  <div class="placeholder-glow row g-3">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="col-md-3"><div class="card"><div class="card-body"><span class="placeholder col-12"></span></div></div></div>
+    }
+  </div>
+}
+
+@if (data(); as d) {
+  <app-dashboard-section title="Schools">
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <app-stat-card label="Total schools" [value]="d.tenants.total" icon="bi-building" routerLink="/super-admin/tenants" />
+      </div>
+      <div class="col-6 col-md-3">
+        <app-stat-card label="Active" [value]="d.tenants.active" icon="bi-check-circle" routerLink="/super-admin/tenants" />
+      </div>
+      <div class="col-6 col-md-3">
+        <app-stat-card label="Inactive" [value]="d.tenants.inactive" icon="bi-pause-circle" routerLink="/super-admin/tenants" />
+      </div>
+      <div class="col-6 col-md-3">
+        <app-stat-card label="New this month" [value]="d.tenants.new_this_month" icon="bi-plus-circle" />
+      </div>
+    </div>
+  </app-dashboard-section>
+
+  <app-dashboard-section title="Users">
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <app-stat-card label="Users (all tenants)" [value]="d.users.total_across_tenants" icon="bi-people" />
+      </div>
+    </div>
+  </app-dashboard-section>
+
+  <app-dashboard-section title="Most enabled modules">
+    <ul class="list-group">
+      @for (m of d.modules.most_enabled; track m.key) {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>{{ m.label }} <code class="small ms-1">{{ m.key }}</code></span>
+          <span class="badge text-bg-primary rounded-pill">{{ m.enabled_count }}</span>
+        </li>
+      } @empty {
+        <li class="list-group-item text-secondary">No data</li>
+      }
+    </ul>
+  </app-dashboard-section>
+}

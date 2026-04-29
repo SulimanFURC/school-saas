@@ -1,0 +1,42 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Fee defaulters (no payment this calendar year)</h2>
+    <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
+      <div class="col-md-8">
+        <label class="form-label" for="fd-ay">Academic year</label>
+        <select id="fd-ay" class="form-select" formControlName="academic_year_id">
+          @for (y of years(); track y.id) {
+            <option [ngValue]="y.id">{{ y.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100" [disabled]="loading()">Apply</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped">
+        <thead>
+          <tr>
+            <th>Admission</th>
+            <th>Name</th>
+            <th>Last payment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.student_id) {
+            <tr>
+              <td>{{ r.admission_no }}</td>
+              <td>{{ r.student_name }}</td>
+              <td>{{ r.last_payment_date ?? '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="text-secondary">No rows — run Apply</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,68 @@
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 mb-0">My dashboard</h1>
+    <p class="text-secondary small mb-0">Enrollment, results, and fees</p>
+  </div>
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="refresh()" [disabled]="loading()">
+    @if (loading()) {
+      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+    }
+    <i class="bi bi-arrow-clockwise"></i>
+    <span class="ms-1">Refresh</span>
+  </button>
+</div>
+
+@if (loading() && !data()) {
+  <div class="placeholder-glow"><div class="card"><div class="card-body"><span class="placeholder col-12"></span></div></div></div>
+}
+
+@if (data(); as d) {
+  <div class="card mb-4 border-primary border-opacity-25">
+    <div class="card-body">
+      <h2 class="h6 text-secondary mb-2">Current enrollment</h2>
+      <p class="mb-0 fs-5">
+        {{ d.enrollment.class_name ?? '—' }}
+        @if (d.enrollment.section_name) {
+          <span class="text-secondary"> · Section {{ d.enrollment.section_name }}</span>
+        }
+        @if (d.enrollment.roll_number != null) {
+          <span class="text-secondary"> · Roll {{ d.enrollment.roll_number }}</span>
+        }
+      </p>
+      @if (d.enrollment.academic_year) {
+        <p class="text-secondary small mb-0 mt-1">{{ d.enrollment.academic_year }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <app-stat-card
+        label="Attendance (stub)"
+        [value]="d.attendance_summary.total > 0 ? d.attendance_summary.present + '/' + d.attendance_summary.total : '—'"
+        icon="bi-calendar-check"
+      />
+    </div>
+    <div class="col-md-4">
+      <app-stat-card label="Pending rechecks" [value]="d.pending_recheck_requests" icon="bi-question-circle" />
+    </div>
+    <div class="col-md-4">
+      <app-stat-card
+        label="Fees paid this year"
+        [value]="d.fee_status.total_paid_this_year | number: '1.0-2'"
+        icon="bi-currency-dollar"
+      />
+    </div>
+  </div>
+
+  @if (d.fee_status.last_payment_date) {
+    <p class="small text-secondary mb-3">
+      Last payment:
+      {{ d.fee_status.last_payment_amount | number: '1.0-2' }} on {{ d.fee_status.last_payment_date }}
+    </p>
+  }
+
+  <app-dashboard-section title="Recent results">
+    <app-recent-table title="" [columns]="resultColumns" [rows]="resultRows()" />
+  </app-dashboard-section>
+}

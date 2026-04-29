@@ -1,0 +1,52 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Enrollment summary</h2>
+    <form class="row g-2 align-items-end mb-3" [formGroup]="form" (ngSubmit)="apply()">
+      <div class="col-md-6">
+        <label class="form-label" for="enr-ay">Academic year</label>
+        <select id="enr-ay" class="form-select" formControlName="academic_year_id">
+          @for (y of years(); track y.id) {
+            <option [ngValue]="y.id">{{ y.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-6 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          }
+          Apply
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="exportCsv()" [disabled]="!summary()?.by_gender?.length">
+          Export CSV
+        </button>
+      </div>
+    </form>
+
+    @if (summary(); as s) {
+      <p class="mb-2"><strong>Total enrolled:</strong> {{ s.total_enrolled }}</p>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>Gender</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of s.by_gender; track r.gender) {
+              <tr>
+                <td>{{ r.gender }}</td>
+                <td>{{ r.count }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="2" class="text-secondary">No rows</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

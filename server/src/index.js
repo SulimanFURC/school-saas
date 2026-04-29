@@ -1,6 +1,7 @@
 require('dotenv').config();
 const path = require('path');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const sequelize = require('./config/db');
@@ -53,6 +54,8 @@ const ExamGradingConfig = require('./modules/exams/examGradingConfig.model');
 const ExamRecheckRequest = require('./modules/exams/examRecheckRequest.model');
 const Notification = require('./modules/notifications/notification.model');
 const NotificationRead = require('./modules/notifications/notificationRead.model');
+const PlatformSetting = require('./modules/settings/platformSetting.model');
+const UserNotificationPreference = require('./modules/settings/userNotificationPreference.model');
 User.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 User.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 Teacher.hasOne(User, { foreignKey: 'teacher_id', as: 'login_user' });
@@ -103,6 +106,9 @@ ExamRecheckRequest.belongsTo(Teacher, { foreignKey: 'assigned_teacher_id', as: '
 NotificationRead.belongsTo(Notification, { foreignKey: 'notification_id', as: 'notification' });
 Notification.hasMany(NotificationRead, { foreignKey: 'notification_id', as: 'reads' });
 
+UserNotificationPreference.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+UserNotificationPreference.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
+
 const academicRoutes = require('./modules/classes/academic.routes');
 const studentApiRoutes = require('./modules/students/student.routes');
 const teacherApiRoutes = require('./modules/teachers/teacher.routes');
@@ -111,6 +117,9 @@ const feeRoutes = require('./modules/fees/fee.routes');
 const expenseRoutes = require('./modules/expenses/expense.routes');
 const examRoutes = require('./modules/exams/exam.routes');
 const notificationRoutes = require('./modules/notifications/notification.routes');
+const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const settingsRoutes = require('./modules/settings/settings.routes');
+const reportsRoutes = require('./modules/reports/reports.routes');
 
 
 const app = express();
@@ -124,8 +133,20 @@ app.use(
 /** Base64 expands ~33%; allow large phone photos. Override with JSON_BODY_LIMIT in .env */
 const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || '50mb';
 app.use(express.json({ limit: JSON_BODY_LIMIT }));
-app.post('/auth/signup', authController.signup);
+
+const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_SIGNUP_MAX || 20),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post('/auth/signup', signupLimiter, authController.signup);
 app.use(tenantMiddleware);
+
+app.use('/dashboard', dashboardRoutes);
+app.use('/settings', settingsRoutes);
+app.use('/reports', reportsRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -166,6 +187,14 @@ app.use(examRoutes);
 app.use(notificationRoutes);
 app.use('/fees', tenantMiddleware, feeRoutes);
 app.use('/expenses', tenantMiddleware, expenseRoutes);
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+  console.error('Unhandled error:', err);
+  return res.status(500).json({ message: 'Internal server error' });
+});
 
 const PORT = process.env.PORT || 5000;
 

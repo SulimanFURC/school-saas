@@ -5,6 +5,7 @@ const router = express.Router();
 const authorize = require('../../core/middleware/authorize.middleware');
 const superAdminController = require('./super-admin.controller');
 const tenantBrandingController = require('../tenant-branding/tenantBranding.controller');
+const settingsController = require('../settings/settings.controller');
 
 const uploadsRoot = path.join(__dirname, '../../uploads');
 const logoStorage = multer.diskStorage({
@@ -36,6 +37,10 @@ const logoUpload = multer({
 });
 
 router.use(authorize('super_admin'));
+
+router.get('/dashboard', superAdminController.superAdminDashboard);
+router.get('/platform-settings', settingsController.platformSettingsGet);
+router.put('/platform-settings', settingsController.platformSettingsPut);
 
 router.get('/tenants', superAdminController.listTenants);
 router.post('/tenants', superAdminController.createTenant);

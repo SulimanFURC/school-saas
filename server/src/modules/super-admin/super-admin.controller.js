@@ -473,3 +473,66 @@ exports.updateTenantModules = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.superAdminDashboard = async (req, res) => {
+  try {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const nonPlatformWhere = { subdomain: { [Op.ne]: 'platform' } };
+
+    const [
+      totalTenants,
+      activeTenants,
+      inactiveTenants,
+      newThisMonth,
+      totalUsers,
+      mostEnabledRows,
+    ] = await Promise.all([
+      Tenant.count({ where: nonPlatformWhere }),
+      Tenant.count({ where: { ...nonPlatformWhere, status: 'active' } }),
+      Tenant.count({ where: { ...nonPlatformWhere, status: 'inactive' } }),
+      Tenant.count({
+        where: {
+          ...nonPlatformWhere,
+          createdAt: { [Op.gte]: monthStart },
+        },
+      }),
+      User.count({ where: { role: { [Op.ne]: 'super_admin' } } }),
+      sequelize.query(
+        `
+          SELECT tm.module_key AS key, m.name AS label, COUNT(*)::int AS enabled_count
+          FROM tenant_modules tm
+          INNER JOIN modules m ON m.key = tm.module_key
+          WHERE tm.is_enabled = true
+          GROUP BY tm.module_key, m.name
+          ORDER BY enabled_count DESC
+          LIMIT 5
+          `,
+        { type: sequelize.QueryTypes.SELECT }
+      ),
+    ]);
+
+    const most_enabled = (mostEnabledRows || []).map((r) => ({
+      key: r.key,
+      label: r.label,
+      enabled_count: Number(r.enabled_count),
+    }));
+
+    res.set('Cache-Control', 'private, max-age=60');
+    res.status(200).json({
+      tenants: {
+        total: totalTenants,
+        active: activeTenants,
+        inactive: inactiveTenants,
+        new_this_month: newThisMonth,
+      },
+      users: { total_across_tenants: totalUsers },
+      modules: { most_enabled },
+    });
+  } catch (err) {
+    console.error('superAdminDashboard error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

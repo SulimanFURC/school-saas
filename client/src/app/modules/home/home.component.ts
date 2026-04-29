@@ -1,26 +1,36 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+
+import { AuthService } from '../../services/auth.service';
+import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
+import { StudentDashboardComponent } from './student-dashboard/student-dashboard.component';
+import { TeacherDashboardComponent } from './teacher-dashboard/teacher-dashboard.component';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  standalone: true,
+  imports: [AdminDashboardComponent, TeacherDashboardComponent, StudentDashboardComponent],
   template: `
-    <section class="ds-section-pad home-hero">
-      <h1 class="ds-display-md">Dashboard</h1>
-      <p class="ds-body-lg ds-on-variant">
-        Welcome to School SaaS — your workspace overview will appear here.
-      </p>
-    </section>
+    @switch (role()) {
+      @case ('teacher') {
+        <app-teacher-dashboard />
+      }
+      @case ('student') {
+        <app-student-dashboard />
+      }
+      @default {
+        <app-admin-dashboard />
+      }
+    }
   `,
-  styles: [
-    `
-      :host {
-        display: block;
-      }
-
-      .home-hero {
-        max-width: 42rem;
-      }
-    `,
-  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {}
+export class HomeComponent {
+  private auth = inject(AuthService);
+
+  readonly role = (): 'teacher' | 'student' | 'admin' => {
+    const r = String(this.auth.userRole() ?? '').toLowerCase();
+    if (r === 'teacher') return 'teacher';
+    if (r === 'student') return 'student';
+    return 'admin';
+  };
+}

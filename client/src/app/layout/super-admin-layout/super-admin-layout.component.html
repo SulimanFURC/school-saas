@@ -22,6 +22,16 @@
       <nav class="d-flex flex-column gap-1 px-2 pb-3 pt-3 layout-sidenav-inner flex-grow-1">
         <a
           class="sa-nav-item"
+          routerLink="/super-admin/dashboard"
+          routerLinkActive="sa-nav-item--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeSidebarIfMobile()"
+        >
+          <i class="bi bi-speedometer2"></i>
+          <span class="ds-body-sm">Dashboard</span>
+        </a>
+        <a
+          class="sa-nav-item"
           routerLink="/super-admin/tenants"
           routerLinkActive="sa-nav-item--active"
           [routerLinkActiveOptions]="{ exact: false }"
@@ -32,12 +42,21 @@
         </a>
         <a
           class="sa-nav-item"
+          routerLink="/super-admin/platform-settings"
+          routerLinkActive="sa-nav-item--active"
+          (click)="closeSidebarIfMobile()"
+        >
+          <i class="bi bi-sliders"></i>
+          <span class="ds-body-sm">Platform settings</span>
+        </a>
+        <a
+          class="sa-nav-item"
           routerLink="/super-admin/settings"
           routerLinkActive="sa-nav-item--active"
           (click)="closeSidebarIfMobile()"
         >
           <i class="bi bi-gear"></i>
-          <span class="ds-body-sm">Settings</span>
+          <span class="ds-body-sm">Tenant branding</span>
         </a>
         <a class="sa-nav-item" routerLink="/" (click)="closeSidebarIfMobile()">
           <i class="bi bi-arrow-left"></i>

@@ -1,0 +1,31 @@
+<section class="ds-section-pad">
+  <h1 class="h4 mb-3">Settings</h1>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-3">
+      <nav class="nav flex-column gap-1 settings-nav">
+        @if (showSchoolTabs()) {
+          <a
+            class="nav-link rounded"
+            routerLink="/settings/school-profile"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            School profile
+          </a>
+          <a class="nav-link rounded" routerLink="/settings/academic" routerLinkActive="active">Academic year</a>
+          <a class="nav-link rounded" routerLink="/settings/grading" routerLinkActive="active">Grading schemes</a>
+        }
+        @if (showNotifications()) {
+          <a class="nav-link rounded" routerLink="/settings/notifications" routerLinkActive="active">
+            Notifications
+          </a>
+        }
+        <a class="nav-link rounded" routerLink="/settings/password" routerLinkActive="active">Password</a>
+      </nav>
+    </div>
+    <div class="col-12 col-lg-9">
+      <router-outlet />
+    </div>
+  </div>
+</section>

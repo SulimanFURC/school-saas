@@ -1,0 +1,29 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="h6 mb-3">Platform configuration</h2>
+    @if (loading()) {
+      <p class="text-secondary small">Loading…</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="mb-3">
+          <label class="form-label" for="pf-name">Platform name</label>
+          <input id="pf-name" class="form-control" type="text" formControlName="platform_name" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="pf-email">Support email</label>
+          <input id="pf-email" class="form-control" type="email" formControlName="support_email" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="pf-max">Max tenants allowed</label>
+          <input id="pf-max" class="form-control" type="number" formControlName="max_tenants_allowed" />
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          }
+          Save
+        </button>
+      </form>
+    }
+  </div>
+</div>

@@ -80,22 +80,24 @@ export class MainLayoutComponent {
 
     if (role === 'teacher') {
       const teacherNav: NavEntry[] = [
-        { label: 'Dashboard', path: '/teachers/dashboard', icon: 'dashboard' },
+        { label: 'Dashboard', path: '/home', icon: 'dashboard' },
       ];
       if (enabled.has('exams')) {
         teacherNav.push({ label: 'Exams', path: '/teachers/exams', icon: 'quiz' });
       }
+      teacherNav.push({ label: 'Settings', path: '/settings', icon: 'settings' });
       teacherNav.push({ label: 'My profile', path: '/teachers/me', icon: 'badge' });
       return teacherNav;
     }
 
     if (role === 'student') {
       const studentNav: NavEntry[] = [
-        { label: 'Dashboard', path: '/', icon: 'dashboard', exact: true },
+        { label: 'Dashboard', path: '/home', icon: 'dashboard', exact: true },
       ];
       if (enabled.has('exams')) {
         studentNav.push({ label: 'My exams', path: '/my-exams', icon: 'quiz' });
       }
+      studentNav.push({ label: 'Settings', path: '/settings/password', icon: 'settings' });
       studentNav.push({ label: 'My profile', path: '/profile', icon: 'badge' });
       return studentNav;
     }

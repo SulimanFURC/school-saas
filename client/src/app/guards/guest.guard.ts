@@ -12,8 +12,8 @@ export const guestGuard: CanActivateFn = () => {
   }
 
   if (auth.userRole()?.toLowerCase() === 'super_admin') {
-    return router.createUrlTree(['/super-admin/tenants']);
+    return router.createUrlTree(['/super-admin/dashboard']);
   }
 
-  return router.createUrlTree(['/']);
+  return router.createUrlTree(['/home']);
 };

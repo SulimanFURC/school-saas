@@ -76,7 +76,7 @@ export class LoginComponent {
           }
           let target = '/';
           if (role === 'super_admin') {
-            target = '/super-admin/tenants';
+            target = '/super-admin/dashboard';
           } else if (role === 'teacher') {
             target = '/teachers/dashboard';
           } else if (

@@ -21,7 +21,7 @@ export function isNavGroup(entry: NavEntry): entry is NavGroupConfig {
 }
 
 export const TENANT_NAV_CONFIG: NavEntry[] = [
-  { label: 'Dashboard', path: '/', icon: 'dashboard', exact: true },
+  { label: 'Dashboard', path: '/home', icon: 'dashboard' },
   {
     label: 'Students',
     icon: 'school',
