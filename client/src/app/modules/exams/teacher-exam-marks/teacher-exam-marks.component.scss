@@ -1,0 +1,212 @@
+.teacher-marks {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background:
+      linear-gradient(110deg, color-mix(in srgb, var(--primary-color) 14%, transparent), transparent 48%),
+      var(--surface-card);
+  }
+
+  &__hero-text h1 {
+    margin: 0.2rem 0 0.4rem;
+    font-size: 1.45rem;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 350px) minmax(0, 1fr);
+
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__left,
+  &__right {
+    min-width: 0;
+  }
+
+  &__summary {
+    border: 1px solid var(--surface-border);
+    border-radius: 0.9rem;
+  }
+
+  &__papers {
+    border: 1px solid var(--surface-border);
+    border-radius: 0.9rem;
+
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+
+      h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+    }
+
+    .pill {
+      display: inline-flex;
+      min-width: 2rem;
+      justify-content: center;
+      align-items: center;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    tr.selected {
+      background: color-mix(in srgb, var(--primary-color) 12%, transparent) !important;
+    }
+
+    tr {
+      cursor: pointer;
+    }
+  }
+
+  &__sheet {
+    border: 1px solid var(--surface-border);
+    border-radius: 0.9rem;
+
+    .sheet-headline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+
+      h2 {
+        margin: 0 0 0.25rem;
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+.muted {
+  color: var(--text-color-secondary);
+  font-size: 0.82rem;
+  display: block;
+}
+
+.num {
+  text-align: right;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  background: color-mix(in srgb, var(--surface-card) 88%, transparent);
+
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 0.22rem;
+  }
+
+  strong {
+    font-size: 0.95rem;
+  }
+}
+
+.sheet-toolbar {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.marks-table {
+  border-top: 1px solid var(--surface-border);
+}
+
+.sheet-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  input {
+    flex: 1 1 280px;
+    min-width: 240px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.empty-state {
+  border: 1px dashed var(--surface-border);
+  border-radius: 0.8rem;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--text-color-secondary);
+  gap: 0.45rem;
+
+  i {
+    font-size: 1.5rem;
+  }
+}
+
+.marks-input {
+  width: 100px;
+  text-align: right;
+}
+
+.csv-import {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  background: var(--surface-100);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+
+  input[type='file'] {
+    display: none;
+  }
+}

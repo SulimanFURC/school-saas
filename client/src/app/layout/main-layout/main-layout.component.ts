@@ -90,7 +90,14 @@ export class MainLayoutComponent {
     }
 
     if (role === 'student') {
-      return base.filter((entry) => !isNavGroup(entry) && (entry.path === '/' || entry.path === '/profile'));
+      const studentNav: NavEntry[] = [
+        { label: 'Dashboard', path: '/', icon: 'dashboard', exact: true },
+      ];
+      if (enabled.has('exams')) {
+        studentNav.push({ label: 'My exams', path: '/my-exams', icon: 'quiz' });
+      }
+      studentNav.push({ label: 'My profile', path: '/profile', icon: 'badge' });
+      return studentNav;
     }
 
     return base;

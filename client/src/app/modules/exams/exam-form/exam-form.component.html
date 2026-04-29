@@ -1,0 +1,88 @@
+<p-toast position="top-right"></p-toast>
+
+<section class="exam-form-page">
+  <header class="exam-form-page__header">
+    <div>
+      <h1 class="exam-form-page__title">{{ pageTitle() }}</h1>
+      <p class="exam-form-page__subtitle">Define the exam header. You can configure classes, timetable, and grading on the next screen.</p>
+    </div>
+    <a pButton routerLink="/exams" icon="pi pi-arrow-left" label="Back to exams" class="p-button-text"></a>
+  </header>
+
+  <p-card>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="exam-form">
+      <div class="exam-form__row">
+        <label>
+          Title
+          <input pInputText formControlName="title" placeholder="e.g. Mid-term Examination 2026" />
+        </label>
+        <label>
+          Type
+          <p-select
+            formControlName="exam_type"
+            [options]="examTypeOptions"
+            placeholder="Select type"
+            appendTo="body"
+          ></p-select>
+        </label>
+      </div>
+
+      <div class="exam-form__row">
+        <label>
+          Academic year
+          <p-select
+            formControlName="academic_year_id"
+            [options]="years()"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Select year"
+            appendTo="body"
+          ></p-select>
+        </label>
+        <label>
+          Recheck window (days)
+          <input pInputText type="number" min="1" formControlName="recheck_window_days" />
+        </label>
+      </div>
+
+      <div class="exam-form__row">
+        <label>
+          Start date
+          <p-datepicker formControlName="start_date" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+        </label>
+        <label>
+          End date
+          <p-datepicker formControlName="end_date" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+        </label>
+      </div>
+
+      <label class="exam-form__check">
+        <p-checkbox formControlName="is_internal" [binary]="true"></p-checkbox>
+        Internal exam (Grade 9+ classes are excluded)
+      </label>
+
+      <label class="exam-form__row exam-form__row--full">
+        <span>Classes</span>
+        <p-multiselect
+          formControlName="class_ids"
+          [options]="classes()"
+          optionLabel="name"
+          optionValue="id"
+          display="chip"
+          placeholder="Select classes"
+          appendTo="body"
+        ></p-multiselect>
+      </label>
+
+      <div class="exam-form__actions">
+        <a pButton routerLink="/exams" label="Cancel" class="p-button-text"></a>
+        <p-button
+          type="submit"
+          [label]="editId() ? 'Save changes' : 'Create exam'"
+          [loading]="submitting()"
+          icon="pi pi-check"
+        ></p-button>
+      </div>
+    </form>
+  </p-card>
+</section>

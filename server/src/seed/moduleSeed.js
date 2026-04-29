@@ -28,13 +28,16 @@ async function seedModuleCatalog() {
 
 /**
  * Ensures every catalog module has a tenant_modules row for the given tenant.
+ * @param {{ transaction?: import('sequelize').Transaction }} [options]
  */
-async function seedTenantModulesForTenant(tenantId, defaultEnabled = true) {
+async function seedTenantModulesForTenant(tenantId, defaultEnabled = true, options = {}) {
+  const { transaction } = options;
   const keys = CATALOG.map((m) => m.key);
   for (const moduleKey of keys) {
     await TenantModule.findOrCreate({
       where: { tenant_id: tenantId, module_key: moduleKey },
       defaults: { is_enabled: defaultEnabled },
+      transaction,
     });
   }
 }

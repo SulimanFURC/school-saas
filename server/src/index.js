@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const { Op } = require('sequelize');
 const sequelize = require('./config/db');
 const Tenant = require('./modules/tenant/tenant.model');
 const User = require('./modules/users/user.model');
@@ -38,15 +37,22 @@ const SchoolClass = require('./modules/classes/class.model');
 const Section = require('./modules/classes/section.model');
 const AcademicYear = require('./modules/classes/academicYear.model');
 const Student = require('./modules/students/student.model');
-const StudentEnrollment = require('./modules/students/studentEnrollment.model');
-const StudentGuardian = require('./modules/students/studentGuardian.model');
-const StudentPreviousSchool = require('./modules/students/studentPreviousSchool.model');
-const StudentDocument = require('./modules/students/studentDocument.model');
 const FeeCollection = require('./modules/fees/feeCollection.model');
 const Expense = require('./modules/expenses/expense.model');
 const Teacher = require('./modules/teachers/teacher.model');
 const TeacherAcademicAssignment = require('./modules/teachers/teacherAcademicAssignment.model');
 const Subject = require('./modules/subjects/subject.model');
+const Exam = require('./modules/exams/exam.model');
+const ExamClass = require('./modules/exams/examClass.model');
+const ExamTimetable = require('./modules/exams/examTimetable.model');
+const ExamMark = require('./modules/exams/examMark.model');
+const ExamMarkAudit = require('./modules/exams/examMarkAudit.model');
+const GradingScheme = require('./modules/exams/gradingScheme.model');
+const GradingBand = require('./modules/exams/gradingBand.model');
+const ExamGradingConfig = require('./modules/exams/examGradingConfig.model');
+const ExamRecheckRequest = require('./modules/exams/examRecheckRequest.model');
+const Notification = require('./modules/notifications/notification.model');
+const NotificationRead = require('./modules/notifications/notificationRead.model');
 User.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 User.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 Teacher.hasOne(User, { foreignKey: 'teacher_id', as: 'login_user' });
@@ -63,12 +69,48 @@ FeeCollection.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 Student.hasMany(FeeCollection, { foreignKey: 'student_id', as: 'feeCollections' });
 FeeCollection.belongsTo(User, { foreignKey: 'collected_by_user_id', as: 'collectedBy' });
 Expense.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdBy' });
+
+Exam.belongsTo(AcademicYear, { foreignKey: 'academic_year_id', as: 'academicYear' });
+Exam.hasMany(ExamClass, { foreignKey: 'exam_id', as: 'classes' });
+Exam.hasMany(ExamTimetable, { foreignKey: 'exam_id', as: 'timetables' });
+Exam.hasMany(ExamMark, { foreignKey: 'exam_id', as: 'marks' });
+Exam.hasOne(ExamGradingConfig, { foreignKey: 'exam_id', as: 'gradingConfig' });
+Exam.hasMany(ExamRecheckRequest, { foreignKey: 'exam_id', as: 'recheckRequests' });
+
+ExamClass.belongsTo(Exam, { foreignKey: 'exam_id', as: 'exam' });
+ExamClass.belongsTo(SchoolClass, { foreignKey: 'class_id', as: 'schoolClass' });
+
+ExamTimetable.belongsTo(Exam, { foreignKey: 'exam_id', as: 'exam' });
+ExamTimetable.belongsTo(SchoolClass, { foreignKey: 'class_id', as: 'schoolClass' });
+ExamTimetable.belongsTo(Subject, { foreignKey: 'subject_id', as: 'subject' });
+ExamTimetable.hasMany(ExamMark, { foreignKey: 'exam_timetable_id', as: 'marks' });
+
+ExamMark.belongsTo(Exam, { foreignKey: 'exam_id', as: 'exam' });
+ExamMark.belongsTo(ExamTimetable, { foreignKey: 'exam_timetable_id', as: 'timetable' });
+ExamMark.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
+
+GradingScheme.hasMany(GradingBand, { foreignKey: 'grading_scheme_id', as: 'bands' });
+GradingBand.belongsTo(GradingScheme, { foreignKey: 'grading_scheme_id', as: 'scheme' });
+
+ExamGradingConfig.belongsTo(Exam, { foreignKey: 'exam_id', as: 'exam' });
+ExamGradingConfig.belongsTo(GradingScheme, { foreignKey: 'grading_scheme_id', as: 'scheme' });
+
+ExamRecheckRequest.belongsTo(Exam, { foreignKey: 'exam_id', as: 'exam' });
+ExamRecheckRequest.belongsTo(ExamTimetable, { foreignKey: 'exam_timetable_id', as: 'timetable' });
+ExamRecheckRequest.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
+ExamRecheckRequest.belongsTo(Teacher, { foreignKey: 'assigned_teacher_id', as: 'assignedTeacher' });
+
+NotificationRead.belongsTo(Notification, { foreignKey: 'notification_id', as: 'notification' });
+Notification.hasMany(NotificationRead, { foreignKey: 'notification_id', as: 'reads' });
+
 const academicRoutes = require('./modules/classes/academic.routes');
 const studentApiRoutes = require('./modules/students/student.routes');
 const teacherApiRoutes = require('./modules/teachers/teacher.routes');
 const subjectRoutes = require('./modules/subjects/subject.routes');
 const feeRoutes = require('./modules/fees/fee.routes');
 const expenseRoutes = require('./modules/expenses/expense.routes');
+const examRoutes = require('./modules/exams/exam.routes');
+const notificationRoutes = require('./modules/notifications/notification.routes');
 
 
 const app = express();
@@ -120,163 +162,12 @@ app.use(academicRoutes);
 app.use(subjectRoutes);
 app.use(studentApiRoutes);
 app.use(teacherApiRoutes);
+app.use(examRoutes);
+app.use(notificationRoutes);
 app.use('/fees', tenantMiddleware, feeRoutes);
 app.use('/expenses', tenantMiddleware, expenseRoutes);
 
 const PORT = process.env.PORT || 5000;
-
-async function seedTenants() {
-  await Tenant.findOrCreate({
-    where: { subdomain: 'abc' },
-    defaults: { name: 'ABC School', status: 'active' },
-  });
-  await Tenant.findOrCreate({
-    where: { subdomain: 'xyz' },
-    defaults: { name: 'XYZ College', status: 'active' },
-  });
-  console.log('Tenants seeded');
-}
-
-async function seedUsers() {
-  const tenant = await Tenant.findOne({ where: { subdomain: 'abc' } });
-  if (!tenant) {
-    console.log('Skip user seed: tenant abc not found');
-    return;
-  }
-  const hash = await bcrypt.hash('123456', 10);
-  await User.findOrCreate({
-    where: { email: 'admin@abc.com', tenant_id: tenant.id },
-    defaults: {
-      name: 'Admin User',
-      password: hash,
-      role: 'admin',
-      status: 'active',
-    },
-  });
-  console.log('Users seeded');
-}
-
-
-
-async function seedAbcSampleData() {
-  const tenant = await Tenant.findOne({ where: { subdomain: 'abc' } });
-  if (!tenant) {
-    console.log('Skip ABC sample data: tenant not found');
-    return;
-  }
-
-  const [year] = await AcademicYear.findOrCreate({
-    where: { tenant_id: tenant.id, name: '2025-2026' },
-    defaults: { is_active: true },
-  });
-  await AcademicYear.update(
-    { is_active: false },
-    { where: { tenant_id: tenant.id, id: { [Op.ne]: year.id } } }
-  );
-  await year.update({ is_active: true });
-
-  // Sample class is now admin-created (requires a class teacher); skip enrollment seed if missing.
-  const cls = await SchoolClass.findOne({
-    where: { tenant_id: tenant.id, name: 'Class 10th' },
-  });
-  if (!cls) {
-    console.log('Skip ABC enrollment: sample class not found (admin must create classes)');
-    return;
-  }
-
-  const [section] = await Section.findOrCreate({
-    where: { tenant_id: tenant.id, class_id: cls.id, name: 'A' },
-    defaults: { tenant_id: tenant.id, class_id: cls.id, name: 'A' },
-  });
-
-  const [student] = await Student.findOrCreate({
-    where: { tenant_id: tenant.id, admission_no: 'DEMO-001' },
-    defaults: {
-      full_name: 'Seth Hallam',
-      first_name: 'Seth',
-      last_name: 'Hallam',
-      gender: 'male',
-      dob: '2010-05-12',
-      phone: '555-0100',
-      email: 'seth.hallam@example.com',
-      blood_group: 'O+',
-      status: 'active',
-      current_address: '123 Main Street',
-      permanent_address: '123 Main Street',
-      extra_details: 'Sample student seeded for development.',
-      room_type: 'Double',
-    },
-  });
-
-  await StudentEnrollment.findOrCreate({
-    where: {
-      tenant_id: tenant.id,
-      student_id: student.id,
-      academic_year_id: year.id,
-    },
-    defaults: {
-      class_id: cls.id,
-      section_id: section.id,
-      roll_number: 10,
-      category: 'Science',
-      promotion_type: 'initial',
-      status: 'active',
-    },
-  });
-
-  await StudentGuardian.findOrCreate({
-    where: { tenant_id: tenant.id, student_id: student.id },
-    defaults: {
-      guardian_type: 'father',
-      father_name: 'John Hallam',
-      father_phone: '555-1111',
-      father_occupation: 'Engineer',
-      mother_name: 'Jane Hallam',
-      mother_occupation: 'Teacher',
-      guardian_name: '',
-      guardian_phone: '',
-      guardian_occupation: '',
-      guardian_relation: '',
-      guardian_address: '',
-    },
-  });
-
-  await StudentPreviousSchool.findOrCreate({
-    where: { tenant_id: tenant.id, student_id: student.id },
-    defaults: {
-      school_name: 'Previous Primary School',
-      school_address: 'Old Town',
-    },
-  });
-
-  await StudentDocument.findOrCreate({
-    where: {
-      tenant_id: tenant.id,
-      student_id: student.id,
-      file_name: 'BirthCertificate.pdf',
-    },
-    defaults: {
-      file_url: 'https://example.com/demo/BirthCertificate.pdf',
-    },
-  });
-
-  const demoUsername = (tenant.subdomain + '-' + String(student.admission_no).trim()).toLowerCase();
-  const demoPass = await bcrypt.hash(process.env.STUDENT_DEFAULT_PASSWORD || '123456', 10);
-  await User.findOrCreate({
-    where: { tenant_id: tenant.id, username: demoUsername },
-    defaults: {
-      name: [student.first_name, student.last_name].filter(Boolean).join(' ').trim() || 'Demo Student',
-      email: null,
-      username: demoUsername,
-      password: demoPass,
-      role: 'student',
-      status: 'inactive',
-      student_id: student.id,
-    },
-  });
-
-  console.log('ABC sample academic + student data seeded');
-}
 
 async function seedPlatformAndSuperAdmin() {
   const [platform] = await Tenant.findOrCreate({
@@ -302,13 +193,10 @@ sequelize
   .then(() => console.log('DB connected'))
   .then(() => sequelize.sync({ alter: true }))
   .then(() => console.log('DB synced'))
-  .then(() => seedTenants())
   .then(() => seedPlatformAndSuperAdmin())
-  .then(() => seedUsers())
   .then(() => seedModuleCatalog())
   .then(() => backfillAllTenantModules())
   .then(() => backfillAcademicYearsAllTenants())
-  .then(() => seedAbcSampleData())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

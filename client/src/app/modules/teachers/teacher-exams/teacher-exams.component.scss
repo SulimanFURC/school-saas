@@ -1,3 +1,19 @@
-:host {
-  display: block;
+.teacher-exams {
+  .title-link {
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .actions {
+    text-align: right;
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-secondary);
+  }
 }

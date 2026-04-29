@@ -1,0 +1,39 @@
+.schemes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--text-color-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}

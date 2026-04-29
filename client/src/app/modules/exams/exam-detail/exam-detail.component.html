@@ -1,0 +1,328 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+@if (exam(); as e) {
+  <section class="exam-detail-page">
+    <header class="exam-detail-page__header">
+      <div>
+        <a pButton routerLink="/exams" icon="pi pi-arrow-left" label="Back" class="p-button-text"></a>
+        <h1 class="exam-detail-page__title">{{ examTitle(e) }}</h1>
+        <p class="exam-detail-page__meta">
+          <p-tag [value]="statusLabels[e.status]" [severity]="statusSeverity(e.status)"></p-tag>
+          <span>{{ e.start_date }} → {{ e.end_date }}</span>
+          <span>{{ e.academicYear?.name || 'No year' }}</span>
+          <span>{{ e.classes?.length || 0 }} class(es)</span>
+        </p>
+      </div>
+      <div class="exam-detail-page__actions">
+        <a pButton [routerLink]="['/exams', e.id, 'edit']" icon="pi pi-pencil" label="Edit details" class="p-button-outlined"></a>
+        @if (e.status === 'draft') {
+          <p-button label="Move to Scheduled" icon="pi pi-calendar" (onClick)="transition('scheduled')"></p-button>
+        }
+        @if (e.status === 'scheduled') {
+          <p-button label="Mark Ongoing" icon="pi pi-play" severity="warn" (onClick)="transition('ongoing')"></p-button>
+        }
+        @if (e.status === 'ongoing') {
+          <p-button label="Result pending" icon="pi pi-stop" severity="warn" (onClick)="transition('result_pending')"></p-button>
+        }
+        @if (e.status === 'result_pending' || e.status === 'ongoing') {
+          <p-button label="Publish results" icon="pi pi-check-circle" severity="success" (onClick)="publish()"></p-button>
+        }
+      </div>
+    </header>
+
+    <p-tabView>
+      <p-tabPanel header="Timetable">
+        <div class="exam-detail-page__panel">
+          @if (isFullyEditable()) {
+            <p-card header="Add paper" styleClass="add-paper-card">
+              <div class="add-paper">
+                <p-select
+                  placeholder="Class"
+                  [options]="e.classes || []"
+                  optionLabel="class_name"
+                  optionValue="class_id"
+                  [ngModel]="newPaper().class_id"
+                  (ngModelChange)="patchNewPaper({ class_id: $event })"
+                  appendTo="body"
+                ></p-select>
+                <p-select
+                  placeholder="Subject"
+                  [options]="subjects()"
+                  optionLabel="name"
+                  optionValue="id"
+                  [ngModel]="newPaper().subject_id"
+                  (ngModelChange)="patchNewPaper({ subject_id: $event })"
+                  appendTo="body"
+                ></p-select>
+                <p-datepicker
+                  placeholder="Date"
+                  dateFormat="yy-mm-dd"
+                  [ngModel]="newPaper().exam_date"
+                  (ngModelChange)="patchNewPaper({ exam_date: $event })"
+                  appendTo="body"
+                ></p-datepicker>
+                <input
+                  pInputText
+                  placeholder="Start time (HH:MM)"
+                  [ngModel]="newPaper().start_time"
+                  (ngModelChange)="patchNewPaper({ start_time: $event })"
+                />
+                <input
+                  pInputText
+                  placeholder="End time (HH:MM)"
+                  [ngModel]="newPaper().end_time"
+                  (ngModelChange)="patchNewPaper({ end_time: $event })"
+                />
+                <input
+                  pInputText
+                  placeholder="Room"
+                  [ngModel]="newPaper().room"
+                  (ngModelChange)="patchNewPaper({ room: $event })"
+                />
+                <input
+                  pInputText
+                  type="number"
+                  placeholder="Total marks"
+                  [ngModel]="newPaper().total_marks"
+                  (ngModelChange)="patchNewPaper({ total_marks: $event })"
+                />
+                <input
+                  pInputText
+                  type="number"
+                  placeholder="Passing marks"
+                  [ngModel]="newPaper().passing_marks"
+                  (ngModelChange)="patchNewPaper({ passing_marks: $event })"
+                />
+                <p-button label="Add" icon="pi pi-plus" (onClick)="addPaper()"></p-button>
+              </div>
+            </p-card>
+          }
+
+          <div class="timetable-actions">
+            @if (!e.timetable_finalized_at && (timetable().length || 0) > 0) {
+              <p-button
+                label="Finalize timetable"
+                icon="pi pi-lock"
+                severity="success"
+                (onClick)="finalizeTimetable()"
+              ></p-button>
+            } @else if (e.timetable_finalized_at) {
+              <span class="muted">
+                Finalized at {{ e.timetable_finalized_at | date: 'yyyy-MM-dd HH:mm' }}.
+                Admit cards available for download.
+              </span>
+            }
+          </div>
+
+          <p-table [value]="timetable()" [rowHover]="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Room</th>
+                <th class="num">Marks (max / pass)</th>
+                <th>Status</th>
+                <th class="actions">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.exam_date }}</td>
+                <td>{{ row.start_time }} – {{ row.end_time }}</td>
+                <td>{{ row.class_name }}</td>
+                <td>{{ row.subject_name }}</td>
+                <td>{{ row.room || '—' }}</td>
+                <td class="num">{{ row.total_marks }} / {{ row.passing_marks }}</td>
+                <td>
+                  @if (row.is_locked) {
+                    <p-tag value="Locked" severity="danger"></p-tag>
+                  } @else {
+                    <p-tag value="Open" severity="success"></p-tag>
+                  }
+                </td>
+                <td class="actions">
+                  <p-button
+                    [icon]="row.is_locked ? 'pi pi-unlock' : 'pi pi-lock'"
+                    text
+                    severity="secondary"
+                    pTooltip="Toggle lock"
+                    (onClick)="toggleLock(row)"
+                  ></p-button>
+                  @if (isFullyEditable()) {
+                    <p-button
+                      icon="pi pi-trash"
+                      text
+                      severity="danger"
+                      pTooltip="Remove"
+                      (onClick)="deleteEntry(row)"
+                    ></p-button>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="muted center">No papers in the timetable yet.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Marks progress">
+        <div class="exam-detail-page__panel">
+          @if (progress(); as p) {
+            <p-card>
+              <div class="progress-overview">
+                <div>
+                  <strong>{{ p.overall.entered }}</strong> / {{ p.overall.total }} entered
+                  <p-progressBar [value]="progressPercent()" [showValue]="false"></p-progressBar>
+                </div>
+                @if (p.overall.complete) {
+                  <p-tag value="Complete" severity="success"></p-tag>
+                }
+              </div>
+            </p-card>
+            <p-table [value]="p.data">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Class</th>
+                  <th>Subject</th>
+                  <th class="num">Total</th>
+                  <th class="num">Entered</th>
+                  <th>State</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.class_name }}</td>
+                  <td>{{ row.subject_name }}</td>
+                  <td class="num">{{ row.total_students }}</td>
+                  <td class="num">{{ row.entered }}</td>
+                  <td>
+                    @if (row.is_locked) {
+                      <p-tag value="Locked" severity="danger"></p-tag>
+                    } @else if (row.entered >= row.total_students && row.total_students > 0) {
+                      <p-tag value="Complete" severity="success"></p-tag>
+                    } @else {
+                      <p-tag value="In progress" severity="warn"></p-tag>
+                    }
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          }
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Grading">
+        <div class="exam-detail-page__panel">
+          <p-card header="Configure grading">
+            <div class="grading-form">
+              <p-select
+                placeholder="Grading scheme"
+                [options]="schemes()"
+                optionLabel="name"
+                optionValue="id"
+                [ngModel]="selectedSchemeId()"
+                (ngModelChange)="selectedSchemeId.set($event)"
+                appendTo="body"
+              ></p-select>
+              <p-select
+                placeholder="Mode"
+                [options]="[
+                  { label: 'Per subject', value: 'per_subject' },
+                  { label: 'Aggregate (all subjects)', value: 'aggregate' }
+                ]"
+                optionLabel="label"
+                optionValue="value"
+                [ngModel]="selectedMode()"
+                (ngModelChange)="selectedMode.set($event)"
+                appendTo="body"
+              ></p-select>
+              <p-button label="Save grading" icon="pi pi-save" (onClick)="saveGrading()"></p-button>
+              <a pButton routerLink="/exams/grading-schemes" label="Manage schemes" class="p-button-text"></a>
+            </div>
+          </p-card>
+
+          @if (distribution(); as d) {
+            <p-card header="Grade distribution">
+              @if (d.configured) {
+                <p-table [value]="d.distribution">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Grade</th>
+                      <th>Range</th>
+                      <th>Remarks</th>
+                      <th>Failing?</th>
+                      <th class="num">Count</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-row>
+                    <tr>
+                      <td>{{ row.grade_label }}</td>
+                      <td>{{ row.min_percent ?? '—' }}% – {{ row.max_percent ?? '—' }}%</td>
+                      <td>{{ row.remarks || '—' }}</td>
+                      <td>
+                        <p-tag [value]="row.is_failing ? 'Failing' : 'Pass'" [severity]="row.is_failing ? 'danger' : 'success'"></p-tag>
+                      </td>
+                      <td class="num">{{ row.count }}</td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              } @else {
+                <p class="muted">Configure a grading scheme to see distribution.</p>
+              }
+            </p-card>
+          }
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Reports">
+        <div class="exam-detail-page__panel">
+          @if (e.classes && e.classes.length > 0) {
+            <p-card header="Bulk downloads">
+              <p-table [value]="e.classes">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Class</th>
+                    <th class="actions">Admit cards</th>
+                    <th class="actions">Result cards</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-c>
+                  <tr>
+                    <td>{{ c.class_name }}</td>
+                    <td class="actions">
+                      <p-button
+                        icon="pi pi-download"
+                        label="Download ZIP"
+                        text
+                        [disabled]="!e.timetable_finalized_at"
+                        (onClick)="downloadAdmitCardZip(c.class_id)"
+                      ></p-button>
+                    </td>
+                    <td class="actions">
+                      <p-button
+                        icon="pi pi-download"
+                        label="Download ZIP"
+                        text
+                        [disabled]="e.status !== 'published'"
+                        (onClick)="downloadResultZip(c.class_id)"
+                      ></p-button>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </p-card>
+          } @else {
+            <p class="muted">Add classes to enable bulk downloads.</p>
+          }
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </section>
+}

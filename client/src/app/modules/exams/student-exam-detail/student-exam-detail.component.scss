@@ -1,0 +1,66 @@
+.student-exam {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    h1 {
+      margin: 0;
+    }
+    .muted {
+      margin: 0.25rem 0 0;
+      color: var(--text-color-secondary);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+.totals {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    span {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+    }
+    strong {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.num {
+  text-align: right;
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.muted {
+  color: var(--text-color-secondary);
+}

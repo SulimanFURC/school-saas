@@ -1,0 +1,82 @@
+<p-toast position="top-right"></p-toast>
+
+<section class="scheme-form-page">
+  <header class="scheme-form-page__header">
+    <div>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="muted">Define grade ranges by percentage. Bands cannot overlap.</p>
+    </div>
+    <a pButton routerLink="/exams/grading-schemes" icon="pi pi-arrow-left" label="Back" class="p-button-text"></a>
+  </header>
+
+  <p-card>
+    <div class="scheme-form__row">
+      <label>
+        Name
+        <input pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" />
+      </label>
+      <label>
+        Description
+        <input pInputText [ngModel]="description()" (ngModelChange)="description.set($event)" />
+      </label>
+    </div>
+
+    @for (b of bands(); track b.__key) {
+      <div class="scheme-form__band">
+        <input
+          pInputText
+          placeholder="Label"
+          [ngModel]="b.grade_label"
+          (ngModelChange)="patchBand(b.__key, { grade_label: $event })"
+        />
+        <input
+          pInputText
+          type="number"
+          placeholder="Min %"
+          [ngModel]="b.min_percent"
+          (ngModelChange)="patchBand(b.__key, { min_percent: $event })"
+        />
+        <input
+          pInputText
+          type="number"
+          placeholder="Max %"
+          [ngModel]="b.max_percent"
+          (ngModelChange)="patchBand(b.__key, { max_percent: $event })"
+        />
+        <input
+          pInputText
+          type="number"
+          placeholder="Grade point"
+          [ngModel]="b.grade_point"
+          (ngModelChange)="patchBand(b.__key, { grade_point: $event })"
+        />
+        <input
+          pInputText
+          placeholder="Remarks"
+          [ngModel]="b.remarks"
+          (ngModelChange)="patchBand(b.__key, { remarks: $event })"
+        />
+        <label class="failing-label">
+          <p-checkbox [binary]="true" [ngModel]="b.is_failing" (ngModelChange)="patchBand(b.__key, { is_failing: $event })"></p-checkbox>
+          Failing
+        </label>
+        <p-button icon="pi pi-trash" severity="danger" text (onClick)="removeBand(b.__key)" pTooltip="Remove"></p-button>
+      </div>
+    }
+
+    @if (hasOverlap()) {
+      <p class="error">Some bands overlap. Adjust min/max to fix this before saving.</p>
+    }
+
+    <div class="scheme-form__actions">
+      <p-button label="Add band" icon="pi pi-plus" severity="secondary" (onClick)="addBand()"></p-button>
+      <p-button
+        label="Save scheme"
+        icon="pi pi-check"
+        [loading]="submitting()"
+        [disabled]="hasOverlap()"
+        (onClick)="submit()"
+      ></p-button>
+    </div>
+  </p-card>
+</section>

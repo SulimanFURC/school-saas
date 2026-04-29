@@ -1,14 +1,9 @@
 <p-toast position="top-right"></p-toast>
 
-<section class="page teacher-exams">
-  <header class="content-area-header">
-    <div class="content-area-header__main">
-      <h1 class="content-area-header__title">My exams</h1>
-      <p class="content-area-header__subtitle">Pick an exam to enter marks for your assigned papers.</p>
-    </div>
-    <div class="content-area-header__end">
-      <p-button label="Dashboard" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" routerLink="/teachers/dashboard"></p-button>
-    </div>
+<section class="student-exams">
+  <header class="student-exams__header">
+    <h1>My exams</h1>
+    <p class="muted">Download admit cards and result cards once available.</p>
   </header>
 
   <p-table [value]="rows()" [loading]="loading()" [rowHover]="true">
@@ -18,7 +13,7 @@
         <th>Type</th>
         <th>Window</th>
         <th>Status</th>
-        <th class="actions">Action</th>
+        <th class="actions">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
@@ -32,13 +27,28 @@
           <p-tag [value]="row.status" [severity]="statusSeverity(row.status)"></p-tag>
         </td>
         <td class="actions">
-          <p-button label="Open" icon="pi pi-pencil" text (onClick)="open(row)"></p-button>
+          <p-button
+            icon="pi pi-id-card"
+            label="Admit card"
+            text
+            [disabled]="!row.can_download_admit_card"
+            (onClick)="downloadAdmit(row)"
+          ></p-button>
+          <p-button
+            icon="pi pi-file"
+            label="Result"
+            text
+            severity="success"
+            [disabled]="!row.can_view_results"
+            (onClick)="downloadResult(row)"
+          ></p-button>
+          <p-button label="Open" icon="pi pi-arrow-right" text (onClick)="open(row)"></p-button>
         </td>
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="5" class="empty">No exams assigned to you yet.</td>
+        <td colspan="5" class="empty">No upcoming exams.</td>
       </tr>
     </ng-template>
   </p-table>

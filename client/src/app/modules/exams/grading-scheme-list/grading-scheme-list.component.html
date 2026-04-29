@@ -1,0 +1,64 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<section class="schemes-page">
+  <header class="schemes-page__header">
+    <div>
+      <h1 class="schemes-page__title">Grading schemes</h1>
+      <p class="schemes-page__subtitle">Reusable grade bands assignable to exams.</p>
+    </div>
+    <div class="schemes-page__actions">
+      <a pButton routerLink="/exams" icon="pi pi-arrow-left" label="Back to exams" class="p-button-text"></a>
+      <a pButton routerLink="/exams/grading-schemes/new" icon="pi pi-plus" label="New scheme"></a>
+    </div>
+  </header>
+
+  <p-table [value]="schemes()" [loading]="loading()" [rowHover]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Bands</th>
+        <th>Grade points</th>
+        <th>State</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{ row.name }}</td>
+        <td>{{ row.description || '—' }}</td>
+        <td>{{ row.bands?.length || 0 }}</td>
+        <td>
+          <p-tag
+            [value]="row.has_grade_points ? 'Yes' : 'No'"
+            [severity]="row.has_grade_points ? 'info' : 'secondary'"
+          ></p-tag>
+        </td>
+        <td>
+          @if (row.archived_at) {
+            <p-tag value="Archived" severity="danger"></p-tag>
+          } @else {
+            <p-tag value="Active" severity="success"></p-tag>
+          }
+        </td>
+        <td class="actions">
+          <p-button icon="pi pi-pencil" text severity="secondary" (onClick)="edit(row)" pTooltip="Edit"></p-button>
+          <p-button
+            icon="pi pi-trash"
+            text
+            severity="danger"
+            [disabled]="!!row.archived_at"
+            (onClick)="archive(row)"
+            pTooltip="Archive"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty">No schemes yet — create one to start grading exams.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>

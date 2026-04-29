@@ -1,0 +1,241 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<section class="teacher-marks">
+  <header class="teacher-marks__hero">
+    <div class="teacher-marks__hero-text">
+      <p class="teacher-marks__eyebrow">Examinations</p>
+      <h1>Teacher Marks Workspace</h1>
+      <p class="muted">Select an assigned paper, enter marks quickly, and keep exam summaries updated in one place.</p>
+    </div>
+    <a pButton routerLink="/teachers/exams" icon="pi pi-arrow-left" label="Back to exams" class="p-button-secondary p-button-outlined"></a>
+  </header>
+
+  <div class="teacher-marks__grid">
+    <aside class="teacher-marks__left">
+      <p-card styleClass="teacher-marks__papers">
+        <ng-template pTemplate="header">
+          <div class="card-title-row">
+            <h2>Your papers</h2>
+            <span class="pill">{{ papers().length }}</span>
+          </div>
+        </ng-template>
+
+        <p-table [value]="papers()" [loading]="loadingPapers()" [rowHover]="true" selectionMode="single" dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Paper</th>
+              <th class="num">Progress</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr [class.selected]="row.id === selectedPaper()?.id" (click)="selectPaper(row)">
+              <td>
+                <strong>{{ row.subject_name }}</strong>
+                <small class="muted">{{ row.class_name }}</small>
+                <small class="muted">{{ row.exam_date }} · {{ row.start_time }}–{{ row.end_time }}</small>
+              </td>
+              <td class="num">{{ row.entered }} / {{ row.total_students }}</td>
+              <td>
+                @if (row.is_locked) {
+                  <p-tag value="Locked" severity="danger"></p-tag>
+                } @else {
+                  <p-tag value="Open" severity="success"></p-tag>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="empty">No papers assigned in this exam.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </aside>
+
+    <main class="teacher-marks__right">
+      <p-card styleClass="teacher-marks__sheet">
+        @if (sheet(); as s) {
+          <div class="sheet-headline">
+            <div>
+              <h2>{{ s.timetable.subject_name }} — {{ s.timetable.class_name }}</h2>
+              <p class="muted">
+                {{ s.timetable.exam_date }} · {{ s.timetable.start_time }}–{{ s.timetable.end_time }} ·
+                Max {{ s.timetable.total_marks }} · Pass {{ s.timetable.passing_marks }}
+              </p>
+            </div>
+            <p-tag [value]="s.can_edit ? 'Editable' : 'Locked'" [severity]="s.can_edit ? 'success' : 'danger'"></p-tag>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="label">Entered</span>
+              <strong>{{ progressLabel() }}</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Present</span>
+              <strong>{{ presentCount() }}</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Absent</span>
+              <strong>{{ absentCount() }}</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Pending entries</span>
+              <strong>{{ pendingEntryCount() }}</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Completion</span>
+              <strong>{{ completionPercentLabel() }}</strong>
+            </div>
+            <div class="stat-card">
+              <span class="label">Subject aggregate</span>
+              <strong>{{ subjectAggregateLabel() }}</strong>
+            </div>
+          </div>
+
+          <div class="sheet-toolbar">
+            <p-button label="Download CSV template" icon="pi pi-download" severity="secondary" outlined (onClick)="downloadTemplate()"></p-button>
+            <label class="csv-import">
+              <input type="file" accept=".csv,text/csv" (change)="onCsvSelected($event, 'preview')" />
+              <i class="pi pi-eye"></i> Preview CSV
+            </label>
+            <label class="csv-import">
+              <input type="file" accept=".csv,text/csv" (change)="onCsvSelected($event, 'commit')" />
+              <i class="pi pi-upload"></i> Import CSV
+            </label>
+          </div>
+
+          <p-table [value]="rows()" [loading]="loadingSheet()" [rowHover]="true" styleClass="marks-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Roll</th>
+                <th>Student</th>
+                <th>Section</th>
+                <th>Status</th>
+                <th class="num">Marks (max {{ s.timetable.total_marks }})</th>
+                <th class="num">Subject %</th>
+                <th class="num">Overall %</th>
+                <th>Overall grade</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-r>
+              <tr>
+                <td>{{ r.roll_number ?? '—' }}</td>
+                <td>
+                  <strong>{{ r.display_name }}</strong>
+                  <small class="muted">{{ r.admission_no }}</small>
+                </td>
+                <td>{{ r.section_name || '—' }}</td>
+                <td>
+                  <p-select
+                    [options]="statusOptions"
+                    [ngModel]="r.entry_status"
+                    (ngModelChange)="patchRow(r.student_id, { entry_status: $event, marks_obtained: $event === 'present' ? r.marks_obtained : null })"
+                    appendTo="body"
+                    [disabled]="!s.can_edit"
+                  ></p-select>
+                </td>
+                <td class="num">
+                  <input
+                    pInputText
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    [attr.maxlength]="marksMaxLength(s.timetable.total_marks)"
+                    [value]="r.marks_obtained ?? ''"
+                    (input)="onMarksInput(r.student_id, $event, s.timetable.total_marks)"
+                    (keydown)="onMarksKeydown($event)"
+                    [disabled]="!s.can_edit || r.entry_status !== 'present'"
+                    class="marks-input"
+                  />
+                </td>
+                <td class="num">{{ subjectPercentageLabel(r, s.timetable.total_marks) }}</td>
+                <td class="num">{{ overallPercentageLabel(r.student_id) }}</td>
+                <td>{{ overallGradeLabel(r.student_id) }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="footer">
+              <tr>
+                <td colspan="5" class="num"><strong>Subject aggregate</strong></td>
+                <td class="num">
+                  <strong>{{ subjectAggregateLabel() }}</strong>
+                </td>
+                <td colspan="2" class="muted num">
+                  {{ subjectPresentCountLabel() }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <div class="sheet-footer">
+            @if (hasExistingChanges()) {
+              <input
+                pInputText
+                placeholder="Reason for editing existing marks (required)"
+                [ngModel]="reason()"
+                (ngModelChange)="reason.set($event)"
+              />
+            }
+            <p-button
+              label="Save marks"
+              icon="pi pi-save"
+              [loading]="saving()"
+              [disabled]="!s.can_edit"
+              (onClick)="save()"
+            ></p-button>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <i class="pi pi-file-edit"></i>
+            <p>Select a paper from the left panel to start entering marks.</p>
+          </div>
+        }
+      </p-card>
+    </main>
+  </div>
+
+  <p-card header="Exam summary (all subjects)" styleClass="teacher-marks__summary">
+    <p class="muted">Multi-subject totals per student across all papers in this exam. Updates after each successful save/import.</p>
+    <p-table [value]="summaryRows()" [loading]="loadingSummary()" [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Roll</th>
+          <th>Student</th>
+          <th>Class / Section</th>
+          <th class="num">Total obtained</th>
+          <th class="num">Total max</th>
+          <th class="num">Overall %</th>
+          <th>Grade</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.roll_number ?? '—' }}</td>
+          <td>
+            <strong>{{ row.display_name }}</strong><br />
+            <small class="muted">{{ row.admission_no }}</small>
+          </td>
+          <td>{{ row.class_name }} · {{ row.section_name || '—' }}</td>
+          <td class="num">{{ row.totals.total_obtained ?? '—' }}</td>
+          <td class="num">{{ row.totals.total_max }}</td>
+          <td class="num">
+            @if (row.totals.percentage != null) {
+              {{ row.totals.percentage | number: '1.2-2' }}%
+            } @else {
+              —
+            }
+          </td>
+          <td>{{ row.overall_grade?.grade_label || '—' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty muted">No marks summary available yet.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</section>

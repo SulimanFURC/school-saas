@@ -6,6 +6,7 @@ import { adminRoleGuard } from './guards/admin-role.guard';
 import { authGuard } from './guards/auth.guard';
 import { featureGuard } from './guards/feature.guard';
 import { guestGuard } from './guards/guest.guard';
+import { studentRoleGuard } from './guards/student-role.guard';
 import { superAdminGuard } from './guards/super-admin.guard';
 import { teacherRoleGuard } from './guards/teacher-role.guard';
 
@@ -256,13 +257,89 @@ export const routes: Routes = [
         data: { title: 'Attendance', moduleKey: 'attendance' },
       },
       {
-        path: 'exams',
+        path: 'exams/grading-schemes',
+        pathMatch: 'full',
         canActivate: [featureGuard, adminRoleGuard],
         loadComponent: () =>
-          import('./shared/placeholder-page/placeholder-page.component').then(
-            (m) => m.PlaceholderPageComponent
+          import('./modules/exams/grading-scheme-list/grading-scheme-list.component').then(
+            (m) => m.GradingSchemeListComponent
           ),
+        data: { title: 'Grading schemes', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams/grading-schemes/new',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/grading-scheme-form/grading-scheme-form.component').then(
+            (m) => m.GradingSchemeFormComponent
+          ),
+        data: { title: 'New grading scheme', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams/grading-schemes/:id/edit',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/grading-scheme-form/grading-scheme-form.component').then(
+            (m) => m.GradingSchemeFormComponent
+          ),
+        data: { title: 'Edit grading scheme', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams/new',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/exam-form/exam-form.component').then((m) => m.ExamFormComponent),
+        data: { title: 'Create exam', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams/:id/edit',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/exam-form/exam-form.component').then((m) => m.ExamFormComponent),
+        data: { title: 'Edit exam', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams/:id',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/exam-detail/exam-detail.component').then((m) => m.ExamDetailComponent),
+        data: { title: 'Exam details', moduleKey: 'exams' },
+      },
+      {
+        path: 'exams',
+        pathMatch: 'full',
+        canActivate: [featureGuard, adminRoleGuard],
+        loadComponent: () =>
+          import('./modules/exams/exam-list/exam-list.component').then((m) => m.ExamListComponent),
         data: { title: 'Exams', moduleKey: 'exams' },
+      },
+      {
+        path: 'teachers/exams/:id',
+        canActivate: [teacherRoleGuard, featureGuard],
+        loadComponent: () =>
+          import('./modules/exams/teacher-exam-marks/teacher-exam-marks.component').then(
+            (m) => m.TeacherExamMarksComponent
+          ),
+        data: { title: 'Marks entry', moduleKey: 'exams' },
+      },
+      {
+        path: 'my-exams',
+        pathMatch: 'full',
+        canActivate: [studentRoleGuard, featureGuard],
+        loadComponent: () =>
+          import('./modules/exams/student-exams/student-exams.component').then(
+            (m) => m.StudentExamsComponent
+          ),
+        data: { title: 'My exams', moduleKey: 'exams' },
+      },
+      {
+        path: 'my-exams/:id',
+        canActivate: [studentRoleGuard, featureGuard],
+        loadComponent: () =>
+          import('./modules/exams/student-exam-detail/student-exam-detail.component').then(
+            (m) => m.StudentExamDetailComponent
+          ),
+        data: { title: 'Exam details', moduleKey: 'exams' },
       },
       {
         path: 'reports',

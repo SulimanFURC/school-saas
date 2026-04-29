@@ -1,0 +1,57 @@
+.exam-form-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.exam-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__row {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-weight: 500;
+    }
+
+    &--full label {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+}

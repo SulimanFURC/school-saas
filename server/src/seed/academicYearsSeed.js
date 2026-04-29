@@ -19,35 +19,41 @@ function suggestedActiveYearName() {
 
 /**
  * Creates consecutive academic years "2001-2002", "2002-2003", … for the tenant and sets one active.
+ * @param {{ transaction?: import('sequelize').Transaction }} [options]
  */
-async function seedAcademicYearsForTenant(tenantId) {
+async function seedAcademicYearsForTenant(tenantId, options = {}) {
+  const { transaction } = options;
   for (let start = RANGE_START; start < RANGE_END; start += 1) {
     const name = `${start}-${start + 1}`;
     await AcademicYear.findOrCreate({
       where: { tenant_id: tenantId, name },
       defaults: { is_active: false },
+      transaction,
     });
   }
 
-  await AcademicYear.update({ is_active: false }, { where: { tenant_id: tenantId } });
+  await AcademicYear.update({ is_active: false }, { where: { tenant_id: tenantId }, transaction });
 
   const targetName = suggestedActiveYearName();
   let row = await AcademicYear.findOne({
     where: { tenant_id: tenantId, name: targetName },
+    transaction,
   });
   if (!row) {
     row = await AcademicYear.findOne({
       where: { tenant_id: tenantId, name: '2025-2026' },
+      transaction,
     });
   }
   if (!row) {
     row = await AcademicYear.findOne({
       where: { tenant_id: tenantId },
       order: [['id', 'DESC']],
+      transaction,
     });
   }
   if (row) {
-    await row.update({ is_active: true });
+    await row.update({ is_active: true }, { transaction });
   }
 }
 

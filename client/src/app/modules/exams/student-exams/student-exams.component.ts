@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -12,11 +12,10 @@ import { catchError, finalize, of } from 'rxjs';
 import { ExamService, type MyExamSummary } from '../../../services/exam.service';
 
 @Component({
-  selector: 'app-teacher-exams',
+  selector: 'app-student-exams',
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     CardModule,
     ButtonModule,
     TableModule,
@@ -24,11 +23,11 @@ import { ExamService, type MyExamSummary } from '../../../services/exam.service'
     ToastModule,
   ],
   providers: [MessageService],
-  templateUrl: './teacher-exams.component.html',
-  styleUrl: './teacher-exams.component.scss',
+  templateUrl: './student-exams.component.html',
+  styleUrl: './student-exams.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TeacherExamsComponent implements OnInit {
+export class StudentExamsComponent implements OnInit {
   private api = inject(ExamService);
   private router = inject(Router);
   private messages = inject(MessageService);
@@ -38,7 +37,7 @@ export class TeacherExamsComponent implements OnInit {
 
   ngOnInit(): void {
     this.api
-      .teacherListMyExams()
+      .myExams()
       .pipe(
         catchError((e: { error?: { message?: string } }) => {
           this.messages.add({
@@ -54,7 +53,45 @@ export class TeacherExamsComponent implements OnInit {
   }
 
   open(row: MyExamSummary): void {
-    void this.router.navigate(['/teachers/exams', row.id]);
+    void this.router.navigate(['/my-exams', row.id]);
+  }
+
+  downloadAdmit(row: MyExamSummary): void {
+    this.fetchAndSave(this.api.studentAdmitCardUrl(row.id), `admit-card-${row.id}.pdf`);
+  }
+
+  downloadResult(row: MyExamSummary): void {
+    this.fetchAndSave(this.api.studentResultCardUrl(row.id), `result-card-${row.id}.pdf`);
+  }
+
+  private fetchAndSave(url: string, name: string): void {
+    const token = localStorage.getItem('school_saas_token');
+    const sub = localStorage.getItem('school_saas_subdomain');
+    if (!token) return;
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(sub ? { 'x-tenant-id': sub } : {}),
+      },
+    }).then(async (resp) => {
+      if (!resp.ok) {
+        let msg = resp.statusText;
+        try {
+          const j = await resp.json();
+          msg = j.message || msg;
+        } catch {
+          /* ignore */
+        }
+        this.messages.add({ severity: 'error', summary: 'Download failed', detail: msg });
+        return;
+      }
+      const blob = await resp.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
   }
 
   statusSeverity(s: string): 'info' | 'success' | 'warn' | 'danger' | 'secondary' {

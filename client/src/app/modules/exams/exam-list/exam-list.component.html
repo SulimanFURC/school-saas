@@ -1,0 +1,138 @@
+<p-toast position="top-right"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="exam-list-page">
+  <div class="exam-list-page__header">
+    <div>
+      <h1 class="exam-list-page__title">Exams</h1>
+      <p class="exam-list-page__subtitle">Plan exams, schedule papers, and publish results.</p>
+    </div>
+    <div class="exam-list-page__actions">
+      <a pButton routerLink="/exams/grading-schemes" icon="pi pi-list" label="Grading schemes" class="p-button-outlined"></a>
+      <a pButton routerLink="/exams/new" icon="pi pi-plus" label="Create exam"></a>
+    </div>
+  </div>
+
+  <div class="exam-list-page__counters">
+    <div class="exam-list-page__counter">
+      <span>Total</span>
+      <strong>{{ counts().total }}</strong>
+    </div>
+    <div class="exam-list-page__counter">
+      <span>Draft</span>
+      <strong>{{ counts().draft }}</strong>
+    </div>
+    <div class="exam-list-page__counter">
+      <span>Scheduled</span>
+      <strong>{{ counts().scheduled }}</strong>
+    </div>
+    <div class="exam-list-page__counter">
+      <span>Ongoing</span>
+      <strong>{{ counts().ongoing }}</strong>
+    </div>
+    <div class="exam-list-page__counter">
+      <span>Published</span>
+      <strong>{{ counts().published }}</strong>
+    </div>
+  </div>
+
+  <div class="exam-list-page__filters">
+    <p-iconfield iconPosition="left" class="exam-list-page__search">
+      <p-inputicon styleClass="pi pi-search"></p-inputicon>
+      <input
+        pInputText
+        placeholder="Search by title"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="load()"
+      />
+    </p-iconfield>
+    <p-select
+      [options]="yearOptions()"
+      [ngModel]="selectedYear()"
+      (ngModelChange)="selectedYear.set($event); load()"
+      placeholder="Academic year"
+      appendTo="body"
+    ></p-select>
+    <p-select
+      [options]="statusOptions"
+      [ngModel]="selectedStatus()"
+      (ngModelChange)="selectedStatus.set($event); load()"
+      placeholder="Status"
+      appendTo="body"
+    ></p-select>
+    <p-button label="Refresh" icon="pi pi-refresh" severity="secondary" (onClick)="load()"></p-button>
+    <label class="exam-list-page__archived">
+      <input
+        type="checkbox"
+        [checked]="includeArchived()"
+        (change)="includeArchived.set(!includeArchived()); load()"
+      />
+      Include archived
+    </label>
+  </div>
+
+  <p-table
+    [value]="rows()"
+    [loading]="loading()"
+    [rowHover]="true"
+    [paginator]="false"
+    dataKey="id"
+    styleClass="exam-table"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Title</th>
+        <th>Type</th>
+        <th>Academic year</th>
+        <th>Window</th>
+        <th>Classes</th>
+        <th>Status</th>
+        <th class="exam-table__actions">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>
+          <a class="exam-table__title-link" (click)="openDetail(row)">{{ row.title }}</a>
+        </td>
+        <td>{{ examTypeLabel(row.exam_type) }}</td>
+        <td>{{ row.academicYear?.name ?? '—' }}</td>
+        <td>{{ row.start_date }} → {{ row.end_date }}</td>
+        <td>{{ classCount(row) }}</td>
+        <td>
+          <p-tag [value]="row.live_status || row.status" [severity]="statusSeverity(row.status)"></p-tag>
+        </td>
+        <td class="exam-table__actions">
+          <p-button
+            icon="pi pi-eye"
+            severity="secondary"
+            text
+            (onClick)="openDetail(row)"
+            pTooltip="Open"
+          ></p-button>
+          <p-button
+            icon="pi pi-copy"
+            severity="secondary"
+            text
+            (onClick)="cloneExam(row)"
+            pTooltip="Clone"
+          ></p-button>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            text
+            (onClick)="archiveExam(row)"
+            pTooltip="Archive"
+            [disabled]="row.status === 'archived'"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="exam-table__empty">No exams yet — click "Create exam" to start.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

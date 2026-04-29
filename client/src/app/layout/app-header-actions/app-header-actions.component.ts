@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, type AppNotification } from '../../services/notification.service';
 import { ThemeService } from '../../services/theme.service';
+import { formatRelativeTime } from '../../utils/relative-time';
 
 function formatRole(role: string | undefined): string {
   if (!role?.trim()) return 'User';
@@ -17,17 +18,6 @@ function initialsFromName(name: string): string {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function formatRelativeTime(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
 }
 
 @Component({
@@ -53,7 +43,7 @@ export class AppHeaderActionsComponent {
 
   readonly avatarInitials = computed(() => initialsFromName(this.displayName()));
 
-  relativeTime(iso: string): string {
+  relativeTime(iso: string | null | undefined): string {
     return formatRelativeTime(iso);
   }
 
