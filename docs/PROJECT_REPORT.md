@@ -1,16 +1,16 @@
 # School SaaS — Project Details Report
 
-Generated from a read-only scan of the school-saas monorepo (Angular client, Express/Sequelize server, PostgreSQL).
+Generated from a read-only scan of the current school-saas monorepo (Angular client, Express/Sequelize server, PostgreSQL).
 
 ---
 
 ## 1. Project Overview
 
 **What is this application?**  
-A **multi-tenant school management SaaS** monorepo: an **Angular 19** SPA (`client/`) talks to a **Node/Express** API (`server/`) backed by **PostgreSQL** via **Sequelize**. Tenants are schools (identified by **subdomain**). The platform supports **super admin** operations (tenant lifecycle, feature flags per tenant, branding) and **school admin** workflows (academic structure, student registration, promotion, enrollments).
+A **multi-tenant school management SaaS** monorepo: an **Angular 19** SPA (`client/`) talks to a **Node/Express** API (`server/`) backed by **PostgreSQL** via **Sequelize**. Tenants are schools (identified by **subdomain**). The platform supports **super admin** operations (tenant lifecycle, feature flags per tenant, branding) and school operations for **admin**, **teacher**, and **student** personas (academic structure, students, teachers, fees, exams, and notifications).
 
 **What problem does it solve?**  
-Centralizes **per-school isolation** (data + branding + feature toggles) on one stack, so multiple schools can use the same deployment with separate data and configurable modules (students, classes, fees, etc.).
+Centralizes **per-school isolation** (data + branding + feature toggles) on one stack, so multiple schools can use the same deployment with separate data and configurable modules (students, teachers, classes, fees, exams, etc.).
 
 **End users / stakeholders**
 
@@ -18,7 +18,8 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 |-------------|-------------|--------|
 | **Super admin** | `super_admin` user on reserved tenant `platform` | Tenant CRUD, module toggles, branding upload, cross-tenant APIs via `x-tenant-id` |
 | **School admin** | `admin` per tenant | Signup creates first admin; full academic + student APIs where authorized |
-| **Student (portal user)** | `student` + `users.student_id` | Seeded example user exists; **student CRUD APIs require `admin`/`super_admin`** — student role is not the primary SPA audience today |
+| **Teacher (portal user)** | `teacher` + `users.teacher_id` | Teacher self-profile and exam/marks workflows are implemented alongside admin-facing teacher management |
+| **Student (portal user)** | `student` + `users.student_id` | Student exam views and recheck flows are implemented; student CRUD remains admin/super_admin only |
 | **Developers / operators** | — | Run client + server per root `README.md` |
 
 ---
@@ -121,9 +122,13 @@ school-saas/
 │           │   ├── home/
 │           │   ├── classes/                 # class-list, class-form
 │           │   ├── students/                # list, detail, register, promote
+│           │   ├── teachers/                # list, form, detail, self-profile, dashboard
+│           │   ├── fees/                    # fee collection + receipt
+│           │   ├── expenses/                # expense list + receipt
+│           │   ├── exams/                   # exams, grading, marks, student/teacher exam views
 │           │   └── super-admin/             # tenants, features, branding settings
 │           ├── shared/                      # placeholder-page, unauthorized, table-pagination-footer
-│           ├── services/                    # api, auth, academic, student, feature, branding, theme, toast, notification
+│           ├── services/                    # api, auth, academic, student, teacher, fee, exam, feature, branding, theme, toast, notification
 │           └── utils/                       # e.g. table-sort.ts
 └── server/
     ├── .env.example          # PORT, DB_*, JWT_SECRET
@@ -142,6 +147,12 @@ school-saas/
         │   ├── module/
         │   ├── modules/      # tenant-visible module list
         │   ├── students/     # models, student.routes, student.controller
+        │   ├── teachers/
+        │   ├── fees/
+        │   ├── expenses/
+        │   ├── exams/
+        │   ├── notifications/
+        │   ├── subjects/
         │   ├── super-admin/
         │   ├── tenant/
         │   ├── tenant-branding/
@@ -177,7 +188,7 @@ school-saas/
 | Table | Model file | Purpose |
 |-------|------------|---------|
 | `tenants` | `server/src/modules/tenant/tenant.model.js` | School org: `name`, `subdomain` (unique), `status`, `contact_email`, `phone`, `address` |
-| `users` | `server/src/modules/users/user.model.js` | Login users: `tenant_id`, `name`, `email`, `username`, `password`, `role`, `status`, optional `student_id` |
+| `users` | `server/src/modules/users/user.model.js` | Login users: `tenant_id`, `name`, `email`, `username`, `password`, `role`, `status`, optional `student_id` and `teacher_id` |
 | `modules` | `server/src/modules/module/module.model.js` | Global catalog: `name`, `key` (unique), `description`, `group` |
 | `tenant_modules` | `server/src/modules/tenant-module/tenantModule.model.js` | Per-tenant toggle: `module_key`, `is_enabled` (unique on `tenant_id` + `module_key`) |
 | `tenant_branding` | `server/src/modules/tenant-branding/tenantBranding.model.js` | `primary_color`, `secondary_color`, `logo_url` (one row per tenant) |
@@ -190,6 +201,20 @@ school-saas/
 | `student_previous_schools` | `server/src/modules/students/studentPreviousSchool.model.js` | Previous school info |
 | `student_documents` | `server/src/modules/students/studentDocument.model.js` | `file_name`, `file_url` |
 | `student_promotions` | `server/src/modules/students/studentPromotion.model.js` | Audit trail: from/to year, class, section, `kind`, `created_by_user_id` |
+| `teachers` | `server/src/modules/teachers/teacher.model.js` | Teacher profile, payroll/basic employment data, status, and reporting manager/class links |
+| `teacher_academic_assignments` | `server/src/modules/teachers/teacherAcademicAssignment.model.js` | Teacher assignment to class/section/subject/academic year |
+| `subjects` | `server/src/modules/subjects/subject.model.js` | Tenant-scoped subject catalog mapped to class/academic year |
+| `fee_collections` | `server/src/modules/fees/feeCollection.model.js` | Student fee ledger with receipt metadata and collector info |
+| `expenses` | `server/src/modules/expenses/expense.model.js` | Tenant expense tracking with category, amount, and creator |
+| `exams` | `server/src/modules/exams/exam.model.js` | Exam master records, status transitions, publication flags |
+| `exam_classes` | `server/src/modules/exams/examClass.model.js` | Class participation per exam |
+| `exam_timetables` | `server/src/modules/exams/examTimetable.model.js` | Subject schedule and paper-level timetable details |
+| `exam_marks` | `server/src/modules/exams/examMark.model.js` | Marks entry, moderation, grading source data |
+| `exam_mark_audits` | `server/src/modules/exams/examMarkAudit.model.js` | Audit trail of marks changes |
+| `grading_schemes` / `grading_bands` | `server/src/modules/exams/gradingScheme.model.js`, `gradingBand.model.js` | Configurable grading scales |
+| `exam_grading_configs` | `server/src/modules/exams/examGradingConfig.model.js` | Exam-level binding to grading scheme |
+| `exam_recheck_requests` | `server/src/modules/exams/examRecheckRequest.model.js` | Student recheck workflow and assignment to teachers |
+| `notifications` / `notification_reads` | `server/src/modules/notifications/*.model.js` | In-app notifications and per-user read status |
 
 **Relationships (high level)**
 
@@ -199,7 +224,7 @@ school-saas/
 
 **Enums / constants (not DB enums — application-level)**
 
-- **Roles** (string): `super_admin`, `admin`, `student` (and any value stored in `users.role` — enforced by `authorize()` allow-lists on routes).
+- **Roles** (string): `super_admin`, `admin`, `teacher`, `student` (enforced by `authorize()` allow-lists on routes).
 - **Module keys** (from `server/src/seed/moduleSeed.js` `CATALOG`): `students`, `teachers`, `classes`, `attendance`, `fees`, `exams`, `results`, `library`, `transport`, `reports`.
 - **Enrollment categories** validated in `server/src/seed/canonicalClasses.js`: `Science`/`Arts` for classes `C9`–`C10`; `Pre-engineering`/`Medical`/`Computer science` for `C11`–`C12`.
 - **Blood groups** set in `server/src/modules/students/student.controller.js` (`BLOOD_GROUPS`).
@@ -250,7 +275,7 @@ All routes: `authorize('super_admin')` (router-level), plus `authMiddleware` on 
 | POST | `/super-admin/tenant-branding` | Upsert colors (`tenantId`, `primaryColor`, `secondaryColor`) |
 | POST | `/super-admin/tenant-branding/upload-logo` | Multipart `file` + `tenantId` query; PNG only, 1MB |
 
-**Academic / classes** (`server/src/modules/classes/academic.routes.js` — **no** path prefix in router; mounted at app root)
+**Academic / classes + subjects** (`server/src/modules/classes/academic.routes.js`, `server/src/modules/subjects/subject.routes.js` — mounted at app root)
 
 Router stack: `authMiddleware` → `checkFeature('classes')` → `authorize('admin', 'super_admin')`.
 
@@ -268,6 +293,11 @@ Router stack: `authMiddleware` → `checkFeature('classes')` → `authorize('adm
 | GET | `/academic-years/current` | Active year |
 | POST | `/academic-years` | Create |
 | PATCH | `/academic-years/:id/active` | Set active (others false) |
+| GET | `/subjects` | List subjects (tenant-scoped) |
+| POST | `/subjects` | Create subject |
+| GET | `/subjects/:id` | Subject details |
+| PATCH | `/subjects/:id` | Update subject |
+| DELETE | `/subjects/:id` | Delete subject |
 
 **Students** (`server/src/modules/students/student.routes.js`)
 
@@ -285,6 +315,65 @@ Stack: `authMiddleware` → `checkFeature('students')` → `authorize('admin', '
 | DELETE | `/students/:id` | Remove |
 | GET | `/enrollments` | List enrollments (tenant-scoped) |
 
+**Teachers** (`server/src/modules/teachers/teacher.routes.js`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/teachers/me` | Teacher self-profile |
+| PATCH | `/teachers/me` | Update teacher profile |
+| PATCH | `/teachers/me/password` | Change own password |
+| GET | `/teachers/me/dashboard` | Teacher dashboard/assignment summary |
+| GET | `/teachers` | Admin/super_admin teacher list |
+| POST | `/teachers` | Create teacher + optional login linkage |
+| GET | `/teachers/:id` | Teacher details |
+| PUT | `/teachers/:id` | Update teacher |
+| DELETE | `/teachers/:id` | Remove/deactivate teacher |
+| POST | `/teachers/:id/cv` | Upload teacher CV (PDF/Word) |
+| GET | `/teachers/:id/assignments` | Teacher assignments |
+| POST | `/teachers/:id/assignments` | Assign class/section/subject/year |
+| DELETE | `/teachers/:id/assignments/:assignmentId` | Remove assignment |
+
+**Fees / expenses** (`server/src/modules/fees/fee.routes.js`, `server/src/modules/expenses/expense.routes.js`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/fees` | List fee collections |
+| POST | `/fees` | Create fee collection entry |
+| GET | `/fees/:id` | Fee detail |
+| PUT | `/fees/:id` | Update fee record |
+| DELETE | `/fees/:id` | Delete fee record |
+| GET | `/fees/student/:studentId` | Fee history by student |
+| GET | `/expenses` | List expenses |
+| POST | `/expenses` | Record expense |
+| GET | `/expenses/:id` | Expense detail |
+| PUT | `/expenses/:id` | Update expense |
+| DELETE | `/expenses/:id` | Delete expense |
+
+**Exams** (`server/src/modules/exams/exam.routes.js`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/exams` | Admin exam list |
+| POST | `/exams` | Create exam |
+| GET | `/exams/:id` | Exam detail |
+| PATCH | `/exams/:id` | Update exam |
+| POST | `/exams/:id/transition` | Status transitions |
+| POST | `/exams/:id/publish` | Publish exam result |
+| GET/POST/PATCH | `/exams/:id/timetable*` | Timetable lifecycle |
+| GET/PUT | `/exams/:id/marks*` | Marks sheet + marks upsert |
+| GET/POST | `/exams/grading-schemes*` | Grading scheme CRUD/archive |
+| GET | `/exams/teachers/me/exams*` | Teacher exam workload views |
+| GET/POST | `/exams/students/me*` | Student result/recheck flows |
+| GET | `/exams/:id/*pdf` | Admit/result PDF generation |
+
+**Notifications** (`server/src/modules/notifications/notification.routes.js`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/notifications` | List current user notifications |
+| POST | `/notifications/:id/read` | Mark one as read |
+| POST | `/notifications/read-all` | Mark all as read |
+
 **Request/response**  
 Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true`. Errors typically `{ message: string }` or `{ error: string }`.
 
@@ -295,7 +384,7 @@ Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true
 **Module structure**  
 No classic `NgModule` feature modules — **standalone components** + **lazy `loadComponent`** in `client/src/app/app.routes.ts`.
 
-- **Feature areas:** `modules/auth`, `modules/home`, `modules/classes`, `modules/students`, `modules/super-admin`.
+- **Feature areas:** `modules/auth`, `modules/home`, `modules/classes`, `modules/students`, `modules/teachers`, `modules/fees`, `modules/expenses`, `modules/exams`, `modules/super-admin`.
 - **Shared:** `shared/placeholder-page`, `shared/unauthorized`, `shared/table-pagination-footer`.
 - **Layout:** `layout/main-layout` (tenant app shell), `layout/super-admin-layout`, `layout/app-header-actions`.
 
@@ -314,6 +403,8 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 - `MainLayoutComponent` → sidebar from `TENANT_NAV_CONFIG` filtered by `FeatureService.enabled()` + `RouterOutlet` for child routes.
 - Students: `StudentListComponent` → detail/edit/register/promote routes as siblings under `MainLayoutComponent`.
 - Super admin: `SuperAdminLayoutComponent` → tenants, feature management, branding settings.
+- Teachers: `TeacherDashboardComponent` + `TeacherSelfProfileComponent` + teacher exam workflows.
+- Exams: admin exam setup, grading schemes, marks entry and student exam/result screens.
 
 **Services**
 
@@ -324,7 +415,10 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 | `client/src/app/services/branding.service.ts` | Tenant theming (loaded via initializer when authenticated) |
 | `client/src/app/services/academic.service.ts` | Classes, sections, academic years |
 | `client/src/app/services/student.service.ts` | Student CRUD, list normalization, promote, etc. |
-| `client/src/app/services/api.service.ts` | Demo `GET /` with hardcoded `x-tenant-id: abc` |
+| `client/src/app/services/teacher.service.ts` | Teacher admin CRUD + self-profile endpoints + assignment endpoints |
+| `client/src/app/services/fee.service.ts` | Fee collection and student fee history |
+| `client/src/app/services/exam.service.ts` | Exam lifecycle, timetable, marks, grading, student/teacher exam views |
+| `client/src/app/services/api.service.ts` | Demo `GET /` with hardcoded `x-tenant-id: abc` (non-core utility) |
 | `client/src/app/services/theme.service.ts` | Dark/light via `APP_INITIALIZER` |
 | `client/src/app/services/toast.service.ts`, `notification.service.ts` | UX |
 
@@ -385,24 +479,30 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 **Roles**
 
 - **`super_admin`:** Platform tenant; `/super-admin/*`; can assume tenant via `x-tenant-id`.
-- **`admin`:** School administrator; full access to academic/student routes when features enabled.
-- **`student`:** Stored for portal-style users; **student APIs are restricted to admin/super_admin** in `student.routes.js`.
+- **`admin`:** School administrator; full access to academic/student/teacher/fees/exams where features are enabled.
+- **`teacher`:** Self profile and teacher exam endpoints (`/teachers/me*`, `/exams/teachers/me*`); admin teacher management endpoints remain restricted.
+- **`student`:** Student exam endpoints (`/exams/students/me*`) plus authenticated module visibility as configured.
 
 **Enforcement**
 
 | Layer | Mechanism |
 |-------|-----------|
 | Backend | `authMiddleware` + `authorize(...)` + `checkFeature(...)` per router |
-| Frontend | `authGuard`, `superAdminGuard`, `featureGuard`; sidebar filtered by features **only** (not by role — see §12) |
+| Frontend | `authGuard`, `superAdminGuard`, `featureGuard`; sidebar is primarily feature-driven and role guards enforce route-level access |
 
 **Permissions matrix (simplified)**
 
-| Capability | super_admin | admin | student (API) |
-|------------|-------------|-------|----------------|
-| `/super-admin/*` | Yes | No | No |
-| `/classes`, `/sections`, `/academic-years` | Yes (with tenant context) | Yes | **403** on route |
-| `/students/*`, `/enrollments` | Yes (with tenant context) | Yes | **403** on route |
-| `/modules` | Yes (tenant from JWT/header) | Yes | Yes if authenticated (same route) |
+| Capability | super_admin | admin | teacher | student |
+|------------|-------------|-------|---------|---------|
+| `/super-admin/*` | Yes | No | No | No |
+| `/classes`, `/sections`, `/academic-years`, `/subjects` | Yes (with tenant context) | Yes | No | No |
+| `/students/*`, `/enrollments` | Yes (with tenant context) | Yes | No | No |
+| `/teachers` admin APIs | Yes (with tenant context) | Yes | No | No |
+| `/teachers/me*` | No | No | Yes | No |
+| `/exams` admin APIs | Yes (with tenant context) | Yes | No | No |
+| `/exams/teachers/me*` | No | No | Yes | No |
+| `/exams/students/me*` | No | No | No | Yes |
+| `/modules` | Yes (tenant from JWT/header) | Yes | Yes | Yes |
 
 ---
 
@@ -415,11 +515,13 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 | **Branding** | — | `/tenant-branding`, super-admin branding | Tenant branding settings, theme in layout | **Implemented** |
 | **Classes / sections / academic years** | `classes` | `/classes`, `/sections`, `/academic-years` | Class list, class form | **Implemented** |
 | **Students** | `students` | Full student + enrollment + promote APIs | List, detail, register, promote | **Implemented** (rich) |
-| **Teachers** | `teachers` | **Not found** | `PlaceholderPageComponent` | **Planned / stub** |
-| **Fees** | `fees` | **Not found** | Placeholder | **Planned / stub** |
-| **Attendance** | `attendance` | **Not found** | Placeholder | **Planned / stub** |
-| **Reports** | `reports` | **Not found** | Placeholder | **Planned / stub** |
-| **Exams / Results / Library / Transport** | in seed only | **Not found** | No dedicated routes in `app.routes.ts` | **Catalog only** |
+| **Teachers** | `teachers` | CRUD + assignments + self-service endpoints | Teacher list/form/detail + self-profile/dashboard | **Implemented** |
+| **Fees** | `fees` | Fee collection CRUD + student fee history | Fee collection + receipt | **Implemented** |
+| **Expenses** | `expenses` | Expense CRUD | Expense list + receipt | **Implemented** |
+| **Exams** | `exams` | Exams, timetables, marks, grading, PDFs, rechecks | Admin/teacher/student exam flows | **Implemented** |
+| **Attendance** | `attendance` | Not found | Placeholder | **Planned / stub** |
+| **Reports** | `reports` | Not found | Placeholder | **Planned / stub** |
+| **Library / Transport / Results (standalone module)** | catalog keys | Not found | No dedicated routes in `app.routes.ts` | **Catalog / planned** |
 
 ---
 
@@ -451,21 +553,7 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 ---
 
-## 12. Gaps & Inconsistencies Found
-
-- **No JWT refresh / server-side logout**; stolen token valid until expiry.
-- **CORS** `origin: true` — permissive (reflects request origin).
-- **`sequelize.sync({ alter: true })`** — not a safe production migration strategy.
-- **No centralized validation library** on server; coverage varies by endpoint.
-- **No global Express error handler**; inconsistent `next(err)` handling.
-- **Frontend nav** shows module links for any authenticated user if the module is enabled — **role checks are weaker in UI** than on API (e.g. hypothetical `student` user would see admin nav until API returns 403).
-- **Production `environment.ts`** still points `apiBaseUrl` to `http://localhost:5000` — deployment config gap.
-- **`.env.example`** omits `JSON_BODY_LIMIT`, `SUPER_ADMIN_PASSWORD`, `STUDENT_DEFAULT_PASSWORD` used in `server/src/index.js`.
-- **Student photo** as large base64 in JSON — documented limit increase; still a scalability concern.
-
----
-
-## 13. Dependencies & Versions
+## 12. Dependencies & Versions
 
 **Client (`client/package.json`) — runtime**
 
@@ -488,7 +576,7 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 ---
 
-## 14. Environment & Configuration
+## 13. Environment & Configuration
 
 **Documented in `server/.env.example`**
 
@@ -508,7 +596,7 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 ---
 
-## 15. Testing Strategy
+## 14. Testing Strategy
 
 **Frameworks**
 
