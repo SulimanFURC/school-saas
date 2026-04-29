@@ -7,7 +7,7 @@ Generated from a read-only scan of the current school-saas monorepo (Angular cli
 ## 1. Project Overview
 
 **What is this application?**  
-A **multi-tenant school management SaaS** monorepo: an **Angular 19** SPA (`client/`) talks to a **Node/Express** API (`server/`) backed by **PostgreSQL** via **Sequelize**. Tenants are schools (identified by **subdomain**). The platform supports **super admin** operations (tenant lifecycle, feature flags per tenant, branding) and school operations for **admin**, **teacher**, and **student** personas (academic structure, students, teachers, fees, exams, and notifications).
+A **multi-tenant school management SaaS** monorepo: an **Angular 19** SPA (`client/`) talks to a **Node/Express** API (`server/`) backed by **PostgreSQL** via **Sequelize**. Tenants are schools (identified by **subdomain**). The platform supports **super admin** operations (tenant lifecycle, platform dashboard/settings, feature flags per tenant, branding) and school operations for **admin**, **teacher**, and **student** personas (role-aware dashboards, tenant settings, optional **reports** module, academic structure, students, teachers, fees, exams, and notifications).
 
 **What problem does it solve?**  
 Centralizes **per-school isolation** (data + branding + feature toggles) on one stack, so multiple schools can use the same deployment with separate data and configurable modules (students, teachers, classes, fees, exams, etc.).
@@ -31,13 +31,14 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 | Area | Choice |
 |------|--------|
 | Framework | **Angular 19** (standalone components, `provideRouter`, lazy `loadComponent`) |
-| UI | **Bootstrap 5.3**, **bootstrap-icons**, **@popperjs/core** |
-| Animations | `@angular/platform-browser/animations/async` (`provideAnimationsAsync` in `client/src/app/app.config.ts`) |
+| Layout & styling | **Bootstrap 5.3**, **Bootstrap Icons** (`bootstrap-icons`), **@popperjs/core** (Bootstrap positioning). Primary grid, typography, utilities, and many screens use Bootstrap classes and patterns. |
+| Component library | **PrimeNG** (^19.x) with **PrimeIcons** and **@primeuix/themes** — used for richer widgets where implemented (e.g. login/signup **PrimeNG** `Card`, `InputText`, `Password`, `Button`, `Checkbox`). **`@angular/cdk`** is present as a dependency (overlay/positioning for PrimeNG); **Angular Material is not used** (`@angular/material` is not a dependency). |
+| Animations | `@angular/platform-browser/animations/async` (`provideAnimationsAsync` in `client/src/app/app.config.ts`) — required for PrimeNG components |
 | HTTP | `@angular/common/http` + functional interceptor |
 | State | **Signals** (`AuthService`, `FeatureService`, `BrandingService`, layout signals) — **no NgRx** |
 | Routing | `@angular/router` with guards |
 
-**Note:** Root `README.md` says “Angular Material”; `client/package.json` does **not** include `@angular/material` — UI is Bootstrap-driven.
+**Note:** The UI stack is **Bootstrap + PrimeNG** as above. **`README.md`** lists the same for `client/` (Angular Material is not used).
 
 ### Backend
 
@@ -45,8 +46,9 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 |------|--------|
 | Runtime | **Node.js** (CommonJS, `"type": "commonjs"` in `server/package.json`) |
 | Framework | **Express 5** (`express@^5.2.1`) |
-| Middleware | `cors`, `express.json` (limit from `JSON_BODY_LIMIT` or default `50mb`), `multer` (logo uploads), static `/uploads` |
+| Middleware | `cors`, `express.json` (limit from `JSON_BODY_LIMIT` or default `50mb`), **`express-rate-limit`** on `/auth/login` and `/auth/signup`, `multer` (logo uploads), static `/uploads` |
 | Validation | **Ad hoc** in controllers (no Joi/Zod class-wide) |
+| Errors | **Global Express error handler** in `server/src/index.js` — logs server-side, responds with `{ message: 'Internal server error' }` for unhandled errors |
 | Password hashing | **bcrypt** |
 | Images | **sharp** (student photo optimize to JPEG) |
 
@@ -87,7 +89,7 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 
 ```text
 school-saas/
-├── README.md                 # Dev setup; mentions Angular Material (see §2)
+├── README.md                 # Dev setup (should describe Bootstrap + PrimeNG; see §2)
 ├── docs/
 │   ├── README.md             # Placeholder for future docs
 │   └── PROJECT_REPORT.md     # This file
@@ -119,16 +121,18 @@ school-saas/
 │           ├── layout/                      # main-layout, super-admin-layout, app-header-actions
 │           ├── modules/
 │           │   ├── auth/                    # login, signup
-│           │   ├── home/
+│           │   ├── home/                    # role-aware dashboards (admin / teacher / student)
+│           │   ├── settings/               # school profile, academic snippet, password, notifications
+│           │   ├── reports/                # enrollment, fees, expenses reports (feature-gated)
 │           │   ├── classes/                 # class-list, class-form
 │           │   ├── students/                # list, detail, register, promote
 │           │   ├── teachers/                # list, form, detail, self-profile, dashboard
 │           │   ├── fees/                    # fee collection + receipt
 │           │   ├── expenses/                # expense list + receipt
 │           │   ├── exams/                   # exams, grading, marks, student/teacher exam views
-│           │   └── super-admin/             # tenants, features, branding settings
+│           │   └── super-admin/             # tenants, features, dashboard, platform-settings, tenant branding
 │           ├── shared/                      # placeholder-page, unauthorized, table-pagination-footer
-│           ├── services/                    # api, auth, academic, student, teacher, fee, exam, feature, branding, theme, toast, notification
+│           ├── services/                    # api, auth, academic, student, teacher, fee, exam, feature, branding, dashboard, settings, report, theme, toast, notification
 │           └── utils/                       # e.g. table-sort.ts
 └── server/
     ├── .env.example          # PORT, DB_*, JWT_SECRET
@@ -144,8 +148,11 @@ school-saas/
         ├── modules/
         │   ├── auth/
         │   ├── classes/      # models + academic.routes + academic.controller
+        │   ├── dashboard/
         │   ├── module/
         │   ├── modules/      # tenant-visible module list
+        │   ├── reports/
+        │   ├── settings/
         │   ├── students/     # models, student.routes, student.controller
         │   ├── teachers/
         │   ├── fees/
@@ -163,7 +170,7 @@ school-saas/
 
 **Major folders**
 
-- **`client/src/app/modules/*`** — Feature areas (auth, students, classes, super-admin).
+- **`client/src/app/modules/*`** — Feature areas (auth, home/dashboards, settings, reports, students, classes, teachers, fees, expenses, exams, super-admin).
 - **`client/src/app/layout/*`** — Shells and header (theme toggle, notifications, logout).
 - **`client/src/app/services/*`** — API access and cross-cutting UI state.
 - **`server/src/modules/*`** — Domain models + route/controller pairs (no separate `services/` or `repositories/` layers).
@@ -215,8 +222,8 @@ school-saas/
 | `exam_grading_configs` | `server/src/modules/exams/examGradingConfig.model.js` | Exam-level binding to grading scheme |
 | `exam_recheck_requests` | `server/src/modules/exams/examRecheckRequest.model.js` | Student recheck workflow and assignment to teachers |
 | `notifications` / `notification_reads` | `server/src/modules/notifications/*.model.js` | In-app notifications and per-user read status |
-
-**Relationships (high level)**
+| `platform_settings` | `server/src/modules/settings/platformSetting.model.js` | Global key/value settings for super-admin platform configuration |
+| `user_notification_preferences` | `server/src/modules/settings/userNotificationPreference.model.js` | Per-user per-tenant notification toggles (email / SMS / in-app) |
 
 - `users.tenant_id` → `tenants.id`; optional `users.student_id` → `students.id` (`server/src/index.js` `User.belongsTo(Student, …)`).
 - All academic/student entities carry **`tenant_id`** for isolation.
@@ -267,6 +274,9 @@ All routes: `authorize('super_admin')` (router-level), plus `authMiddleware` on 
 
 | Method | Path | Purpose |
 |--------|------|---------|
+| GET | `/super-admin/dashboard` | Platform-wide dashboard stats (tenants, users, module adoption) |
+| GET | `/super-admin/platform-settings` | Platform name, support email, max tenants (global settings) |
+| PUT | `/super-admin/platform-settings` | Update platform settings |
 | GET | `/super-admin/tenants` | Paginated tenants (`page`, `limit`) |
 | POST | `/super-admin/tenants` | Create tenant + admin user + seed modules/classes/years |
 | GET | `/super-admin/tenants/:tenantId/modules` | Tenant + module toggles |
@@ -374,8 +384,48 @@ Stack: `authMiddleware` → `checkFeature('students')` → `authorize('admin', '
 | POST | `/notifications/:id/read` | Mark one as read |
 | POST | `/notifications/read-all` | Mark all as read |
 
+**Dashboard** (`server/src/modules/dashboard/dashboard.routes.js`) — mount `/dashboard`
+
+After global **`tenantMiddleware`** → **`authMiddleware`**. Handlers enforce role (`admin`/`super_admin` vs `teacher` vs `student`).
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/dashboard/admin` | School-wide KPIs and recent activity for admins |
+| GET | `/dashboard/teacher` | Teacher-facing dashboard aggregates |
+| GET | `/dashboard/student` | Student-facing dashboard aggregates |
+
+**Tenant settings** (`server/src/modules/settings/settings.routes.js`) — mount `/settings`
+
+Stack: **`tenantMiddleware`** → **`authMiddleware`**. School profile endpoints require **`authorize('admin', 'super_admin')`** in controller/router pattern.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/settings/school-profile` | Read editable school profile fields |
+| PUT | `/settings/school-profile` | Update school profile |
+| GET | `/settings/academic-year` | Academic year snippet for settings UI |
+| POST | `/settings/change-password` | Authenticated user changes password |
+| GET | `/settings/notification-preferences` | Per-user notification channel toggles |
+| PUT | `/settings/notification-preferences` | Update notification preferences |
+
+**Reports** (`server/src/modules/reports/reports.routes.js`) — mount `/reports`
+
+Stack: **`tenantMiddleware`** → **`authMiddleware`** → **`checkFeature('reports')`**. Most routes **`authorize('admin', 'super_admin')`**; student result report allows student context where implemented.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/reports/students/enrollment-summary` | Enrollment summary |
+| GET | `/reports/students/attendance-summary` | Attendance stub / placeholder |
+| GET | `/reports/students/list` | Student list export-oriented |
+| GET | `/reports/fees/collection-summary` | Fee collection summary |
+| GET | `/reports/fees/defaulters` | Fee defaulters |
+| GET | `/reports/fees/daily-collection` | Daily fee collection |
+| GET | `/reports/expenses/summary` | Expense summary |
+| GET | `/reports/exams/result-summary/:examId` | Exam result summary |
+| GET | `/reports/exams/student-result/:studentId` | Per-student exam result |
+| GET | `/reports/teachers/assignment-summary` | Teacher assignment summary |
+
 **Request/response**  
-Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true`. Errors typically `{ message: string }` or `{ error: string }`.
+Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true`. Errors should use **`{ message: string }`**; a few legacy paths may still return **`{ error: string }`** — align new code with **`message`**.
 
 ---
 
@@ -384,7 +434,7 @@ Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true
 **Module structure**  
 No classic `NgModule` feature modules — **standalone components** + **lazy `loadComponent`** in `client/src/app/app.routes.ts`.
 
-- **Feature areas:** `modules/auth`, `modules/home`, `modules/classes`, `modules/students`, `modules/teachers`, `modules/fees`, `modules/expenses`, `modules/exams`, `modules/super-admin`.
+- **Feature areas:** `modules/auth`, `modules/home`, `modules/settings`, `modules/reports`, `modules/classes`, `modules/students`, `modules/teachers`, `modules/fees`, `modules/expenses`, `modules/exams`, `modules/super-admin`.
 - **Shared:** `shared/placeholder-page`, `shared/unauthorized`, `shared/table-pagination-footer`.
 - **Layout:** `layout/main-layout` (tenant app shell), `layout/super-admin-layout`, `layout/app-header-actions`.
 
@@ -392,7 +442,7 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 
 - **Lazy loading:** Nearly all feature components loaded via dynamic `import()`.
 - **Guards:**
-  - `guestGuard` — login/signup if not authenticated; redirects super_admin to `/super-admin/tenants`.
+  - `guestGuard` — login/signup if not authenticated; redirects authenticated **`super_admin`** to **`/super-admin/dashboard`**, other roles to **`/home`**.
   - `authGuard` — main app + unauthorized; stores `returnUrl`.
   - `superAdminGuard` — role `super_admin`.
   - `featureGuard` — reads `route.data['moduleKey']`, checks `FeatureService.isEnabled()`; else `/unauthorized`.
@@ -402,7 +452,7 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 
 - `MainLayoutComponent` → sidebar from `TENANT_NAV_CONFIG` filtered by `FeatureService.enabled()` + `RouterOutlet` for child routes.
 - Students: `StudentListComponent` → detail/edit/register/promote routes as siblings under `MainLayoutComponent`.
-- Super admin: `SuperAdminLayoutComponent` → tenants, feature management, branding settings.
+- Super admin: `SuperAdminLayoutComponent` → dashboard, tenants, feature management, platform settings, tenant branding.
 - Teachers: `TeacherDashboardComponent` + `TeacherSelfProfileComponent` + teacher exam workflows.
 - Exams: admin exam setup, grading schemes, marks entry and student exam/result screens.
 
@@ -421,6 +471,9 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 | `client/src/app/services/api.service.ts` | Demo `GET /` with hardcoded `x-tenant-id: abc` (non-core utility) |
 | `client/src/app/services/theme.service.ts` | Dark/light via `APP_INITIALIZER` |
 | `client/src/app/services/toast.service.ts`, `notification.service.ts` | UX |
+| `client/src/app/services/dashboard.service.ts` | Role-aware dashboard widgets (`/dashboard/*`) |
+| `client/src/app/services/settings.service.ts` | School profile, academic snippet, password, notification preferences |
+| `client/src/app/services/report.service.ts` | Reports listing + CSV-oriented downloads (`/reports/*`) |
 
 **State management**  
 **Signals + localStorage** for auth and feature sets; no global store. HTTP state is mostly **imperative** in components/services.
@@ -442,7 +495,7 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 **Order caveat:** `/auth/signup` is registered **before** `tenantMiddleware`; `/auth/login` is **after** `tenantMiddleware`, so login requires tenant context (header or JWT path).
 
 **Error handling**  
-Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some async errors use `next(err)` (e.g. feature middleware); **no global Express error handler** observed in `server/src/index.js`.
+Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. **`express`** async errors forwarded with **`next(err)`** are handled by a **global error middleware** at the end of `server/src/index.js`, which logs the stack server-side and returns **`{ message: 'Internal server error' }`** without leaking internals.
 
 **Logging**  
 **Console** (`console.log` / `console.error`) in startup and seeds; Sequelize `logging: false`.
@@ -503,8 +556,10 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 | `/exams/teachers/me*` | No | No | Yes | No |
 | `/exams/students/me*` | No | No | No | Yes |
 | `/modules` | Yes (tenant from JWT/header) | Yes | Yes | Yes |
-
----
+| `/dashboard/*` | Yes (with tenant context) | Yes | Yes (`/dashboard/teacher`) | Yes (`/dashboard/student`) |
+| `/settings/school-profile*` (admin profile fields) | Yes | Yes | No | No |
+| `/settings/change-password`, `/settings/notification-preferences` | Yes | Yes | Yes | Yes |
+| `/reports/*` (feature enabled) | Yes (with tenant context) | Yes | No | Own student row only where implemented (`/reports/exams/student-result/:studentId`) |
 
 ## 10. Business Modules Identified
 
@@ -519,8 +574,10 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 | **Fees** | `fees` | Fee collection CRUD + student fee history | Fee collection + receipt | **Implemented** |
 | **Expenses** | `expenses` | Expense CRUD | Expense list + receipt | **Implemented** |
 | **Exams** | `exams` | Exams, timetables, marks, grading, PDFs, rechecks | Admin/teacher/student exam flows | **Implemented** |
-| **Attendance** | `attendance` | Not found | Placeholder | **Planned / stub** |
-| **Reports** | `reports` | Not found | Placeholder | **Planned / stub** |
+| **Dashboard** | — (always-on for authenticated users) | `/dashboard/admin`, `/dashboard/teacher`, `/dashboard/student`; `/super-admin/dashboard` | `/home` role dashboards; super-admin dashboard | **Implemented** |
+| **Tenant settings** | — | `/settings/*` (profile, password, notification prefs) | `/settings/*` | **Implemented** |
+| **Attendance** | `attendance` | Stub under `/reports/students/attendance-summary` | Placeholder | **Planned / richer attendance module** |
+| **Reports** | `reports` | `/reports/*` (fee/expense/enrollment summaries, CSV-oriented exports) | `/reports/*` (feature-gated) | **Implemented** |
 | **Library / Transport / Results (standalone module)** | catalog keys | Not found | No dedicated routes in `app.routes.ts` | **Catalog / planned** |
 
 ---
@@ -548,7 +605,7 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 **Inconsistencies**
 
-- README vs actual UI stack (**Material** vs **Bootstrap**).
+- Some API responses may still use **`{ error: string }`**; prefer **`{ message: string }`** for new code (see workspace API conventions).
 - `client/src/app/services/api.service.ts` hardcodes tenant `abc` for demo `getHello()` — easy to confuse with real app flow.
 
 ---
@@ -557,7 +614,8 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 **Client (`client/package.json`) — runtime**
 
-- `@angular/*` **^19.2.x** (animations ^19.2.20)
+- `@angular/*` **^19.2.x** (animations ^19.2.20); **`@angular/cdk`** **^19.2.x** (PrimeNG support — not Angular Material)
+- `primeng` **^19.x**, `primeicons` **^7.x**, `@primeuix/themes` **^2.x**
 - `bootstrap` **^5.3.3**, `bootstrap-icons` **^1.11.3**, `@popperjs/core` **^2.11.8**
 - `rxjs` **~7.8.0**, `tslib` **^2.3.0**, `zone.js` **~0.15.0**
 
@@ -567,8 +625,9 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 
 **Server (`server/package.json`)**
 
-- `express` **^5.2.1**, `sequelize` **^6.37.8**, `pg` **^8.20.0**
+- `express` **^5.2.1**, `sequelize` **^6.37.8**, `pg` **^8.20.0`, **`express-rate-limit`** **^8.x** (login/signup)
 - `jsonwebtoken` **^9.0.3**, `bcrypt` **^6.0.0**, `cors` **^2.8.6**, `dotenv` **^17.4.0**, `multer` **^1.4.5-lts.1**, `sharp` **^0.33.5**
+- `csv-parse`, `csv-stringify`, `pdfkit`, `archiver` — reports/PDF/archive flows where used
 - `nodemon` **^3.1.14** (dev)
 
 **Outdated / conflict audit**  
@@ -581,11 +640,10 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 **Documented in `server/.env.example`**
 
 - `PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_HOST`, `JWT_SECRET`
-
-**Referenced in code but not in `.env.example`**
-
-- `JSON_BODY_LIMIT` (`server/src/index.js`)
-- `SUPER_ADMIN_PASSWORD`, `STUDENT_DEFAULT_PASSWORD` (seed defaults in `server/src/index.js`)
+- `JSON_BODY_LIMIT` — max JSON body size for Express (large photos)
+- `SUPER_ADMIN_PASSWORD` — seed/bootstrap password for platform super admin
+- `STUDENT_DEFAULT_PASSWORD` — default for generated student portal accounts
+- `RATE_LIMIT_LOGIN_MAX`, `RATE_LIMIT_SIGNUP_MAX` — optional overrides for **`express-rate-limit`** windows on `/auth/login` and `/auth/signup`
 
 **Client**
 
@@ -601,7 +659,7 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 **Frameworks**
 
 - **Client:** **Karma + Jasmine** via Angular CLI (`client/angular.json` test target).
-- **Server:** **No test runner** configured.
+- **Server:** **`node:test`** via `npm run test` in `server/` (`node --test "src/**/*.test.js"`).
 
 **Specs present (client)**
 
@@ -609,11 +667,16 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. Some 
 - `client/src/app/modules/students/student-register/student-register.component.spec.ts`
 - `client/src/app/modules/students/student-promote/student-promote.component.spec.ts`
 
+**Specs present (server)**
+
+- `server/src/smoke-modules.test.js` — lightweight module-load smoke for route wiring
+- `server/src/modules/teachers/teacherAssignment.helpers.test.js` — helper unit tests
+
 **Coverage gaps**
 
 - No **e2e** harness configured in repo (Angular default `ng e2e` mentioned in client README as optional).
-- **No server unit/integration tests** for controllers, middleware, or multi-tenant boundaries.
-- Most feature components, guards, interceptors, and services **untested**.
+- **Limited server coverage** — smoke/helpers only; most controllers, middleware, and multi-tenant boundaries are **untested**.
+- Most feature components, guards, interceptors, and client services **untested**.
 
 ---
 

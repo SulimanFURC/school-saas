@@ -1,6 +1,6 @@
 # School SaaS (monorepo)
 
-- **`client/`** — Angular 19 (standalone) + Angular Material
+- **`client/`** — Angular 19 (standalone) + Bootstrap 5 + PrimeNG
 - **`server/`** — Express + Sequelize + PostgreSQL
 - **`docs/`** — project documentation
 
