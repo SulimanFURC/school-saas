@@ -47,7 +47,7 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 | Runtime | **Node.js** (CommonJS, `"type": "commonjs"` in `server/package.json`) |
 | Framework | **Express 5** (`express@^5.2.1`) |
 | Middleware | `cors`, `express.json` (limit from `JSON_BODY_LIMIT` or default `50mb`), **`express-rate-limit`** on `/auth/login` and `/auth/signup`, `multer` (logo uploads), static `/uploads` |
-| Validation | **Ad hoc** in controllers (no Joi/Zod class-wide) |
+| Validation | **Zod-based request validation middleware** (`server/src/core/middleware/validate.middleware.js`) + route-level schemas in key modules (`auth`, `students`, `teachers`, `exams`) |
 | Errors | **Global Express error handler** in `server/src/index.js` — logs server-side, responds with `{ message: 'Internal server error' }` for unhandled errors |
 | Password hashing | **bcrypt** |
 | Images | **sharp** (student photo optimize to JPEG) |
@@ -58,7 +58,7 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 |------|--------|
 | Engine | **PostgreSQL** (`pg` driver) |
 | ORM | **Sequelize 6** |
-| Migrations | **Not found** — schema evolves via **`sequelize.sync({ alter: true })`** on startup in `server/src/index.js` |
+| Migrations | **Sequelize CLI migrations enabled** (`server/migrations/`, `.sequelizerc`, `server/config/config.cjs`) with scripts: `db:migrate`, `db:migrate:undo`, `db:migrate:status` |
 
 ### Auth
 
@@ -67,7 +67,7 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 | Strategy | **JWT** (`jsonwebtoken`), **Bearer** header |
 | Token payload | `userId`, `tenant_id`, `role` (`server/src/modules/auth/auth.controller.js` `signToken`) |
 | Expiry | `expiresIn: '1d'` |
-| Refresh | **Not implemented** (no refresh endpoint) |
+| Refresh | **Implemented** (`POST /auth/refresh`) with token rotation via `session.service.js` |
 
 ### DevOps / tooling
 
@@ -79,7 +79,7 @@ Centralizes **per-school isolation** (data + branding + feature toggles) on one 
 | Server dev | **nodemon** `npm run dev` |
 | Linting | **ESLint/Prettier not found** in any `package.json` |
 | Client tests | **Karma + Jasmine** (`ng test`) |
-| Server tests | **Placeholder** — `"test": "echo \"Error: no test specified\" && exit 1"` |
+| Server tests | **Node test runner** — `node --test "src/**/*.test.js"` |
 
 ---
 
@@ -110,7 +110,7 @@ school-saas/
 │       └── app/
 │           ├── app.component.*
 │           ├── app.config.ts                # router, HTTP + authInterceptor, APP_INITIALIZERs
-│           ├── app.routes.ts                # Lazy routes, guards
+│           ├── app.routes.ts                # Lazy routes, guards, dedicated /404 route
 │           ├── app-initializer.ts           # Feature flags after auth
 │           ├── branding-initializer.ts
 │           ├── config/
@@ -131,14 +131,15 @@ school-saas/
 │           │   ├── expenses/                # expense list + receipt
 │           │   ├── exams/                   # exams, grading, marks, student/teacher exam views
 │           │   └── super-admin/             # tenants, features, dashboard, platform-settings, tenant branding
-│           ├── shared/                      # placeholder-page, unauthorized, table-pagination-footer
-│           ├── services/                    # api, auth, academic, student, teacher, fee, exam, feature, branding, dashboard, settings, report, theme, toast, notification
+│           ├── shared/                      # reusable UX components (skeletons, inline/full-page errors, loading), plus placeholder-page/unauthorized
+│           ├── services/                    # api, auth, academic, lookup, student, teacher, fee, exam, feature, branding, dashboard, settings, report, theme, toast, notification
 │           └── utils/                       # e.g. table-sort.ts
 └── server/
     ├── .env.example          # PORT, DB_*, JWT_SECRET
     ├── package.json
     └── src/
-        ├── index.js          # Express app, sync+seed chain, route mounting order
+        ├── index.js          # Express app, authenticate+seed chain, route mounting order
+        ├── migrations/       # Versioned Sequelize migrations (indexes + DB constraints)
         ├── config/
         │   └── db.js         # Sequelize → Postgres
         ├── core/
@@ -172,7 +173,7 @@ school-saas/
 
 - **`client/src/app/modules/*`** — Feature areas (auth, home/dashboards, settings, reports, students, classes, teachers, fees, expenses, exams, super-admin).
 - **`client/src/app/layout/*`** — Shells and header (theme toggle, notifications, logout).
-- **`client/src/app/services/*`** — API access and cross-cutting UI state.
+- **`client/src/app/services/*`** — API access and cross-cutting UI state (including lookup caching).
 - **`server/src/modules/*`** — Domain models + route/controller pairs (no separate `services/` or `repositories/` layers).
 - **`server/src/core/middleware/*`** — Tenant resolution, JWT, RBAC, feature flags.
 - **`server/src/seed/*`** — Catalog modules, canonical classes, academic years backfill.
@@ -218,6 +219,7 @@ school-saas/
 | `exam_timetables` | `server/src/modules/exams/examTimetable.model.js` | Subject schedule and paper-level timetable details |
 | `exam_marks` | `server/src/modules/exams/examMark.model.js` | Marks entry, moderation, grading source data |
 | `exam_mark_audits` | `server/src/modules/exams/examMarkAudit.model.js` | Audit trail of marks changes |
+| `audit_logs` | `server/src/modules/audit/auditLog.model.js` | Generic audit trail for cross-module critical mutations |
 | `grading_schemes` / `grading_bands` | `server/src/modules/exams/gradingScheme.model.js`, `gradingBand.model.js` | Configurable grading scales |
 | `exam_grading_configs` | `server/src/modules/exams/examGradingConfig.model.js` | Exam-level binding to grading scheme |
 | `exam_recheck_requests` | `server/src/modules/exams/examRecheckRequest.model.js` | Student recheck workflow and assignment to teachers |
@@ -239,7 +241,27 @@ school-saas/
 - **Reserved subdomain:** `platform` (`server/src/core/utils/subdomain.js`).
 
 **Migration strategy**  
-**`sequelize.sync({ alter: true })` on every successful DB connect** — no versioned migration files. Suitable for early dev; risky for production (schema drift, locking).
+Runtime schema auto-alter has been removed from startup. Schema changes are now applied through **versioned Sequelize migrations** (`server/migrations/`) via CLI commands (`npm run db:migrate`, `npm run db:migrate:undo`, `npm run db:migrate:status`), which is safer for production rollout.
+
+**Recent DB hardening updates**
+
+- Added migration baseline files and CLI configuration:
+  - `server/.sequelizerc`
+  - `server/config/config.cjs`
+  - `server/migrations/20260429145000-add-query-performance-indexes.js`
+  - `server/migrations/20260429150000-add-check-constraints-for-enum-like-fields.js`
+- Added performance indexes for report-heavy paths:
+  - `fee_collections (tenant_id, collection_date)`
+  - `fee_collections (tenant_id, student_id, collection_date)`
+  - `student_enrollments (tenant_id, academic_year_id, status)`
+  - `student_enrollments (tenant_id, student_id, status)`
+- Added DB-level `CHECK` constraints with pre-cleanup updates for:
+  - `users.role`
+  - `users.status`
+  - `student_enrollments.status`
+  - `student_enrollments.promotion_type`
+  - `fee_collections.status`
+- Added operations runbook: `docs/DB_MIGRATIONS_RUNBOOK.md`
 
 ---
 
@@ -261,6 +283,10 @@ school-saas/
 | Method | Path | Purpose |
 |--------|------|---------|
 | POST | `/auth/login` | Body: `email`+`password` or `login`+`password`; tenant from JWT or **`x-tenant-id`** header |
+| POST | `/auth/refresh` | Rotate refresh token and return new access/refresh token pair |
+| POST | `/auth/forgot-password` | Creates password reset token flow (tenant-scoped) |
+| POST | `/auth/reset-password` | Resets password via reset token |
+| POST | `/auth/logout` | Revokes current access session (and optional refresh token) |
 
 **Modules (tenant)** (`server/src/modules/modules/modules.routes.js`)
 
@@ -425,7 +451,7 @@ Stack: **`tenantMiddleware`** → **`authMiddleware`** → **`checkFeature('repo
 | GET | `/reports/teachers/assignment-summary` | Teacher assignment summary |
 
 **Request/response**  
-Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true`. Errors should use **`{ message: string }`**; a few legacy paths may still return **`{ error: string }`** — align new code with **`message`**.
+Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true`. Error responses are standardized to **`{ message: string }`** (legacy `{ error }` responses were normalized in recent backend cleanup).
 
 ---
 
@@ -435,7 +461,7 @@ Mostly **JSON** with **snake_case** fields matching Sequelize `underscored: true
 No classic `NgModule` feature modules — **standalone components** + **lazy `loadComponent`** in `client/src/app/app.routes.ts`.
 
 - **Feature areas:** `modules/auth`, `modules/home`, `modules/settings`, `modules/reports`, `modules/classes`, `modules/students`, `modules/teachers`, `modules/fees`, `modules/expenses`, `modules/exams`, `modules/super-admin`.
-- **Shared:** `shared/placeholder-page`, `shared/unauthorized`, `shared/table-pagination-footer`.
+- **Shared:** `shared/loading-spinner`, `shared/skeleton-table`, `shared/skeleton-card`, `shared/inline-error`, `shared/error-page`, `shared/placeholder-page`, `shared/unauthorized`, `shared/table-pagination-footer`.
 - **Layout:** `layout/main-layout` (tenant app shell), `layout/super-admin-layout`, `layout/app-header-actions`.
 
 **Routing**
@@ -446,7 +472,7 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
   - `authGuard` — main app + unauthorized; stores `returnUrl`.
   - `superAdminGuard` — role `super_admin`.
   - `featureGuard` — reads `route.data['moduleKey']`, checks `FeatureService.isEnabled()`; else `/unauthorized`.
-- **Wildcard:** `**` → `/login`.
+- **Wildcard:** `**` → `/404` with dedicated error page component.
 
 **Component hierarchy (key flows)**
 
@@ -464,11 +490,12 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 | `client/src/app/services/feature.service.ts` | `GET /modules`, signal `Set` of enabled `module_key`s |
 | `client/src/app/services/branding.service.ts` | Tenant theming (loaded via initializer when authenticated) |
 | `client/src/app/services/academic.service.ts` | Classes, sections, academic years |
+| `client/src/app/services/lookup.service.ts` | Cached signal-backed lookup state for classes/academic years + invalidation hooks |
 | `client/src/app/services/student.service.ts` | Student CRUD, list normalization, promote, etc. |
 | `client/src/app/services/teacher.service.ts` | Teacher admin CRUD + self-profile endpoints + assignment endpoints |
 | `client/src/app/services/fee.service.ts` | Fee collection and student fee history |
 | `client/src/app/services/exam.service.ts` | Exam lifecycle, timetable, marks, grading, student/teacher exam views |
-| `client/src/app/services/api.service.ts` | Demo `GET /` with hardcoded `x-tenant-id: abc` (non-core utility) |
+| `client/src/app/services/api.service.ts` | Demo `GET /` utility now relies on interceptor tenant header injection (no hardcoded tenant) |
 | `client/src/app/services/theme.service.ts` | Dark/light via `APP_INITIALIZER` |
 | `client/src/app/services/toast.service.ts`, `notification.service.ts` | UX |
 | `client/src/app/services/dashboard.service.ts` | Role-aware dashboard widgets (`/dashboard/*`) |
@@ -476,14 +503,44 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 | `client/src/app/services/report.service.ts` | Reports listing + CSV-oriented downloads (`/reports/*`) |
 
 **State management**  
-**Signals + localStorage** for auth and feature sets; no global store. HTTP state is mostly **imperative** in components/services.
+**Signals + localStorage** for auth and feature sets; no global store. Recent frontend UX refactor introduced:
+
+- shared loading/error primitives in `shared/*` (table/card skeletons, inline error, full-page error),
+- signal-driven lookup caching via `LookupService`,
+- targeted `toSignal()` adoption for initial read-only dashboard fetches while retaining manual refresh/requery flows where needed.
+
+---
+
+## 6.1 Frontend UX Improvements (Recent)
+
+Recent Core-First UX quality work landed in the Angular client:
+
+- Added reusable standalone components (all OnPush) for loading and error states:
+  - `client/src/app/shared/loading-spinner/loading-spinner.component.ts`
+  - `client/src/app/shared/skeleton-table/skeleton-table.component.ts`
+  - `client/src/app/shared/skeleton-card/skeleton-card.component.ts`
+  - `client/src/app/shared/inline-error/inline-error.component.ts`
+  - `client/src/app/shared/error-page/error-page.component.ts`
+  - barrel exports via `client/src/app/shared/index.ts`
+- Routing hardening:
+  - added dedicated `/404` route and wildcard redirect to `/404` in `client/src/app/app.routes.ts`
+- Lookup data deduplication:
+  - introduced `client/src/app/services/lookup.service.ts` to cache classes/academic years as signals
+  - class create/update now invalidates lookup cache in `modules/classes/class-form/class-form.component.ts`
+- High-traffic module migration:
+  - home dashboards (`admin/teacher/student`) use shared skeleton-card + inline error patterns
+  - students/teachers lists use shared table skeleton + inline error
+  - reports pages use shared loading/error primitives and PrimeNG-based interactive controls
+- `toSignal()` rollout:
+  - applied for initial dashboard fetch pipelines with explicit refresh trigger signals
+  - retained manual signal + subscribe paths for user-triggered requery patterns (filters/pagination/forms)
 
 ---
 
 ## 7. Backend Architecture
 
 **Layering**  
-**Thin vertical slices:** **`*.routes.js` → middleware chain → `*.controller.js` → Sequelize models inline.** No dedicated service or repository layer.
+Primarily vertical slices (**`*.routes.js` → middleware chain → `*.controller.js` → Sequelize**), now with a **growing service layer** for reusable business logic (e.g., `auth/session.service.js`, `exams/examResults.service.js`, `students/student.service.js`, `teachers/teacher.service.js`, `audit/audit.service.js`).
 
 **Middleware chain (typical tenant API)**
 
@@ -495,10 +552,10 @@ No classic `NgModule` feature modules — **standalone components** + **lazy `lo
 **Order caveat:** `/auth/signup` is registered **before** `tenantMiddleware`; `/auth/login` is **after** `tenantMiddleware`, so login requires tenant context (header or JWT path).
 
 **Error handling**  
-Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. **`express`** async errors forwarded with **`next(err)`** are handled by a **global error middleware** at the end of `server/src/index.js`, which logs the stack server-side and returns **`{ message: 'Internal server error' }`** without leaking internals.
+Controllers generally use **`try/catch` → standardized JSON errors (`{ message }`)**. A shared response helper (`server/src/core/http/response.js`) and terminal global error middleware in `server/src/index.js` enforce generic internal error responses without leaking internals.
 
 **Logging**  
-**Console** (`console.log` / `console.error`) in startup and seeds; Sequelize `logging: false`.
+Structured JSON logging is implemented via **Pino** (`server/src/core/logger/logger.js`) with request correlation through `request-context.middleware.js` (`x-request-id`, `req.log`). Sequelize SQL logging remains disabled (`logging: false`).
 
 ---
 
@@ -526,8 +583,8 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. **`ex
 
 - **Signup:** `POST /auth/signup` → creates `tenants` + first `admin` `users` row → seeds modules, canonical classes, academic years → returns **JWT** + user + tenant (`server/src/modules/auth/auth.controller.js`).
 - **Login:** `POST /auth/login` with tenant context → validates password → **JWT** (`1d`).
-- **Logout:** **Client-only** — `AuthService.logout()` clears storage (`client/src/app/services/auth.service.ts`); **no server revoke/blocklist**.
-- **Refresh:** **Not found / planned.**
+- **Logout:** `POST /auth/logout` revokes access token session and optional refresh token; client also clears local storage.
+- **Refresh:** Implemented via `POST /auth/refresh` with rotation/blocklist behavior in `server/src/modules/auth/session.service.js`.
 
 **Roles**
 
@@ -605,8 +662,8 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. **`ex
 
 **Inconsistencies**
 
-- Some API responses may still use **`{ error: string }`**; prefer **`{ message: string }`** for new code (see workspace API conventions).
-- `client/src/app/services/api.service.ts` hardcodes tenant `abc` for demo `getHello()` — easy to confuse with real app flow.
+- API error responses were standardized to **`{ message: string }`** in targeted legacy controllers; keep this as the strict convention for all new work.
+- API versioning is still intentionally deferred (routes remain unversioned).
 
 ---
 
@@ -627,7 +684,9 @@ Controllers generally **`try/catch` → `res.status(4xx/5xx).json(...)`**. **`ex
 
 - `express` **^5.2.1**, `sequelize` **^6.37.8**, `pg` **^8.20.0`, **`express-rate-limit`** **^8.x** (login/signup)
 - `jsonwebtoken` **^9.0.3**, `bcrypt` **^6.0.0**, `cors` **^2.8.6**, `dotenv` **^17.4.0**, `multer` **^1.4.5-lts.1**, `sharp` **^0.33.5**
+- `zod` (request validation middleware/schemas), `pino` (structured JSON logging)
 - `csv-parse`, `csv-stringify`, `pdfkit`, `archiver` — reports/PDF/archive flows where used
+- `sequelize-cli` **^6.6.5** — migration management
 - `nodemon` **^3.1.14** (dev)
 
 **Outdated / conflict audit**  
