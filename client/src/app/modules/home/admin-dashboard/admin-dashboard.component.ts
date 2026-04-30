@@ -25,6 +25,7 @@ import { StatCardComponent } from '../components/stat-card.component';
     InlineErrorComponent,
   ],
   templateUrl: './admin-dashboard.component.html',
+  styleUrl: './admin-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDashboardComponent {

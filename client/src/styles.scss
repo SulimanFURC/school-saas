@@ -121,6 +121,21 @@
   --app-surface-border: var(--p-surface-border);
   --app-text-color: var(--p-text-color);
   --app-text-muted: var(--p-text-muted-color);
+
+  /* Dashboard visual system (tenant-aware) */
+  --dashboard-sidebar-start: var(--secondary);
+  --dashboard-sidebar-end: color-mix(in srgb, var(--secondary) 72%, var(--primary));
+  --dashboard-toolbar-bg: var(--secondary);
+  --dashboard-toolbar-fg: #ffffff;
+  --dashboard-toolbar-icon: rgba(255, 255, 255, 0.9);
+  --dashboard-toolbar-border: color-mix(in srgb, var(--primary) 65%, var(--secondary));
+  --dashboard-bg: #f7f8fa;
+  --dashboard-card: #ffffff;
+  --dashboard-text: #1f2937;
+  --dashboard-text-muted: #6b7280;
+  --dashboard-border: #e5e7eb;
+  --dashboard-radius: 14px;
+  --dashboard-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
 }
 
 .app-dark {
@@ -997,27 +1012,27 @@ html.tenant-branding-active {
 
 .layout-sidebar,
 .sa-sidenav {
-  background-color: var(--secondary) !important;
+  background: linear-gradient(180deg, var(--dashboard-sidebar-start), var(--dashboard-sidebar-end)) !important;
 }
 
 .layout-toolbar,
 .sa-toolbar {
-  background-color: var(--secondary) !important;
-  border-bottom: 2px solid var(--primary) !important;
+  background-color: var(--dashboard-toolbar-bg) !important;
+  border-bottom: 2px solid var(--dashboard-toolbar-border) !important;
 }
 
 .layout-toolbar,
 .sa-toolbar,
 .layout-toolbar *,
 .sa-toolbar * {
-  color: #ffffff;
+  color: var(--dashboard-toolbar-fg);
 }
 
 .layout-toolbar .bi,
 .sa-toolbar .bi,
 .layout-toolbar__menu,
 .app-header-actions__icon {
-  color: #e2e8f0 !important;
+  color: var(--dashboard-toolbar-icon) !important;
 }
 
 .card {

@@ -1,16 +1,19 @@
-<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-  <div>
-    <h1 class="h4 mb-0">School overview</h1>
-    <p class="text-secondary small mb-0">Key metrics for your institution</p>
+<div class="dashboard-page">
+  <div class="dashboard-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h1 class="dashboard-title mb-0">School overview</h1>
+      <p class="dashboard-subtitle mb-0">Key metrics for your institution</p>
+    </div>
+    <p-button
+      label="Refresh"
+      icon="bi bi-arrow-clockwise"
+      [outlined]="true"
+      size="small"
+      styleClass="dashboard-refresh-btn"
+      [loading]="loading()"
+      (onClick)="refresh()"
+    />
   </div>
-  <p-button
-    label="Refresh"
-    icon="bi bi-arrow-clockwise"
-    [outlined]="true"
-    size="small"
-    [loading]="loading()"
-    (onClick)="refresh()"
-  />
 </div>
 
 @if (loading() && !data()) {
@@ -20,7 +23,7 @@
 }
 
 @if (data(); as d) {
-  <app-dashboard-section title="At a glance">
+  <app-dashboard-section title="At a glance" sectionClass="dashboard-section">
     <div class="row g-3 mb-2">
       <div class="col-12 col-md-6 col-xl-3">
         <app-stat-card label="Total students" [value]="d.students.total" icon="bi-people" routerLink="/students" />
@@ -64,7 +67,7 @@
     </div>
   </app-dashboard-section>
 
-  <app-dashboard-section title="Recent activity">
+  <app-dashboard-section title="Recent activity" sectionClass="dashboard-section">
     <div class="row g-3">
       <div class="col-12 col-lg-6">
         <app-recent-table

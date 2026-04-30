@@ -11,8 +11,8 @@ import { RouterLink } from '@angular/router';
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between gap-2">
             <div>
-              <div class="section-label mb-1">{{ label }}</div>
-              <div class="fs-3 fw-semibold">{{ value ?? '—' }}</div>
+              <div class="stat-card__title mb-1">{{ label }}</div>
+              <div class="stat-card__value">{{ value ?? '—' }}</div>
               @if (hint) {
                 <div class="small text-secondary mt-1">{{ hint }}</div>
               }
@@ -30,8 +30,8 @@ import { RouterLink } from '@angular/router';
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between gap-2">
             <div>
-              <div class="section-label mb-1">{{ label }}</div>
-              <div class="fs-3 fw-semibold">{{ value ?? '—' }}</div>
+              <div class="stat-card__title mb-1">{{ label }}</div>
+              <div class="stat-card__value">{{ value ?? '—' }}</div>
               @if (hint) {
                 <div class="small text-secondary mt-1">{{ hint }}</div>
               }
@@ -51,17 +51,34 @@ import { RouterLink } from '@angular/router';
       :host {
         display: block;
       }
+      .stat-card {
+        border: 1px solid var(--dashboard-border);
+        border-radius: var(--dashboard-radius);
+        box-shadow: var(--dashboard-shadow);
+        background: var(--dashboard-card);
+      }
       .stat-card--link:hover {
-        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      }
+      .stat-card__title {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--dashboard-text-muted);
+      }
+      .stat-card__value {
+        font-size: 1.8rem;
+        line-height: 1.1;
+        font-weight: 700;
+        color: var(--dashboard-text);
       }
       .stat-card__icon-chip {
         width: 2.5rem;
         height: 2.5rem;
-        border-radius: 0.625rem;
+        border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #eff6ff;
+        background: color-mix(in srgb, var(--primary) 14%, #ffffff);
       }
       .stat-card__icon-chip .bi {
         color: var(--primary) !important;
