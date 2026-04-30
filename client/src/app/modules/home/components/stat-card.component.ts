@@ -11,14 +11,16 @@ import { RouterLink } from '@angular/router';
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between gap-2">
             <div>
-              <div class="text-secondary small mb-1">{{ label }}</div>
+              <div class="section-label mb-1">{{ label }}</div>
               <div class="fs-3 fw-semibold">{{ value ?? '—' }}</div>
               @if (hint) {
                 <div class="small text-secondary mt-1">{{ hint }}</div>
               }
             </div>
             @if (icon) {
-              <i class="bi fs-2 text-primary opacity-75" [class]="icon"></i>
+              <span class="stat-card__icon-chip">
+                <i class="bi fs-5" [class]="icon"></i>
+              </span>
             }
           </div>
         </div>
@@ -28,14 +30,16 @@ import { RouterLink } from '@angular/router';
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between gap-2">
             <div>
-              <div class="text-secondary small mb-1">{{ label }}</div>
+              <div class="section-label mb-1">{{ label }}</div>
               <div class="fs-3 fw-semibold">{{ value ?? '—' }}</div>
               @if (hint) {
                 <div class="small text-secondary mt-1">{{ hint }}</div>
               }
             </div>
             @if (icon) {
-              <i class="bi fs-2 opacity-75" [class]="iconClass"></i>
+              <span class="stat-card__icon-chip">
+                <i class="bi fs-5" [class]="iconClass"></i>
+              </span>
             }
           </div>
         </div>
@@ -49,6 +53,19 @@ import { RouterLink } from '@angular/router';
       }
       .stat-card--link:hover {
         box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+      }
+      .stat-card__icon-chip {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.625rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eff6ff;
+      }
+      .stat-card__icon-chip .bi {
+        color: var(--primary) !important;
+        opacity: 1 !important;
       }
     `,
   ],

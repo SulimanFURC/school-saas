@@ -11,7 +11,11 @@
     <div class="layout-sidebar__inner">
       <div class="layout-brand border-bottom">
         <div class="layout-brand__row">
-          <img class="layout-brand__logo" [src]="tenantLogoSrc()" width="40" height="40" alt="" />
+          @if (logoUrl()) {
+            <img class="layout-brand__logo" [src]="tenantLogoSrc()" width="40" height="40" alt="" />
+          } @else {
+            <span class="bi bi-mortarboard-fill layout-brand__logo-fallback" [style.color]="primaryColor()"></span>
+          }
           <div class="layout-brand__text">
             <span class="ds-headline-sm layout-brand__title">School SaaS</span>
             <span class="ds-label-sm layout-brand__subtitle">Admin workspace</span>

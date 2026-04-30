@@ -20,7 +20,7 @@ export interface RecentColumn {
           <p class="text-secondary mb-0 p-3 small">No data available</p>
         } @else {
           <div class="table-responsive">
-            <table class="table table-sm table-striped mb-0">
+            <table class="table app-data-table table-sm mb-0">
               <thead>
                 <tr>
                   @for (c of columns; track c.key) {

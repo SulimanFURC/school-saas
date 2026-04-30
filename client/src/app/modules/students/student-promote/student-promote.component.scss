@@ -1,9 +1,9 @@
 /* Promote Students — content-area visual design (scoped) */
-$sp-purple: #5a4cf5;
+$sp-purple: var(--color-primary);
 $sp-purple-hover: color-mix(in srgb, $sp-purple 88%, black);
-$sp-page-bg: #f8f9fd;
-$sp-title: #1a237e;
-$sp-subtitle: #6c757d;
+$sp-page-bg: var(--app-surface-ground);
+$sp-title: var(--app-text-color);
+$sp-subtitle: var(--app-text-muted);
 $sp-card-radius: 14px;
 $sp-control-radius: 10px;
 
@@ -35,10 +35,10 @@ $sp-control-radius: 10px;
 
 /* Cards */
 .sp-card {
-  background: #fff;
+  background: var(--app-surface-card);
   border-radius: $sp-card-radius;
   box-shadow: 0 10px 40px rgba(26, 35, 126, 0.06);
-  border: 1px solid color-mix(in srgb, #1a237e 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 6%, transparent);
   overflow: hidden;
 }
 
@@ -65,8 +65,8 @@ $sp-control-radius: 10px;
 }
 
 .sp-card__head-icon--blue {
-  background: color-mix(in srgb, #2563eb 14%, white);
-  color: #2563eb;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--bs-white));
+  color: var(--color-primary);
 }
 
 .sp-card__head-icon--purple {
@@ -89,11 +89,11 @@ $sp-control-radius: 10px;
 
 .sp-field-label {
   display: block;
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #868e96;
+  color: #94a3b8;
   margin-bottom: 0.35rem;
 }
 
@@ -142,9 +142,9 @@ $sp-control-radius: 10px;
 }
 
 .sp-btn-primary {
-  background: $sp-purple;
-  border: none;
-  color: #fff;
+  background: #eff6ff;
+  border: 1px solid var(--primary);
+  color: #1d4ed8;
   font-weight: 600;
   border-radius: $sp-control-radius;
   padding-inline: 1.25rem;
@@ -152,8 +152,8 @@ $sp-control-radius: 10px;
 }
 
 .sp-btn-primary:hover:not(:disabled) {
-  background: $sp-purple-hover;
-  color: #fff;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .sp-btn-primary:disabled {
@@ -167,11 +167,11 @@ $sp-control-radius: 10px;
 }
 
 .sp-selection-label {
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #adb5bd;
+  color: #94a3b8;
 }
 
 .sp-mode-group {

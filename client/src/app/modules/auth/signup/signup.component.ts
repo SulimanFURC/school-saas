@@ -4,7 +4,6 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize, from, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
-import { BrandingService } from '../../../services/branding.service';
 import { FeatureService } from '../../../services/feature.service';
 import { ToastService } from '../../../services/toast.service';
 
@@ -29,7 +28,6 @@ export class SignupComponent {
   private router = inject(Router);
   private toast = inject(ToastService);
   private features = inject(FeatureService);
-  private branding = inject(BrandingService);
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -61,11 +59,7 @@ export class SignupComponent {
         password: v.password,
       })
       .pipe(
-        switchMap(() =>
-          from(this.features.loadForCurrentTenant().catch(() => undefined)).pipe(
-            switchMap(() => from(this.branding.loadForCurrentTenant().catch(() => undefined)))
-          )
-        ),
+        switchMap(() => from(this.features.loadForCurrentTenant().catch(() => undefined))),
         tap(() => {
           void this.router.navigateByUrl('/');
         }),

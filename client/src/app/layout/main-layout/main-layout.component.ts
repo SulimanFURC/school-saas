@@ -51,6 +51,8 @@ export class MainLayoutComponent {
   readonly auth = inject(AuthService);
   private features = inject(FeatureService);
   readonly branding = inject(BrandingService);
+  readonly logoUrl = this.branding.logoUrl;
+  readonly primaryColor = this.branding.primaryColor;
 
   /** Desktop: column width; mobile: overlay open */
   readonly sidebarOpen = signal(true);
@@ -61,7 +63,7 @@ export class MainLayoutComponent {
     if (this.auth.userRole()?.toLowerCase() === 'super_admin') {
       return 'assets/default-logo.png';
     }
-    const rel = this.branding.logoUrl();
+    const rel = this.logoUrl();
     if (rel) {
       return `${environment.apiBaseUrl}/${rel.replace(/^\//, '')}`;
     }

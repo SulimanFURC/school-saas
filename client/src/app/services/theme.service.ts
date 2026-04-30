@@ -1,49 +1,56 @@
-import { Injectable, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 
-export type AppTheme = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark';
 
-const LS_KEY = 'school_saas_theme';
+const STORAGE_KEY = 'school_saas_theme';
+const DARK_CLASS = 'app-dark';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly themeSig = signal<AppTheme>(ThemeService.readStored());
+  private document = inject(DOCUMENT);
 
-  readonly theme = this.themeSig.asReadonly();
+  private _mode = signal<ThemeMode>(this.readStoredPreference());
 
-  isDark(): boolean {
-    return this.themeSig() === 'dark';
-  }
+  readonly mode = this._mode.asReadonly();
+  readonly isDark = computed(() => this._mode() === 'dark');
 
-  setTheme(theme: AppTheme): void {
-    this.themeSig.set(theme);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(LS_KEY, theme);
-    }
-    ThemeService.applyDomClass(theme);
+  constructor() {
+    this.applyTheme(this._mode());
+
+    effect(() => {
+      const mode = this._mode();
+      this.applyTheme(mode);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, mode);
+      }
+    });
   }
 
   toggle(): void {
-    this.setTheme(this.themeSig() === 'dark' ? 'light' : 'dark');
+    this._mode.update((m) => (m === 'light' ? 'dark' : 'light'));
   }
 
-  private static readStored(): AppTheme {
-    if (typeof localStorage === 'undefined') return 'dark';
-    return localStorage.getItem(LS_KEY) === 'light' ? 'light' : 'dark';
+  setMode(mode: ThemeMode): void {
+    this._mode.set(mode);
   }
 
-  static applyDomClass(theme: AppTheme): void {
-    if (typeof document === 'undefined') return;
-    const root = document.documentElement;
-    root.classList.remove('theme-light', 'theme-dark');
-    root.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
-    root.setAttribute('data-bs-theme', theme === 'light' ? 'light' : 'dark');
+  private readStoredPreference(): ThemeMode {
+    if (typeof localStorage === 'undefined') {
+      return 'light';
+    }
+    const persisted = localStorage.getItem(STORAGE_KEY);
+    return persisted === 'dark' || persisted === 'light' ? persisted : 'light';
   }
-}
 
-export function themeInitializer(): () => void {
-  return () => {
-    if (typeof localStorage === 'undefined' || typeof document === 'undefined') return;
-    const theme = localStorage.getItem(LS_KEY) === 'light' ? 'light' : 'dark';
-    ThemeService.applyDomClass(theme);
-  };
+  private applyTheme(mode: ThemeMode): void {
+    const html = this.document.documentElement;
+    if (mode === 'dark') {
+      html.classList.add(DARK_CLASS);
+      html.setAttribute('data-bs-theme', 'dark');
+      return;
+    }
+    html.classList.remove(DARK_CLASS);
+    html.setAttribute('data-bs-theme', 'light');
+  }
 }

@@ -5,7 +5,7 @@
   display: block;
   margin: -1.75rem -1.5rem -1rem;
   padding: 1.75rem 1.5rem 1rem;
-  background-color: #f5f6fa;
+  background-color: var(--app-surface-ground);
 }
 
 :host-context(html.theme-dark),
@@ -164,7 +164,7 @@
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--bs-white);
 }
 
 .reg-section__desc {
@@ -211,7 +211,7 @@
 .page--student-register .reg-section__body .form-select {
   min-height: 40px;
   border-radius: 7px;
-  border-color: #e0e0e0;
+  border-color: var(--app-surface-border);
 }
 
 :host-context(html.theme-dark) .page--student-register .reg-section__body .form-control:not(textarea),
@@ -387,42 +387,45 @@
 }
 
 .reg-actions__submit.btn.btn-primary {
-  --bs-btn-bg: #7c3aed;
-  --bs-btn-border-color: transparent;
-  --bs-btn-hover-bg: #6d28d9;
-  --bs-btn-hover-border-color: transparent;
-  --bs-btn-active-bg: #5b21b6;
-  --bs-btn-active-border-color: transparent;
-  --bs-btn-disabled-bg: #7c3aed;
-  --bs-btn-disabled-border-color: transparent;
+  --bs-btn-bg: #eff6ff;
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-color: #1d4ed8;
+  --bs-btn-hover-bg: #dbeafe;
+  --bs-btn-hover-border-color: var(--primary);
+  --bs-btn-hover-color: #1d4ed8;
+  --bs-btn-active-bg: #bfdbfe;
+  --bs-btn-active-border-color: var(--primary);
+  --bs-btn-active-color: #1d4ed8;
+  --bs-btn-disabled-bg: #eff6ff;
+  --bs-btn-disabled-border-color: var(--primary);
+  --bs-btn-disabled-color: #1d4ed8;
 
   min-width: 6.75rem;
   min-height: 40px;
-  border: none;
+  border: 1px solid var(--primary);
   border-radius: 8px;
   font-weight: 600;
-  color: #fff;
-  background-image: linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #a78bfa 100%);
-  background-color: transparent;
-  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.35);
+  color: #1d4ed8;
+  background-image: none;
+  background-color: #eff6ff;
+  box-shadow: none;
 }
 
 .reg-actions__submit.btn.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-  color: #fff;
-  background-image: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #9333ea 100%);
+  color: #1d4ed8;
+  background-image: none;
+  background-color: #dbeafe;
 }
 
 .reg-actions__submit.btn.btn-primary:disabled {
   opacity: 0.65;
-  background-image: linear-gradient(135deg, #6d28d9 0%, #9333ea 50%, #a78bfa 100%);
+  background-image: none;
 }
 
 .reg-actions__submit.btn.btn-primary:focus-visible {
-  color: #fff;
+  color: #1d4ed8;
   box-shadow:
-    0 2px 8px rgba(109, 40, 217, 0.35),
-    0 0 0 0.2rem rgba(124, 58, 237, 0.35);
+    0 0 0 0.2rem rgba(37, 99, 235, 0.2);
 }
 
 .reg-hint,

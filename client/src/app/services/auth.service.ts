@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, Injector, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 
@@ -90,7 +90,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private features = inject(FeatureService);
-  private injector = inject(Injector);
+  private brandingService = inject(BrandingService);
 
   private readonly userSignal = signal<AuthUser | null>(bootstrapUserFromStorage());
 
@@ -225,11 +225,7 @@ export class AuthService {
     localStorage.removeItem(LS_USER);
     this.userSignal.set(null);
     this.features.clear();
-    try {
-      this.injector.get(BrandingService).reset();
-    } catch {
-      /* optional */
-    }
+    this.brandingService.resetToDefaults();
     void this.router.navigate(['/login']);
   }
 
@@ -259,5 +255,10 @@ export class AuthService {
       localStorage.setItem(LS_REFRESH, res.refreshToken);
     }
     this.userSignal.set(normalized);
+    if ((normalized.role ?? '').toLowerCase() === 'super_admin') {
+      this.brandingService.resetToDefaults();
+    } else {
+      this.brandingService.loadBranding();
+    }
   }
 }

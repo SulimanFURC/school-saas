@@ -9,7 +9,6 @@ import { PasswordModule } from 'primeng/password';
 import { finalize, from, map, of, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../../services/auth.service';
-import { BrandingService } from '../../../services/branding.service';
 import { FeatureService } from '../../../services/feature.service';
 import { ToastService } from '../../../services/toast.service';
 
@@ -35,7 +34,6 @@ export class LoginComponent {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private features = inject(FeatureService);
-  private branding = inject(BrandingService);
 
   readonly form = this.fb.nonNullable.group({
     subdomain: ['', [Validators.required, Validators.minLength(2)]],
@@ -63,17 +61,11 @@ export class LoginComponent {
           if (role === 'super_admin') {
             return of(loginRes);
           }
-          return from(this.features.loadForCurrentTenant().catch(() => undefined)).pipe(
-            switchMap(() => from(this.branding.loadForCurrentTenant().catch(() => undefined))),
-            map(() => loginRes)
-          );
+          return from(this.features.loadForCurrentTenant().catch(() => undefined)).pipe(map(() => loginRes));
         }),
         tap((loginRes) => {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] as string | undefined;
           const role = this.auth.resolveRoleFromLogin(loginRes);
-          if (role === 'super_admin') {
-            this.branding.reset();
-          }
           let target = '/';
           if (role === 'super_admin') {
             target = '/super-admin/dashboard';

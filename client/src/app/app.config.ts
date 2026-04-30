@@ -12,7 +12,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 import { AuthService } from './services/auth.service';
 import { BrandingService } from './services/branding.service';
 import { FeatureService } from './services/feature.service';
-import { themeInitializer } from './services/theme.service';
+import { ThemeService } from './services/theme.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,14 +25,15 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
         options: {
           prefix: 'p',
-          darkModeSelector: '[data-bs-theme="dark"]',
+          darkModeSelector: '.app-dark',
           cssLayer: false,
         },
       },
     }),
     {
       provide: APP_INITIALIZER,
-      useFactory: themeInitializer,
+      useFactory: (themeService: ThemeService) => () => Promise.resolve(themeService),
+      deps: [ThemeService],
       multi: true,
     },
     {

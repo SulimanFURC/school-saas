@@ -103,8 +103,8 @@
   height: 40px;
   border-radius: 50%;
   border: 2px solid color-mix(in srgb, var(--ds-toolbar-fg) 35%, transparent);
-  background-color: color-mix(in srgb, var(--ds-primary) 28%, var(--ds-surface-container-high));
-  color: var(--ds-toolbar-fg);
+  background-color: var(--primary);
+  color: var(--bs-white);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -146,8 +146,8 @@
   height: 40px;
   border-radius: 50%;
   border: 2px solid color-mix(in srgb, var(--ds-menu-on-surface) 18%, transparent);
-  background-color: color-mix(in srgb, var(--ds-primary) 28%, var(--ds-surface-container-high));
-  color: var(--ds-menu-on-surface);
+  background-color: var(--primary);
+  color: var(--bs-white);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -160,7 +160,7 @@
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: #22c55e;
+  background-color: var(--bs-success);
   border: 1.5px solid var(--ds-menu-surface);
   box-sizing: border-box;
 }

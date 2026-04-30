@@ -35,7 +35,7 @@
 
 .layout-sidebar {
   flex-shrink: 0;
-  background-color: var(--ds-surface-container-low);
+  background-color: var(--secondary);
   z-index: 1045;
   display: flex;
   flex-direction: column;
@@ -114,12 +114,13 @@
 
 .sa-brand__title {
   display: block;
-  color: var(--ds-on-surface);
+  color: var(--bs-white);
 }
 
 .sa-brand__subtitle {
   display: block;
   margin-top: 0.25rem;
+  color: var(--app-text-muted);
 }
 
 .sa-nav-item {
@@ -155,12 +156,12 @@
   align-items: center;
   min-height: 56px;
   padding: 0 0.75rem 0 0.5rem;
-  background-color: var(--ds-toolbar-bg);
+  background-color: var(--secondary);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   color: var(--ds-toolbar-fg);
   border: none;
-  border-bottom: 1px solid var(--ds-toolbar-border);
+  border-bottom: 2px solid var(--primary);
 }
 
 .sa-toolbar__title {

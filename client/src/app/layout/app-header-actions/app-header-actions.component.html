@@ -1,12 +1,15 @@
 <div class="app-header-actions d-flex align-items-center gap-1 flex-shrink-0">
-  <button
-    type="button"
-    class="btn btn-link app-header-actions__icon p-2"
-    [attr.aria-label]="theme.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
-    (click)="toggleTheme()"
-  >
-    <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
-  </button>
+  <p-button
+    [icon]="isDark() ? 'bi bi-sun' : 'bi bi-moon'"
+    [rounded]="true"
+    [text]="true"
+    severity="secondary"
+    styleClass="app-header-actions__icon p-2"
+    (onClick)="toggleTheme()"
+    [pTooltip]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    tooltipPosition="bottom"
+    [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+  />
 
   <div class="dropdown">
     <button

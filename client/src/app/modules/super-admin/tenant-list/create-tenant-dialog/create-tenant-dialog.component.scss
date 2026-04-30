@@ -99,7 +99,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .ct-drawer__footer {
@@ -125,15 +125,15 @@
 }
 
 .ct-drawer__btn--primary {
-  background-color: #1e293b;
-  border-color: #1e293b;
-  color: #ffffff;
+  background-color: #eff6ff;
+  border-color: var(--primary);
+  color: #1d4ed8;
 
   &:hover:not(:disabled),
   &:focus:not(:disabled) {
-    background-color: #0f172a;
-    border-color: #0f172a;
-    color: #ffffff;
+    background-color: #dbeafe;
+    border-color: var(--primary);
+    color: #1d4ed8;
   }
 }
 

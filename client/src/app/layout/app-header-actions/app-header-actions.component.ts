@@ -1,5 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, type AppNotification } from '../../services/notification.service';
@@ -22,14 +24,15 @@ function initialsFromName(name: string): string {
 
 @Component({
   selector: 'app-header-actions',
-  imports: [RouterLink],
+  imports: [RouterLink, ButtonModule, TooltipModule],
   templateUrl: './app-header-actions.component.html',
   styleUrl: './app-header-actions.component.scss',
 })
 export class AppHeaderActionsComponent {
   readonly auth = inject(AuthService);
-  readonly theme = inject(ThemeService);
+  private themeService = inject(ThemeService);
   private readonly notificationsSvc = inject(NotificationService);
+  readonly isDark = this.themeService.isDark;
 
   readonly notifications = this.notificationsSvc.notifications;
   readonly unreadCount = this.notificationsSvc.unreadCount;
@@ -48,7 +51,7 @@ export class AppHeaderActionsComponent {
   }
 
   toggleTheme(): void {
-    this.theme.toggle();
+    this.themeService.toggle();
   }
 
   markNotifRead(n: AppNotification): void {

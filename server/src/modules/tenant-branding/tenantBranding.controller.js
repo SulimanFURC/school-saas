@@ -2,7 +2,7 @@ const path = require('path');
 const Tenant = require('../tenant/tenant.model');
 const TenantBranding = require('./tenantBranding.model');
 
-const HEX_RE = /^#([0-9A-Fa-f]{6})$/;
+const HEX_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
 const DEFAULT_PRIMARY = '#1976d2';
 const DEFAULT_SECONDARY = '#ffffff';
@@ -12,7 +12,11 @@ function isValidHex(color) {
 }
 
 function normalizeHex(color) {
-  return color.trim();
+  const normalized = color.trim();
+  if (normalized.length === 4) {
+    return `#${normalized[1]}${normalized[1]}${normalized[2]}${normalized[2]}${normalized[3]}${normalized[3]}`;
+  }
+  return normalized;
 }
 
 function tenantIdentityFields(tenant) {
@@ -56,6 +60,22 @@ function brandingPayload(row, tenantId, tenant) {
   };
 }
 
+function currentTenantPayload(row) {
+  if (!row) {
+    return {
+      primary_color: null,
+      secondary_color: null,
+      logo_url: null,
+    };
+  }
+
+  return {
+    primary_color: row.primary_color ?? null,
+    secondary_color: row.secondary_color ?? null,
+    logo_url: row.logo_url ?? null,
+  };
+}
+
 exports.getForCurrentTenant = async (req, res) => {
   try {
     const tenantId = req.tenant?.id;
@@ -66,11 +86,8 @@ exports.getForCurrentTenant = async (req, res) => {
     if (role === 'super_admin') {
       return res.status(403).json({ message: 'Use super admin branding endpoints' });
     }
-    const [row, tenant] = await Promise.all([
-      TenantBranding.findOne({ where: { tenant_id: tenantId } }),
-      Tenant.findByPk(tenantId, { attributes: ['name', 'address', 'contact_email'] }),
-    ]);
-    res.json(brandingPayload(row, tenantId, tenant));
+    const row = await TenantBranding.findOne({ where: { tenant_id: tenantId } });
+    return res.status(200).json(currentTenantPayload(row));
   } catch (err) {
     console.error('getForCurrentTenant error:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -107,12 +124,12 @@ exports.upsertBranding = async (req, res) => {
 
     if (primaryColor !== undefined && primaryColor !== null && String(primaryColor).trim() !== '') {
       if (!isValidHex(primaryColor)) {
-        return res.status(400).json({ message: 'primaryColor must be a valid HEX color (#RRGGBB)' });
+        return res.status(400).json({ message: 'primaryColor must be a valid hex color (e.g. #4F46E5)' });
       }
     }
     if (secondaryColor !== undefined && secondaryColor !== null && String(secondaryColor).trim() !== '') {
       if (!isValidHex(secondaryColor)) {
-        return res.status(400).json({ message: 'secondaryColor must be a valid HEX color (#RRGGBB)' });
+        return res.status(400).json({ message: 'secondaryColor must be a valid hex color (e.g. #0EA5E9)' });
       }
     }
 

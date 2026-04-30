@@ -39,7 +39,7 @@
   padding: 0;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 25%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bs-white) 25%, transparent);
 }
 
 .tb-palette__dot:hover {
@@ -139,7 +139,7 @@
 }
 
 .tb-mini-nav__item--active {
-  color: #fff !important;
+  color: var(--bs-white) !important;
   font-weight: 600;
 }
 

@@ -17,6 +17,7 @@ import type { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload
 
 import { environment } from '../../../../environments/environment';
 import type { TenantBrandingResponse } from '../../../services/branding.service';
+import { BrandingService } from '../../../services/branding.service';
 import type { TenantListResponse, TenantRow } from '../tenant-list/tenant-list.component';
 import { ToastService } from '../../../services/toast.service';
 
@@ -94,6 +95,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
   private destroyRef = inject(DestroyRef);
+  private brandingService = inject(BrandingService);
 
   readonly tenants = signal<TenantRow[]>([]);
   readonly loadingList = signal(true);
@@ -155,6 +157,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
           this.pendingFileMeta.set(null);
           this.serverLogoUrl = null;
           this.selectedTenantName.set('School');
+          this.brandingService.revertPreview();
           return;
         }
         this.onTenantChange(id);
@@ -165,6 +168,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
     const v = this.form.getRawValue();
     this.previewPrimary.set(v.primaryColor || DEFAULT_PRIMARY);
     this.previewSecondary.set(v.secondaryColor || DEFAULT_SECONDARY);
+    this.brandingService.previewColors(this.previewPrimary(), this.previewSecondary());
   }
 
   onTenantChange(tenantId: string): void {
@@ -181,8 +185,8 @@ export class TenantBrandingSettingsComponent implements OnInit {
     this.http.get<TenantBrandingResponse>(`${environment.apiBaseUrl}/super-admin/tenant-branding/${tenantId}`).subscribe({
       next: (b) => {
         this.form.patchValue({
-          primaryColor: b.primaryColor,
-          secondaryColor: b.secondaryColor,
+          primaryColor: b.primaryColor ?? b.primary_color ?? DEFAULT_PRIMARY,
+          secondaryColor: b.secondaryColor ?? b.secondary_color ?? DEFAULT_SECONDARY,
         });
         this.syncPreview();
         if (b.logoUrl) {
@@ -269,6 +273,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
     } else {
       this.logoPreview.set(null);
     }
+    this.brandingService.previewColors(DEFAULT_PRIMARY, DEFAULT_SECONDARY);
   }
 
   async save(): Promise<void> {
@@ -306,6 +311,7 @@ export class TenantBrandingSettingsComponent implements OnInit {
         this.logoPreview.set(rel);
       }
       this.toast.open('Branding saved', 'Dismiss', { duration: 4000 });
+      this.brandingService.revertPreview();
     } catch (err: unknown) {
       const msg =
         typeof err === 'object' && err !== null && 'error' in err
@@ -315,6 +321,11 @@ export class TenantBrandingSettingsComponent implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  cancelBranding(): void {
+    this.brandingService.revertPreview();
+    this.syncPreview();
   }
 
   /** File name shown under upload (pending selection or current server asset). */
