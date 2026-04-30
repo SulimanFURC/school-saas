@@ -33,7 +33,6 @@ const Student = sequelize.define(
     current_address: { type: DataTypes.TEXT, allowNull: true },
     permanent_address: { type: DataTypes.TEXT, allowNull: true },
     extra_details: { type: DataTypes.TEXT, allowNull: true },
-    room_type: { type: DataTypes.STRING(50), allowNull: true },
     status: {
       type: DataTypes.STRING(50),
       defaultValue: 'active',

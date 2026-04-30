@@ -91,15 +91,17 @@ exports.listClasses = async (req, res) => {
     if (includeSections) {
       include.push({ model: Section, as: 'sections', required: false });
     }
-    const { count, rows } = await SchoolClass.findAndCountAll({
-      where: { tenant_id: tenantId },
-      include,
-      order: [['name', 'ASC']],
-      limit,
-      offset,
-      distinct: true,
-      col: 'SchoolClass.id',
-    });
+    const where = { tenant_id: tenantId };
+    const [rows, count] = await Promise.all([
+      SchoolClass.findAll({
+        where,
+        include,
+        order: [['name', 'ASC']],
+        limit,
+        offset,
+      }),
+      SchoolClass.count({ where }),
+    ]);
     res.status(200).json({ data: rows, total: count, page, limit });
   } catch (err) {
     req.log?.error({ err }, 'classes.listClasses error');

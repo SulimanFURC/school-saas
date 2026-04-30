@@ -155,7 +155,6 @@ export interface RegisterPayload {
   current_address?: string;
   permanent_address?: string;
   extra_details?: string;
-  room_type?: string;
   /** Raw base64 (no data: prefix); optimized on server */
   photo_base64?: string;
   guardian?: Record<string, string | undefined>;

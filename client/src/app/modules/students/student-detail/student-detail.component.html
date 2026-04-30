@@ -39,137 +39,105 @@
 
     <p-card styleClass="summary mb-3 shadow-sm">
       <div class="summary-grid">
-          <div class="avatar-block">
-            <div class="avatar">
-              @if (profilePhotoSrc(); as src) {
-                <img [src]="src" alt="" />
-              } @else {
-                <span class="student-detail__avatar-fallback" aria-hidden="true">{{ avatarInitials() }}</span>
-              }
-            </div>
-            <div class="name">{{ displayName(student) }}</div>
-            <div class="sub">Admission: <strong>{{ student['admission_no'] }}</strong></div>
-            @if (student['current_enrollment']; as ce) {
-              <div class="sub">Roll: {{ $any(ce)['roll_number'] ?? '—' }}</div>
+        <div class="avatar-block">
+          <div class="avatar">
+            @if (profilePhotoSrc(); as src) {
+              <img [src]="src" alt="" />
+            } @else {
+              <span class="student-detail__avatar-fallback" aria-hidden="true">{{ avatarInitials() }}</span>
             }
-            <div class="actions d-flex flex-wrap gap-2">
-              <p-button type="button" label="Suspend" severity="danger" [outlined]="true" (onClick)="suspend()" />
-              <p-button
-                type="button"
-                label="Edit"
-                icon="pi pi-pencil"
-                [routerLink]="['/students', studentId, 'edit']"
-              />
-            </div>
           </div>
-          <div class="facts">
-            @if (student['current_enrollment']; as ce) {
-              <div class="fact"><span>Class</span><em>{{ $any(ce)['schoolClass']?.['name'] ?? '—' }}</em></div>
-              <div class="fact"><span>Section</span><em>{{ $any(ce)['section']?.['name'] ?? '—' }}</em></div>
-              <div class="fact"><span>Roll</span><em>{{ $any(ce)['roll_number'] ?? '—' }}</em></div>
-              <div class="fact"><span>Category</span><em>{{ $any(ce)['category'] ?? '—' }}</em></div>
-              <div class="fact"><span>Academic year</span><em>{{ $any(ce)['academicYear']?.['name'] ?? '—' }}</em></div>
-            }
-            <div class="fact"><span>Gender</span><em>{{ student['gender'] ?? '—' }}</em></div>
-            <div class="fact"><span>DOB</span><em>{{ dobDisplay(student['dob']) }}</em></div>
-            <div class="fact"><span>Phone</span><em>{{ student['phone'] ?? '—' }}</em></div>
-            <div class="fact"><span>Email</span><em>{{ student['email'] ?? '—' }}</em></div>
-          </div>
-          <div class="status-col">
-            <p-tag [value]="chipStatus(student)" [severity]="statusSeverity(chipStatus(student))" />
+          <div class="name">{{ displayName(student) }}</div>
+          <div class="sub">Admission: <strong>{{ student['admission_no'] }}</strong></div>
+          <div class="actions d-flex flex-wrap gap-2">
+            <p-button type="button" label="Suspend" severity="danger" [outlined]="true" (onClick)="suspend()" />
+            <p-button
+              type="button"
+              label="Edit"
+              icon="pi pi-pencil"
+              [routerLink]="['/students', studentId, 'edit']"
+            />
           </div>
         </div>
+        <div class="facts">
+          @if (latestEnrollment(); as ce) {
+            <div class="fact"><span>Class</span><em>{{ $any(ce['schoolClass'])?.['name'] ?? '—' }}</em></div>
+            <div class="fact"><span>Section</span><em>{{ $any(ce['section'])?.['name'] ?? '—' }}</em></div>
+            <div class="fact"><span>Roll</span><em>{{ ce['roll_number'] ?? '—' }}</em></div>
+            <div class="fact"><span>Category</span><em>{{ ce['category'] ?? '—' }}</em></div>
+            <div class="fact"><span>Academic year</span><em>{{ $any(ce['academicYear'])?.['name'] ?? '—' }}</em></div>
+          } @else {
+            <div class="fact"><span>Current enrollment</span><em>—</em></div>
+          }
+          <div class="fact"><span>Gender</span><em>{{ student['gender'] ?? '—' }}</em></div>
+          <div class="fact"><span>Date of birth</span><em>{{ dobDisplay(student['dob']) }}</em></div>
+          <div class="fact"><span>Phone</span><em>{{ student['phone'] ?? '—' }}</em></div>
+          <div class="fact"><span>Email</span><em>{{ student['email'] ?? '—' }}</em></div>
+          <div class="fact"><span>Blood group</span><em>{{ student['blood_group'] ?? '—' }}</em></div>
+        </div>
+        <div class="status-col">
+          <p-tag [value]="chipStatus(student)" [severity]="statusSeverity(chipStatus(student))" />
+          <div class="sub mt-2">
+            Login:
+            @if (student['login_user']; as lu) {
+              <strong>{{ $any(lu)['username'] || '—' }}</strong> ({{ $any(lu)['status'] || '—' }})
+            } @else {
+              —
+            }
+          </div>
+        </div>
+      </div>
     </p-card>
 
-    <div class="student-detail-tabs">
-      <div class="student-detail-tabs__bar">
-        <ul class="student-detail-tabs__list" role="tablist">
-          @for (tab of tabs; track tab.id; let i = $index) {
-            <li class="student-detail-tabs__item" role="presentation">
-              <button
-                type="button"
-                class="student-detail-tabs__btn"
-                role="tab"
-                [attr.aria-selected]="activeTab() === i"
-                [id]="'student-tab-' + tab.id"
-                [class.student-detail-tabs__btn--active]="activeTab() === i"
-                (click)="setTab(i)"
-              >
-                {{ tab.label }}
-              </button>
-            </li>
-          }
-        </ul>
-      </div>
-      <div class="student-detail-tabs__slider-track" aria-hidden="true">
-        <div
-          class="student-detail-tabs__slider"
-          [style.width.%]="100 / tabs.length"
-          [style.transform]="sliderTransform()"
-        >
-          <div class="student-detail-tabs__indicator"></div>
-        </div>
-      </div>
-    </div>
-
-    @switch (activeTabId()) {
-      @case ('basic') {
+    <p-tabView styleClass="student-detail-tabview">
+      <p-tabPanel header="Basic Info">
         <div class="tab-pad grid">
+          <p-card header="Profile details" styleClass="panel">
+            <div class="kv"><span>First name</span><em>{{ student['first_name'] ?? '—' }}</em></div>
+            <div class="kv"><span>Last name</span><em>{{ student['last_name'] ?? '—' }}</em></div>
+            <div class="kv"><span>Gender</span><em>{{ student['gender'] ?? '—' }}</em></div>
+            <div class="kv"><span>Date of birth</span><em>{{ dobDisplay(student['dob']) }}</em></div>
+            <div class="kv"><span>Blood group</span><em>{{ student['blood_group'] ?? '—' }}</em></div>
+            <div class="kv"><span>Status</span><em>{{ student['status'] ?? '—' }}</em></div>
+          </p-card>
+
+          <p-card header="Contact & address" styleClass="panel">
+            <div class="kv"><span>Phone</span><em>{{ student['phone'] ?? '—' }}</em></div>
+            <div class="kv"><span>Email</span><em>{{ student['email'] ?? '—' }}</em></div>
+            <div class="kv"><span>Current address</span><em>{{ student['current_address'] ?? '—' }}</em></div>
+            <div class="kv"><span>Permanent address</span><em>{{ student['permanent_address'] ?? '—' }}</em></div>
+          </p-card>
+
           <p-card header="Parent / guardian" styleClass="panel span-2">
-            @if (student['guardian']; as g) {
-              <div class="guardian-rows">
-                <div class="g-row">
-                  <div class="g-avatar"><i class="bi bi-person-standing"></i></div>
-                  <div>
-                    <div class="g-name">{{ $any(g)['father_name'] || '—' }}</div>
-                    <div class="g-meta">Father · {{ $any(g)['father_phone'] || '—' }}</div>
-                  </div>
-                </div>
-                <div class="g-row">
-                  <div class="g-avatar"><i class="bi bi-person"></i></div>
-                  <div>
-                    <div class="g-name">{{ $any(g)['mother_name'] || '—' }}</div>
-                    <div class="g-meta">Mother · {{ $any(g)['mother_occupation'] || '—' }}</div>
-                  </div>
-                </div>
-                <div class="g-row">
-                  <div class="g-avatar"><i class="bi bi-shield-check"></i></div>
-                  <div>
-                    <div class="g-name">{{ $any(g)['guardian_name'] || '—' }}</div>
-                    <div class="g-meta">Guardian · {{ $any(g)['guardian_phone'] || '—' }}</div>
-                  </div>
-                </div>
-              </div>
+            @if (guardianRows().length === 0) {
+              <p class="muted mb-0">No guardian record.</p>
             } @else {
-              <p class="muted">No guardian record.</p>
+              <div class="guardian-rows">
+                @for (r of guardianRows(); track r.label) {
+                  <div class="g-row">
+                    <div class="g-avatar"><i class="bi bi-person"></i></div>
+                    <div>
+                      <div class="g-name">{{ r.name }}</div>
+                      <div class="g-meta">{{ r.label }} · {{ r.detail }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
             }
           </p-card>
 
-          <p-card header="Previous school" styleClass="panel">
+          <p-card header="Previous school" styleClass="panel span-2">
             @if (student['previousSchool']; as ps) {
-              <div class="kv"><span>Previous</span><em>{{ $any(ps)['school_name'] ?? '—' }}</em></div>
+              <div class="kv"><span>School</span><em>{{ $any(ps)['school_name'] ?? '—' }}</em></div>
               <div class="kv"><span>Address</span><em>{{ $any(ps)['school_address'] ?? '—' }}</em></div>
             } @else {
-              <p class="muted">No previous school.</p>
+              <p class="muted mb-0">No previous school available.</p>
             }
-          </p-card>
-
-          <p-card header="Address" styleClass="panel">
-            <div class="kv"><span>Current</span><em>{{ student['current_address'] ?? '—' }}</em></div>
-            <div class="kv"><span>Permanent</span><em>{{ student['permanent_address'] ?? '—' }}</em></div>
-          </p-card>
-
-          <p-card header="Medical" styleClass="panel">
-            <div class="kv"><span>Blood</span><em>{{ student['blood_group'] ?? '—' }}</em></div>
-          </p-card>
-
-          <p-card header="Room" styleClass="panel">
-            <div class="kv"><span>Type</span><em>{{ student['room_type'] ?? '—' }}</em></div>
           </p-card>
 
           <p-card header="Documents" styleClass="panel span-2">
             @if (asDocList(student['documents']).length === 0) {
-              <p class="muted">No documents uploaded.</p>
+              <p class="muted mb-0">No documents uploaded.</p>
             } @else {
               <ul class="docs list-unstyled mb-0">
                 @for (d of asDocList(student['documents']); track d.file_url) {
@@ -182,24 +150,41 @@
             }
           </p-card>
 
-          <p-card header="Description" styleClass="panel span-2">
+          <p-card header="Additional notes" styleClass="panel span-2">
             <p class="desc mb-0">{{ student['extra_details'] || '—' }}</p>
           </p-card>
         </div>
-      }
-      @case ('academic') {
+      </p-tabPanel>
+
+      <p-tabPanel header="Academic Info">
         <div class="tab-pad">
+          <p-card styleClass="panel mb-3">
+            @if (latestEnrollment(); as ce) {
+              <div class="facts">
+                <div class="fact"><span>Academic year</span><em>{{ $any(ce['academicYear'])?.['name'] ?? '—' }}</em></div>
+                <div class="fact"><span>Class</span><em>{{ $any(ce['schoolClass'])?.['name'] ?? '—' }}</em></div>
+                <div class="fact"><span>Section</span><em>{{ $any(ce['section'])?.['name'] ?? '—' }}</em></div>
+                <div class="fact"><span>Roll number</span><em>{{ ce['roll_number'] ?? '—' }}</em></div>
+                <div class="fact"><span>Category</span><em>{{ ce['category'] ?? '—' }}</em></div>
+                <div class="fact"><span>Status</span><em>{{ ce['status'] ?? '—' }}</em></div>
+              </div>
+            } @else {
+              <p class="muted mb-0">No active enrollment found.</p>
+            }
+          </p-card>
+
           <p-card styleClass="panel">
             @if (enrollments.length === 0) {
-              <p class="muted">No enrollments.</p>
+              <p class="muted mb-0">No enrollment history.</p>
             } @else {
               <p-table [value]="enrollments" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '100%' }">
                 <ng-template pTemplate="header">
                   <tr>
-                    <th>Year</th>
+                    <th>Academic Year</th>
                     <th>Class</th>
                     <th>Section</th>
                     <th>Roll</th>
+                    <th>Promotion</th>
                     <th>Status</th>
                   </tr>
                 </ng-template>
@@ -209,6 +194,7 @@
                     <td>{{ $any(e)['schoolClass']?.['name'] ?? '—' }}</td>
                     <td>{{ $any(e)['section']?.['name'] ?? '—' }}</td>
                     <td>{{ $any(e)['roll_number'] ?? '—' }}</td>
+                    <td>{{ $any(e)['promotion_type'] ?? '—' }}</td>
                     <td>{{ $any(e)['status'] ?? '—' }}</td>
                   </tr>
                 </ng-template>
@@ -216,14 +202,16 @@
             }
           </p-card>
         </div>
-      }
-      @case ('fees') {
+      </p-tabPanel>
+
+      <p-tabPanel header="Fees">
         <div class="tab-pad">
           <p-card styleClass="panel muted">
-            <p class="mb-0">Fees module coming soon.</p>
+            <p class="mb-2">Fees profile is not linked yet for this student in details view.</p>
+            <a routerLink="/fees/collection">Open fee collection module</a>
           </p-card>
         </div>
-      }
-    }
+      </p-tabPanel>
+    </p-tabView>
   </section>
 }

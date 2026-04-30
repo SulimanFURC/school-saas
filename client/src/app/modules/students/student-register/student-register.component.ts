@@ -193,7 +193,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
     current_address: [''],
     permanent_address: [''],
     extra_details: [''],
-    room_type: [''],
     academic_year_id: [null as number | null, Validators.required],
     class_id: [null as number | null, Validators.required],
     section_id: [null as number | null, Validators.required],
@@ -395,7 +394,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       current_address: String(d['current_address'] ?? ''),
       permanent_address: String(d['permanent_address'] ?? ''),
       extra_details: String(d['extra_details'] ?? ''),
-      room_type: String(d['room_type'] ?? ''),
       create_student_login: false,
       login_password: '',
     });
@@ -645,7 +643,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           current_address: v5.current_address || undefined,
           permanent_address: v5.permanent_address || undefined,
           extra_details: v5.extra_details || undefined,
-          room_type: v5.room_type || undefined,
           photo_base64,
           guardian: guardianPayload,
           previous_school: {
@@ -753,7 +750,6 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       current_address: v5.current_address || undefined,
       permanent_address: v5.permanent_address || undefined,
       extra_details: v5.extra_details || undefined,
-      room_type: v5.room_type || undefined,
       guardian: guardianPayload,
       previous_school: {
         school_name: ps.school_name || undefined,

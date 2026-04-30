@@ -389,7 +389,6 @@ async function seedStepsSchoolSampleData(options = {}) {
           current_address: null,
           permanent_address: null,
           extra_details: 'Seeded student for development.',
-          room_type: null,
           status: 'active',
         },
       });

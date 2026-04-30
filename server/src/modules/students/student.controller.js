@@ -207,7 +207,6 @@ exports.register = async (req, res) => {
       current_address,
       permanent_address,
       extra_details,
-      room_type,
       guardian,
       previous_school,
       enrollment,
@@ -304,7 +303,6 @@ exports.register = async (req, res) => {
         current_address: current_address || null,
         permanent_address: permanent_address || null,
         extra_details: extra_details || null,
-        room_type: room_type || null,
         status: 'active',
       },
       { transaction: t }
@@ -784,7 +782,6 @@ exports.update = async (req, res) => {
       'current_address',
       'permanent_address',
       'extra_details',
-      'room_type',
       'status',
     ];
     const patch = {};

@@ -6,18 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableModule } from 'primeng/table';
+import { TabViewModule } from 'primeng/tabview';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 
 import { StudentService, resolveStudentDisplayName } from '@app/services';
-
-/** Tab ids for `@switch` panels — add entries here when adding tabs (order = bar order). */
-export type StudentDetailTabId = 'basic' | 'guardian' | 'academic' | 'fees';
-
-export interface StudentDetailTab {
-  readonly id: StudentDetailTabId;
-  readonly label: string;
-}
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -34,6 +27,7 @@ function initialsFromName(name: string): string {
     ButtonModule,
     TagModule,
     TableModule,
+    TabViewModule,
     ToastModule,
     ConfirmDialogModule,
   ],
@@ -47,13 +41,6 @@ export class StudentDetailComponent implements OnInit {
   private students = inject(StudentService);
   private messages = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
-  readonly activeTab = signal(0);
-
-  readonly tabs: readonly StudentDetailTab[] = [
-    { id: 'basic', label: 'Basic info' },
-    { id: 'academic', label: 'Academic history' },
-    { id: 'fees', label: 'Fees' },
-  ];
 
   readonly loading = signal(true);
   studentId = '';
@@ -99,20 +86,6 @@ export class StudentDetailComponent implements OnInit {
     }
   }
 
-  setTab(i: number): void {
-    const max = this.tabs.length - 1;
-    this.activeTab.set(Math.max(0, Math.min(i, max)));
-  }
-
-  activeTabId(): StudentDetailTabId {
-    const i = this.activeTab();
-    return this.tabs[i]?.id ?? this.tabs[0].id;
-  }
-
-  sliderTransform(): string {
-    return `translateX(${this.activeTab() * 100}%)`;
-  }
-
   displayName(s: Record<string, unknown>): string {
     const n = resolveStudentDisplayName(s);
     return n || '—';
@@ -150,6 +123,43 @@ export class StudentDetailComponent implements OnInit {
   asDocList(raw: unknown): { file_name: string; file_url: string }[] {
     if (!Array.isArray(raw)) return [];
     return raw.filter((d) => d && typeof d === 'object') as { file_name: string; file_url: string }[];
+  }
+
+  latestEnrollment(): Record<string, unknown> | null {
+    const ce = this.student?.['current_enrollment'];
+    return ce && typeof ce === 'object' ? (ce as Record<string, unknown>) : null;
+  }
+
+  guardianRows(): { label: string; name: string; detail: string }[] {
+    const g = this.student?.['guardian'];
+    if (!g || typeof g !== 'object') return [];
+    const guardian = g as Record<string, unknown>;
+    return [
+      {
+        label: 'Father',
+        name: String(guardian['father_name'] ?? '—') || '—',
+        detail: [guardian['father_phone'], guardian['father_occupation']]
+          .filter((v) => v != null && String(v).trim())
+          .map((v) => String(v))
+          .join(' · ') || '—',
+      },
+      {
+        label: 'Mother',
+        name: String(guardian['mother_name'] ?? '—') || '—',
+        detail: [guardian['mother_phone'], guardian['mother_occupation']]
+          .filter((v) => v != null && String(v).trim())
+          .map((v) => String(v))
+          .join(' · ') || '—',
+      },
+      {
+        label: 'Other guardian',
+        name: String(guardian['guardian_name'] ?? '—') || '—',
+        detail: [guardian['guardian_phone'], guardian['guardian_relation']]
+          .filter((v) => v != null && String(v).trim())
+          .map((v) => String(v))
+          .join(' · ') || '—',
+      },
+    ];
   }
 
   loginInfo(): void {
