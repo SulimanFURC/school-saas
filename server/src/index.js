@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const sequelize = require('./config/db');
 const Tenant = require('./modules/tenant/tenant.model');
 const User = require('./modules/users/user.model');
@@ -14,11 +13,6 @@ require('./modules/module/module.model');
 require('./modules/tenant-module/tenantModule.model');
 require('./modules/tenant-branding/tenantBranding.model');
 require('./modules/subjects/subject.model');
-const {
-  seedModuleCatalog,
-  backfillAllTenantModules,
-} = require('./seed/moduleSeed');
-const { backfillAcademicYearsAllTenants } = require('./seed/academicYearsSeed');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
 const requestContextMiddleware = require('./core/middleware/request-context.middleware');
 const logger = require('./core/logger/logger');
@@ -210,33 +204,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-async function seedPlatformAndSuperAdmin() {
-  const [platform] = await Tenant.findOrCreate({
-    where: { subdomain: 'platform' },
-    defaults: { name: 'Platform', status: 'active' },
-  });
-  const superPass = process.env.SUPER_ADMIN_PASSWORD || '123456';
-  const hash = await bcrypt.hash(superPass, 10);
-  await User.findOrCreate({
-    where: { email: 'superadmin@platform.com', tenant_id: platform.id },
-    defaults: {
-      name: 'Super Admin',
-      password: hash,
-      role: 'super_admin',
-      status: 'active',
-    },
-  });
-  logger.info('Platform tenant and super admin seeded');
-}
-
 sequelize
   .authenticate()
   .then(() => logger.info('DB connected'))
   .then(() => logger.info('DB schema migration expected via CLI'))
-  .then(() => seedPlatformAndSuperAdmin())
-  .then(() => seedModuleCatalog())
-  .then(() => backfillAllTenantModules())
-  .then(() => backfillAcademicYearsAllTenants())
   .then(() => {
     registerTenantQueryHooks(sequelize);
     app.listen(PORT, () => {

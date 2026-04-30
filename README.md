@@ -19,6 +19,16 @@ npm run dev
 ```
 
 API: `http://localhost:5000` (default). The server starts even if PostgreSQL is not running; you will see `DB error` in the console until the database is available and credentials in `.env` are correct.
+Normal startup does not run seed/backfill jobs.
+
+Bootstrap seed/backfill is explicit:
+
+```bash
+cd server
+npm run seed:bootstrap
+```
+
+Run this only when you intentionally want to ensure platform super-admin, module catalog, tenant module rows, and tenant academic-year rows.
 
 ## Frontend
 

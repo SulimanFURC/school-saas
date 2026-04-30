@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "seed:bootstrap": "node src/scripts/seed-bootstrap.js",
     "reseed": "node src/scripts/reseed.js",
     "test": "node --test \"src/**/*.test.js\"",
     "db:migrate": "sequelize-cli db:migrate",
