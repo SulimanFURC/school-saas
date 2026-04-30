@@ -3,6 +3,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
+const { asyncHandler } = require('../../core/http/async-handler');
 const authMiddleware = require('../../core/middleware/auth.middleware');
 const authorize = require('../../core/middleware/authorize.middleware');
 const checkFeature = require('../../core/middleware/feature.middleware');
@@ -63,8 +64,8 @@ router.use(authMiddleware);
 router.use(checkFeature('expenses'));
 router.use(authorize('admin', 'super_admin'));
 
-router.get('/', controller.list);
-router.post('/', controller.create);
+router.get('/', asyncHandler(controller.list));
+router.post('/', asyncHandler(controller.create));
 router.post(
   '/:id/receipt',
   (req, res, next) => {
@@ -73,11 +74,11 @@ router.post(
       next();
     });
   },
-  controller.uploadReceipt
+  asyncHandler(controller.uploadReceipt)
 );
-router.delete('/:id/receipt', controller.deleteReceipt);
-router.get('/:id', controller.getOne);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.remove);
+router.delete('/:id/receipt', asyncHandler(controller.deleteReceipt));
+router.get('/:id', asyncHandler(controller.getOne));
+router.put('/:id', asyncHandler(controller.update));
+router.delete('/:id', asyncHandler(controller.remove));
 
 module.exports = router;

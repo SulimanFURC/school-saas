@@ -8,17 +8,15 @@ import { providePrimeNG } from 'primeng/config';
 import { routes } from './app.routes';
 import { initFeaturesFactory } from './app-initializer';
 import { initBrandingFactory } from './branding-initializer';
+import { apiErrorInterceptor } from './interceptors/api-error.interceptor';
 import { authInterceptor } from './interceptors/auth.interceptor';
-import { AuthService } from './services/auth.service';
-import { BrandingService } from './services/branding.service';
-import { FeatureService } from './services/feature.service';
-import { ThemeService } from './services/theme.service';
+import { AuthService, BrandingService, FeatureService, ThemeService } from '@app/services';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([apiErrorInterceptor, authInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {

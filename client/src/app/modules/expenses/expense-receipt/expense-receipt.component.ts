@@ -9,9 +9,9 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TagModule } from 'primeng/tag';
 
 import { environment } from '../../../../environments/environment';
-import { BrandingService } from '../../../services/branding.service';
-import { Expense, ExpenseService } from '../../../services/expense.service';
-import { ToastService } from '../../../services/toast.service';
+import { BrandingService } from '@app/services';
+import { Expense, ExpenseService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-expense-receipt',

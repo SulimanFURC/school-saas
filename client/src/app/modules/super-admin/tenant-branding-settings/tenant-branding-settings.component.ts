@@ -16,10 +16,10 @@ import { SelectModule } from 'primeng/select';
 import type { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 
 import { environment } from '../../../../environments/environment';
-import type { TenantBrandingResponse } from '../../../services/branding.service';
-import { BrandingService } from '../../../services/branding.service';
+import type { TenantBrandingResponse } from '@app/services';
+import { BrandingService } from '@app/services';
 import type { TenantListResponse, TenantRow } from '../tenant-list/tenant-list.component';
-import { ToastService } from '../../../services/toast.service';
+import { ToastService } from '@app/services';
 
 const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
 

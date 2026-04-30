@@ -3,9 +3,9 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { Router, RouterLink } from '@angular/router';
 import { finalize, from, switchMap, tap } from 'rxjs';
 
-import { AuthService } from '../../../services/auth.service';
-import { FeatureService } from '../../../services/feature.service';
-import { ToastService } from '../../../services/toast.service';
+import { AuthService } from '@app/services';
+import { FeatureService } from '@app/services';
+import { ToastService } from '@app/services';
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;

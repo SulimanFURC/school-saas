@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 
-import { SettingsService } from '../../../services/settings.service';
-import { ToastService } from '../../../services/toast.service';
+import { SettingsService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-academic-settings',

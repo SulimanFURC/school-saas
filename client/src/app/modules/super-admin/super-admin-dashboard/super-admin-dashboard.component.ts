@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 
-import { DashboardService, type SuperAdminDashboardPayload } from '../../../services/dashboard.service';
-import { ToastService } from '../../../services/toast.service';
+import { DashboardService, type SuperAdminDashboardPayload } from '@app/services';
+import { ToastService } from '@app/services';
 import { DashboardSectionComponent } from '../../home/components/dashboard-section.component';
 import { StatCardComponent } from '../../home/components/stat-card.component';
 

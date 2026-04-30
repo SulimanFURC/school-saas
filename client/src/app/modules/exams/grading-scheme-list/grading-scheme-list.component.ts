@@ -10,7 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { ExamService, type GradingSchemeDto } from '../../../services/exam.service';
+import { ExamService, type GradingSchemeDto } from '@app/services';
 
 @Component({
   selector: 'app-grading-scheme-list',

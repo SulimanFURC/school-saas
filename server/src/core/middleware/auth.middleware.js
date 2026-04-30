@@ -1,6 +1,17 @@
 const jwt = require('jsonwebtoken');
 const User = require('../../modules/users/user.model');
 const TokenBlocklist = require('../../modules/auth/tokenBlocklist.model');
+const Tenant = require('../../modules/tenant/tenant.model');
+
+function tenantStatusBlockedMessage(status) {
+  if (status === 'inactive') {
+    return 'Your school account is inactive. Please contact your administrator.';
+  }
+  if (status === 'pending') {
+    return 'Your school account is pending approval. Please try again later.';
+  }
+  return null;
+}
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -24,6 +35,15 @@ const authMiddleware = async (req, res, next) => {
 
     if (!decoded.tenant_id || !decoded.userId) {
       return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    const tenant = await Tenant.findByPk(decoded.tenant_id, { attributes: ['id', 'status'] });
+    if (!tenant) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    const tenantBlockedMessage = tenantStatusBlockedMessage(String(tenant.status || '').toLowerCase());
+    if (tenantBlockedMessage) {
+      return res.status(403).json({ message: tenantBlockedMessage });
     }
 
     const blocked = await TokenBlocklist.findOne({

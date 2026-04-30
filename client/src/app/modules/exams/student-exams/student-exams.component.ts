@@ -9,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { ExamService, type MyExamSummary } from '../../../services/exam.service';
+import { ExamService, type MyExamSummary } from '@app/services';
 
 @Component({
   selector: 'app-student-exams',

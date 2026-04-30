@@ -29,13 +29,13 @@ import {
   of,
 } from 'rxjs';
 
-import { FeatureService } from '../../../services/feature.service';
+import { FeatureService } from '@app/services';
 import {
   DashboardSummaryClassEntry,
   MyStudentRow,
   TeacherDashboardResponse,
   TeacherService,
-} from '../../../services/teacher.service';
+} from '@app/services';
 
 interface ClassFilterOption {
   label: string;

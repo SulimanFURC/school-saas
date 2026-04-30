@@ -3,8 +3,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { AuthService } from '../../../services/auth.service';
-import { ToastService } from '../../../services/toast.service';
+import { AuthService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-forgot-password',

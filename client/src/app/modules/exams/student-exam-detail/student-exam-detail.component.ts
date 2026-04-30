@@ -18,7 +18,7 @@ import {
   type MyExamTimetableEntry,
   type MyResultData,
   type RecheckRequestDto,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 interface ExamHeader {
   id: string;

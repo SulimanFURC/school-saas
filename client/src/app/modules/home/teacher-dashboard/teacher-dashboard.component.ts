@@ -3,8 +3,8 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { catchError, finalize, of, switchMap, tap } from 'rxjs';
 
-import { DashboardService, type TeacherDashboardPayload } from '../../../services/dashboard.service';
-import { ToastService } from '../../../services/toast.service';
+import { DashboardService, type TeacherDashboardPayload } from '@app/services';
+import { ToastService } from '@app/services';
 import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
 import { SkeletonCardComponent } from '../../../shared/skeleton-card/skeleton-card.component';
 import { DashboardSectionComponent } from '../components/dashboard-section.component';

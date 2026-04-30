@@ -25,7 +25,7 @@ import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject }
 
 import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
 import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
-import { TeacherAssignmentStatsRow, TeacherListRow, TeacherService } from '../../../services/teacher.service';
+import { TeacherAssignmentStatsRow, TeacherListRow, TeacherService } from '@app/services';
 import {
   compareNullableString,
   nextSortDir,

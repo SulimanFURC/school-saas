@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 
-import { AuthService } from '../services/auth.service';
+import { UserRole, isAdminOrSuperAdmin, normalizeRole } from '../auth/roles';
+import { AuthService } from '@app/services';
 
 /**
  * Routes only school admins (and super_admin in tenant context) may open.
@@ -10,16 +11,16 @@ import { AuthService } from '../services/auth.service';
 export const adminRoleGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const r = auth.userRole()?.toLowerCase() ?? '';
+  const r = normalizeRole(auth.userRole());
   const path = route.routeConfig?.path ?? '';
 
-  if (r === 'admin' || r === 'super_admin') {
+  if (isAdminOrSuperAdmin(auth.userRole())) {
     return true;
   }
-  if (r === 'teacher') {
+  if (r === UserRole.Teacher) {
     return router.createUrlTree(['/home']);
   }
-  if (r === 'student') {
+  if (r === UserRole.Student) {
     if (path === 'home' || path === 'profile') {
       return true;
     }

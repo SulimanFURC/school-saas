@@ -224,7 +224,7 @@ exports.create = async (req, res) => {
       after: feeRecord.get({ plain: true }),
     });
   } catch (err) {
-    console.error('fee create error:', err);
+    req.log?.error({ err }, 'fee create error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -269,7 +269,7 @@ exports.list = async (req, res) => {
       limit,
     });
   } catch (err) {
-    console.error('fee list error:', err);
+    req.log?.error({ err }, 'fee list error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -295,7 +295,7 @@ exports.getOne = async (req, res) => {
     }
     res.status(200).json(row.get({ plain: true }));
   } catch (err) {
-    console.error('fee getOne error:', err);
+    req.log?.error({ err }, 'fee getOne error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -327,7 +327,7 @@ exports.getByStudent = async (req, res) => {
     });
     res.status(200).json(data);
   } catch (err) {
-    console.error('fee getByStudent error:', err);
+    req.log?.error({ err }, 'fee getByStudent error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -410,7 +410,7 @@ exports.update = async (req, res) => {
     });
     res.status(200).json(fresh.get({ plain: true }));
   } catch (err) {
-    console.error('fee update error:', err);
+    req.log?.error({ err }, 'fee update error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -439,7 +439,7 @@ exports.remove = async (req, res) => {
     });
     res.status(200).json({ message: 'Fee record deleted successfully' });
   } catch (err) {
-    console.error('fee remove error:', err);
+    req.log?.error({ err }, 'fee remove error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };

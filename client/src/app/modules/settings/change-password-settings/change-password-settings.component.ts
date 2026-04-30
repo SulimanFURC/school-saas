@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { SettingsService } from '../../../services/settings.service';
-import { ToastService } from '../../../services/toast.service';
+import { SettingsService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-change-password-settings',

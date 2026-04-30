@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { SettingsService, type PlatformSettingsDto } from '../../../services/settings.service';
-import { ToastService } from '../../../services/toast.service';
+import { SettingsService, type PlatformSettingsDto } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-platform-settings',

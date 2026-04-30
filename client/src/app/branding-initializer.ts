@@ -1,5 +1,5 @@
-import { AuthService } from './services/auth.service';
-import { BrandingService } from './services/branding.service';
+import { AuthService } from '@app/services';
+import { BrandingService } from '@app/services';
 
 export function initBrandingFactory(auth: AuthService, branding: BrandingService) {
   return () => {

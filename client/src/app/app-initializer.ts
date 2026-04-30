@@ -1,5 +1,5 @@
-import { AuthService } from './services/auth.service';
-import { FeatureService } from './services/feature.service';
+import { AuthService } from '@app/services';
+import { FeatureService } from '@app/services';
 
 export function initFeaturesFactory(auth: AuthService, features: FeatureService) {
   return () =>

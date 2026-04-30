@@ -8,10 +8,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { DrawerModule } from 'primeng/drawer';
+import { DialogModule } from 'primeng/dialog';
 
 import { environment } from '../../../../../environments/environment';
-import { ToastService } from '../../../../services/toast.service';
+import { ToastService } from '@app/services';
 
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   const p = group.get('password')?.value;
@@ -24,7 +24,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-create-tenant-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DrawerModule],
+  imports: [CommonModule, ReactiveFormsModule, DialogModule],
   templateUrl: './create-tenant-dialog.component.html',
   styleUrl: './create-tenant-dialog.component.scss',
 })

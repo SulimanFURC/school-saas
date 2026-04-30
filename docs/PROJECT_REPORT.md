@@ -230,4 +230,24 @@ Major implemented model groups include:
 
 ---
 
+## 11) Recent Implemented Updates
+
+### Tenant status enforcement in auth flow
+
+- Tenant `inactive` and `pending` states now block login with explicit user-facing messages.
+- Refresh token rotation is rejected for non-active tenants, with refresh token revocation.
+- Protected APIs enforce tenant active status in auth middleware, cutting off existing sessions when tenant status is no longer active.
+- Super-admin tenant status change from `active` to `inactive/pending` now invalidates all tenant sessions by:
+  - revoking active refresh tokens
+  - incrementing `token_version` for tenant users
+
+### Super admin tenant dialog consistency
+
+- Tenant **Edit** UI was migrated from PrimeNG drawer to centered PrimeNG modal dialog.
+- Tenant **Create** UI was migrated from PrimeNG drawer to centered PrimeNG modal dialog.
+- Drawer-specific code/styles for these dialogs were removed in favor of modal-specific styles.
+- Dialog body height constraints were relaxed (no forced min/max height on `.ct-dialog__body`) to avoid nested scroll behavior.
+
+---
+
 *End of report.*

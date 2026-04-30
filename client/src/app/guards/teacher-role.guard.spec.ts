@@ -3,7 +3,7 @@ import { Router, type ActivatedRouteSnapshot, type RouterStateSnapshot, type Url
 import { signal } from '@angular/core';
 
 import { teacherRoleGuard } from './teacher-role.guard';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '@app/services';
 
 describe('teacherRoleGuard', () => {
   let userRole: ReturnType<typeof signal<string | null>>;

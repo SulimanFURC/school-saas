@@ -31,13 +31,13 @@ import { TagModule } from 'primeng/tag';
 import { Textarea } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 
-import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { FeeCollection, FeeService } from '../../../services/fee.service';
+import { ConfirmDialogService } from '@app/services';
+import { FeeCollection, FeeService } from '@app/services';
 import {
   StudentService,
   resolveStudentDisplayName,
-} from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
+} from '@app/services';
+import { ToastService } from '@app/services';
 
 function parseYmdToLocalDate(ymd: string): Date | null {
   const parts = ymd.trim().split('-').map((p) => Number(p));

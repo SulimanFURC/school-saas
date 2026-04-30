@@ -22,7 +22,9 @@ const { backfillAcademicYearsAllTenants } = require('./seed/academicYearsSeed');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
 const requestContextMiddleware = require('./core/middleware/request-context.middleware');
 const logger = require('./core/logger/logger');
-const { sendInternalError } = require('./core/http/response');
+const { HttpError } = require('./core/http/http-error');
+const { sendError, sendInternalError } = require('./core/http/response');
+const { registerTenantQueryHooks } = require('./core/sequelize/tenant-query-hooks');
 const authRoutes = require('./modules/auth/auth.routes');
 const authController = require('./modules/auth/auth.controller');
 const authMiddleware = require('./core/middleware/auth.middleware');
@@ -200,6 +202,9 @@ app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
+  if (err instanceof HttpError) {
+    return sendError(res, err.status, err.message, err.details);
+  }
   return sendInternalError(res, req.log, 'Unhandled error', err);
 });
 
@@ -233,6 +238,7 @@ sequelize
   .then(() => backfillAllTenantModules())
   .then(() => backfillAcademicYearsAllTenants())
   .then(() => {
+    registerTenantQueryHooks(sequelize);
     app.listen(PORT, () => {
       logger.info({ port: PORT }, 'Server running');
       logger.info('Student photo: JSON field photo_base64 on POST /students/register or PUT /students/:id');

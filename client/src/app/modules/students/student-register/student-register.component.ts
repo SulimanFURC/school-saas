@@ -30,8 +30,8 @@ import { Textarea as PrimeTextarea } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 
-import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
-import { StudentService, resolveStudentFirstLast } from '../../../services/student.service';
+import { AcademicService, SchoolClassDto } from '@app/services';
+import { StudentService, resolveStudentFirstLast } from '@app/services';
 
 const BLOOD_OPTIONS = [
   'A+',

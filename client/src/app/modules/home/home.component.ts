@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '@app/services';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { StudentDashboardComponent } from './student-dashboard/student-dashboard.component';
 import { TeacherDashboardComponent } from './teacher-dashboard/teacher-dashboard.component';

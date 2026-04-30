@@ -28,7 +28,7 @@ import {
   StudentService,
   StudentListRow,
   resolveStudentDisplayName,
-} from '../../../services/student.service';
+} from '@app/services';
 import {
   compareDates,
   compareNullableString,

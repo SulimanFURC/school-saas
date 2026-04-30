@@ -43,9 +43,9 @@ import { Textarea } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 
 import { environment } from '../../../../environments/environment';
-import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { Expense, ExpenseService } from '../../../services/expense.service';
-import { ToastService } from '../../../services/toast.service';
+import { ConfirmDialogService } from '@app/services';
+import { Expense, ExpenseService } from '@app/services';
+import { ToastService } from '@app/services';
 
 function parseYmdToLocalDate(ymd: string): Date | null {
   const parts = ymd.trim().split('-').map((p) => Number(p));

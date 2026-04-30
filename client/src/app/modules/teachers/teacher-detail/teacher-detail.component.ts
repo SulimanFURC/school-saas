@@ -21,9 +21,9 @@ import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { AcademicService, AcademicYearDto, SchoolClassDto, SectionDto } from '../../../services/academic.service';
-import { SubjectDto, SubjectService } from '../../../services/subject.service';
-import { TeacherDetail, TeacherService } from '../../../services/teacher.service';
+import { AcademicService, AcademicYearDto, SchoolClassDto, SectionDto } from '@app/services';
+import { SubjectDto, SubjectService } from '@app/services';
+import { TeacherDetail, TeacherService } from '@app/services';
 import { TeacherLoginCredentialsModalComponent } from '../../../shared/teacher-login-credentials-modal/teacher-login-credentials-modal.component';
 
 @Component({

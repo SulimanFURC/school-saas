@@ -12,9 +12,9 @@ import { filter, map, startWith, tap } from 'rxjs';
 
 import { TENANT_NAV_CONFIG, isNavGroup, type NavEntry, type NavGroupConfig } from '../../config/nav.config';
 import { environment } from '../../../environments/environment';
-import { AuthService } from '../../services/auth.service';
-import { BrandingService } from '../../services/branding.service';
-import { FeatureService } from '../../services/feature.service';
+import { AuthService } from '@app/services';
+import { BrandingService } from '@app/services';
+import { FeatureService } from '@app/services';
 import { AppHeaderActionsComponent } from '../app-header-actions/app-header-actions.component';
 
 const NAV_ICON_MAP: Record<string, string> = {

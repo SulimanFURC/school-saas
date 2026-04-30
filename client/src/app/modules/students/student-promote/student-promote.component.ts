@@ -5,12 +5,12 @@ import { catchError, of, switchMap } from 'rxjs';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { AcademicService, AcademicYearDto, SchoolClassDto, SectionDto } from '../../../services/academic.service';
+import { AcademicService, AcademicYearDto, SchoolClassDto, SectionDto } from '@app/services';
 import {
   StudentCurrentEnrollmentDto,
   StudentListRow,
   StudentService,
-} from '../../../services/student.service';
+} from '@app/services';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';

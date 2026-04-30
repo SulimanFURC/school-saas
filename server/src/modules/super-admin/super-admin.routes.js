@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
+const { asyncSuperAdminHandler } = require('../../core/http/async-handler');
 const router = express.Router();
 const authorize = require('../../core/middleware/authorize.middleware');
 const superAdminController = require('./super-admin.controller');
@@ -38,19 +39,19 @@ const logoUpload = multer({
 
 router.use(authorize('super_admin'));
 
-router.get('/dashboard', superAdminController.superAdminDashboard);
-router.get('/platform-settings', settingsController.platformSettingsGet);
-router.put('/platform-settings', settingsController.platformSettingsPut);
+router.get('/dashboard', asyncSuperAdminHandler(superAdminController.superAdminDashboard));
+router.get('/platform-settings', asyncSuperAdminHandler(settingsController.platformSettingsGet));
+router.put('/platform-settings', asyncSuperAdminHandler(settingsController.platformSettingsPut));
 
-router.get('/tenants', superAdminController.listTenants);
-router.post('/tenants', superAdminController.createTenant);
-router.get('/tenants/:tenantId', superAdminController.getTenant);
-router.patch('/tenants/:tenantId', superAdminController.updateTenant);
-router.get('/tenants/:tenantId/modules', superAdminController.getTenantModules);
-router.put('/tenants/:tenantId/modules', superAdminController.updateTenantModules);
+router.get('/tenants', asyncSuperAdminHandler(superAdminController.listTenants));
+router.post('/tenants', asyncSuperAdminHandler(superAdminController.createTenant));
+router.get('/tenants/:tenantId', asyncSuperAdminHandler(superAdminController.getTenant));
+router.patch('/tenants/:tenantId', asyncSuperAdminHandler(superAdminController.updateTenant));
+router.get('/tenants/:tenantId/modules', asyncSuperAdminHandler(superAdminController.getTenantModules));
+router.put('/tenants/:tenantId/modules', asyncSuperAdminHandler(superAdminController.updateTenantModules));
 
-router.get('/tenant-branding/:tenantId', tenantBrandingController.getForTenant);
-router.post('/tenant-branding', tenantBrandingController.upsertBranding);
+router.get('/tenant-branding/:tenantId', asyncSuperAdminHandler(tenantBrandingController.getForTenant));
+router.post('/tenant-branding', asyncSuperAdminHandler(tenantBrandingController.upsertBranding));
 router.post(
   '/tenant-branding/upload-logo',
   (req, res, next) => {
@@ -61,7 +62,7 @@ router.post(
       next();
     });
   },
-  tenantBrandingController.uploadLogo
+  asyncSuperAdminHandler(tenantBrandingController.uploadLogo)
 );
 
 module.exports = router;

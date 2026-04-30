@@ -2,10 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { DrawerModule } from 'primeng/drawer';
+import { DialogModule } from 'primeng/dialog';
 
 import { environment } from '../../../../../environments/environment';
-import { ToastService } from '../../../../services/toast.service';
+import { ToastService } from '@app/services';
 
 interface TenantDetail {
   id: string;
@@ -20,7 +20,7 @@ interface TenantDetail {
 @Component({
   selector: 'app-edit-tenant-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DrawerModule],
+  imports: [CommonModule, ReactiveFormsModule, DialogModule],
   templateUrl: './edit-tenant-dialog.component.html',
   styleUrl: './edit-tenant-dialog.component.scss',
 })

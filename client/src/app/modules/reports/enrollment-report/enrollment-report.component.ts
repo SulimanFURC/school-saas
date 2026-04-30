@@ -5,9 +5,9 @@ import { SelectModule } from 'primeng/select';
 
 import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
 import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
-import { LookupService } from '../../../services/lookup.service';
-import { ReportService } from '../../../services/report.service';
-import { ToastService } from '../../../services/toast.service';
+import { LookupService } from '@app/services';
+import { ReportService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-enrollment-report',

@@ -11,9 +11,9 @@ import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
 
 import { environment } from '../../../../environments/environment';
-import { AuthService } from '../../../services/auth.service';
-import type { TenantModuleRow } from '../../../services/feature.service';
-import { ToastService } from '../../../services/toast.service';
+import { AuthService } from '@app/services';
+import type { TenantModuleRow } from '@app/services';
+import { ToastService } from '@app/services';
 
 interface TenantSummary {
   id: string;

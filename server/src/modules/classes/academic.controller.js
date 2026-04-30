@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const sequelize = require('../../config/db');
+const { parsePagination } = require('../../core/http/pagination');
 const SchoolClass = require('./class.model');
 const Section = require('./section.model');
 const AcademicYear = require('./academicYear.model');
@@ -81,6 +82,7 @@ async function loadClassWithRelations(tenantId, classId, transaction) {
 exports.listClasses = async (req, res) => {
   try {
     const tenantId = req.tenant.id;
+    const { page, limit, offset } = parsePagination(req, { defaultLimit: 200, maxLimit: 500 });
     const includeSections =
       String(req.query.include || '').includes('sections') || req.query.include === 'sections';
     const include = [
@@ -89,14 +91,18 @@ exports.listClasses = async (req, res) => {
     if (includeSections) {
       include.push({ model: Section, as: 'sections', required: false });
     }
-    const rows = await SchoolClass.findAll({
+    const { count, rows } = await SchoolClass.findAndCountAll({
       where: { tenant_id: tenantId },
       include,
       order: [['name', 'ASC']],
+      limit,
+      offset,
+      distinct: true,
+      col: 'SchoolClass.id',
     });
-    res.status(200).json(rows);
+    res.status(200).json({ data: rows, total: count, page, limit });
   } catch (err) {
-    console.error('classes.listClasses error:', err);
+    req.log?.error({ err }, 'classes.listClasses error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -114,7 +120,7 @@ exports.getClass = async (req, res) => {
     }
     res.status(200).json(cls);
   } catch (err) {
-    console.error('classes.getClass error:', err);
+    req.log?.error({ err }, 'classes.getClass error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -214,7 +220,7 @@ exports.createClass = async (req, res) => {
       }
       return res.status(409).json({ message: 'Constraint violation' });
     }
-    console.error('classes.createClass error:', err);
+    req.log?.error({ err }, 'classes.createClass error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -383,7 +389,7 @@ exports.updateClass = async (req, res) => {
       }
       return res.status(409).json({ message: 'Constraint violation' });
     }
-    console.error('classes.updateClass error:', err);
+    req.log?.error({ err }, 'classes.updateClass error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -426,7 +432,7 @@ exports.deleteClass = async (req, res) => {
     if (!t.finished) {
       await t.rollback();
     }
-    console.error('classes.deleteClass error:', err);
+    req.log?.error({ err }, 'classes.deleteClass error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -444,13 +450,16 @@ exports.listSections = async (req, res) => {
     if (!cls) {
       return res.status(404).json({ message: 'Class not found' });
     }
-    const rows = await Section.findAll({
+    const { page, limit, offset } = parsePagination(req, { defaultLimit: 200, maxLimit: 500 });
+    const { count, rows } = await Section.findAndCountAll({
       where: { tenant_id: tenantId, class_id: classId },
       order: [['name', 'ASC']],
+      limit,
+      offset,
     });
-    res.status(200).json(rows);
+    res.status(200).json({ data: rows, total: count, page, limit });
   } catch (err) {
-    console.error('classes.listSections error:', err);
+    req.log?.error({ err }, 'classes.listSections error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -479,7 +488,7 @@ exports.createSection = async (req, res) => {
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Section already exists for this class' });
     }
-    console.error('classes.createSection error:', err);
+    req.log?.error({ err }, 'classes.createSection error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -505,7 +514,7 @@ exports.updateSection = async (req, res) => {
     if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ message: 'Section name already exists for this class' });
     }
-    console.error('classes.updateSection error:', err);
+    req.log?.error({ err }, 'classes.updateSection error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -538,20 +547,23 @@ exports.deleteSection = async (req, res) => {
     await sec.destroy();
     res.status(204).send();
   } catch (err) {
-    console.error('classes.deleteSection error:', err);
+    req.log?.error({ err }, 'classes.deleteSection error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 exports.listAcademicYears = async (req, res) => {
   try {
-    const rows = await AcademicYear.findAll({
+    const { page, limit, offset } = parsePagination(req, { defaultLimit: 200, maxLimit: 500 });
+    const { count, rows } = await AcademicYear.findAndCountAll({
       where: { tenant_id: req.tenant.id },
       order: [['name', 'ASC']],
+      limit,
+      offset,
     });
-    res.status(200).json(rows);
+    res.status(200).json({ data: rows, total: count, page, limit });
   } catch (err) {
-    console.error('classes.listAcademicYears error:', err);
+    req.log?.error({ err }, 'classes.listAcademicYears error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -567,7 +579,7 @@ exports.getCurrentAcademicYear = async (req, res) => {
     }
     res.status(200).json(row);
   } catch (err) {
-    console.error('classes.getCurrentAcademicYear error:', err);
+    req.log?.error({ err }, 'classes.getCurrentAcademicYear error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -582,7 +594,7 @@ exports.createAcademicYear = async (req, res) => {
     });
     res.status(201).json(row);
   } catch (err) {
-    console.error('classes.createAcademicYear error:', err);
+    req.log?.error({ err }, 'classes.createAcademicYear error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -607,7 +619,7 @@ exports.setActiveAcademicYear = async (req, res) => {
     await year.update({ is_active: true });
     res.status(200).json(await AcademicYear.findOne({ where: { id, tenant_id: tenantId } }));
   } catch (err) {
-    console.error('classes.setActiveAcademicYear error:', err);
+    req.log?.error({ err }, 'classes.setActiveAcademicYear error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };

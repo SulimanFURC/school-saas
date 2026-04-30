@@ -1,33 +1,20 @@
-<p-drawer
+<p-dialog
   [(visible)]="visible"
-  position="right"
-  styleClass="create-tenant-drawer"
-  [dismissible]="!submitting"
+  header="Create New School"
+  styleClass="create-tenant-modal"
+  [dismissableMask]="!submitting"
   [closeOnEscape]="!submitting"
   [modal]="true"
-  [blockScroll]="true"
-  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!submitting"
+  [style]="{ width: 'min(44rem, 96vw)' }"
   (onHide)="onHide()"
 >
-  <ng-template pTemplate="headless">
-    <div class="ct-drawer">
-      <header class="ct-drawer__header">
-        <div class="ct-drawer__header-text">
-          <h2 class="ct-drawer__title">Create New School</h2>
-          <p class="ct-drawer__subtitle">Add a new school tenant to the platform</p>
-        </div>
-        <button
-          type="button"
-          class="ct-drawer__close"
-          aria-label="Close"
-          [disabled]="submitting"
-          (click)="cancel()"
-        >
-          <i class="pi pi-times" aria-hidden="true"></i>
-        </button>
-      </header>
+  <div class="ct-dialog">
+    <p class="ct-dialog__subtitle">Add a new school tenant to the platform</p>
 
-      <form [formGroup]="form" class="ct-drawer__body" (ngSubmit)="submit()">
+      <form [formGroup]="form" class="ct-dialog__body" (ngSubmit)="submit()">
         <div class="ct-field">
           <label class="ct-field__label" for="ct-name">School Name</label>
           <input
@@ -147,7 +134,7 @@
           }
         </div>
 
-        <div class="ct-drawer__section-title" role="presentation">Admin User</div>
+        <div class="ct-dialog__section-title" role="presentation">Admin User</div>
 
         <div class="ct-field">
           <label class="ct-field__label" for="ct-admin-name">Admin Name</label>
@@ -218,10 +205,10 @@
         </div>
       </form>
 
-      <footer class="ct-drawer__footer">
+      <footer class="ct-dialog__footer">
         <button
           type="button"
-          class="btn btn-outline-secondary ct-drawer__btn"
+          class="btn btn-outline-secondary ct-dialog__btn"
           (click)="cancel()"
           [disabled]="submitting"
         >
@@ -229,7 +216,7 @@
         </button>
         <button
           type="button"
-          class="btn btn-primary ct-drawer__btn ct-drawer__btn--primary"
+          class="btn btn-primary ct-dialog__btn ct-dialog__btn--primary"
           (click)="submit()"
           [disabled]="submitting"
         >
@@ -241,6 +228,5 @@
           }
         </button>
       </footer>
-    </div>
-  </ng-template>
-</p-drawer>
+  </div>
+</p-dialog>

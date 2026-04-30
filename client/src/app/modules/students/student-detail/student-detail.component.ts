@@ -9,7 +9,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 
-import { StudentService, resolveStudentDisplayName } from '../../../services/student.service';
+import { StudentService, resolveStudentDisplayName } from '@app/services';
 
 /** Tab ids for `@switch` panels — add entries here when adding tabs (order = bar order). */
 export type StudentDetailTabId = 'basic' | 'guardian' | 'academic' | 'fees';

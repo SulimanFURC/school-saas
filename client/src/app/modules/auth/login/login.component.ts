@@ -8,9 +8,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { finalize, from, map, of, switchMap, tap } from 'rxjs';
 
-import { AuthService } from '../../../services/auth.service';
-import { FeatureService } from '../../../services/feature.service';
-import { ToastService } from '../../../services/toast.service';
+import { isApiClientError } from '../../../models/api-client-error';
+import { AuthService } from '@app/services';
+import { FeatureService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-login',
@@ -42,9 +43,18 @@ export class LoginComponent {
   });
 
   submitting = false;
+  statusMessage: string | null = null;
 
   /** UI-only; not sent with login. */
   rememberMe = false;
+
+  private isTenantStatusMessage(message: string): boolean {
+    const normalized = message.trim().toLowerCase();
+    return (
+      normalized === 'your school account is inactive. please contact your administrator.' ||
+      normalized === 'your school account is pending approval. please try again later.'
+    );
+  }
 
   submit(): void {
     if (this.form.invalid || this.submitting) {
@@ -53,6 +63,7 @@ export class LoginComponent {
     }
     const { subdomain, email, password } = this.form.getRawValue();
     this.submitting = true;
+    this.statusMessage = null;
     this.auth
       .login(subdomain, email, password)
       .pipe(
@@ -85,8 +96,15 @@ export class LoginComponent {
         })
       )
       .subscribe({
-        error: (err: { error?: { message?: string } }) => {
-          const msg = err?.error?.message ?? 'Sign in failed';
+        error: (err: unknown) => {
+          const msg =
+            (isApiClientError(err) ? err.message : null) ||
+            (err as { error?: { message?: string } } | null)?.error?.message ||
+            'Sign in failed';
+          if (this.isTenantStatusMessage(msg)) {
+            this.statusMessage = msg;
+            return;
+          }
           this.toast.open(msg, 'Dismiss', { duration: 5000 });
         },
       });

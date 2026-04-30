@@ -30,9 +30,9 @@ import {
   SchoolClassDto,
   SectionInput,
   UpdateClassPayload,
-} from '../../../services/academic.service';
-import { LookupService } from '../../../services/lookup.service';
-import { TeacherListRow, TeacherService } from '../../../services/teacher.service';
+} from '@app/services';
+import { LookupService } from '@app/services';
+import { TeacherListRow, TeacherService } from '@app/services';
 
 interface TeacherOption {
   label: string;

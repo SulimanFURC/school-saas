@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Tenant = require('../../modules/tenant/tenant.model');
+const { runWithTenantContext } = require('../tenant-context');
 
 const tenantMiddleware = async (req, res, next) => {
   try {
@@ -18,7 +19,7 @@ const tenantMiddleware = async (req, res, next) => {
             return res.status(404).json({ message: 'Tenant not found' });
           }
           req.tenant = tenant;
-          return next();
+          return runWithTenantContext(tenant.id, () => next());
         }
         if (decoded.tenant_id) {
           const tenant = await Tenant.findByPk(decoded.tenant_id);
@@ -26,7 +27,7 @@ const tenantMiddleware = async (req, res, next) => {
             return res.status(404).json({ message: 'Tenant not found' });
           }
           req.tenant = tenant;
-          return next();
+          return runWithTenantContext(tenant.id, () => next());
         }
       } catch {
         if (!req.headers['x-tenant-id']) {
@@ -48,7 +49,7 @@ const tenantMiddleware = async (req, res, next) => {
     }
 
     req.tenant = tenant;
-    next();
+    runWithTenantContext(tenant.id, () => next());
   } catch (err) {
     next(err);
   }

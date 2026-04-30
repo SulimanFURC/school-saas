@@ -20,7 +20,7 @@ import {
   type TeacherExamPaperRow,
   type TeacherExamSummaryRow,
   type UpsertMarkEntry,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 interface MarksRowState {
   student_id: string;

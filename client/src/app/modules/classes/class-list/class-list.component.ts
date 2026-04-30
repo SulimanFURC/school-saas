@@ -20,7 +20,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { AcademicService, SchoolClassDto } from '../../../services/academic.service';
+import { AcademicService, SchoolClassDto } from '@app/services';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
 
 export type ClassSortKey = 'name' | 'teacher' | 'sections';

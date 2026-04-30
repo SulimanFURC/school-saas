@@ -14,7 +14,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CreateTenantDialogComponent } from './create-tenant-dialog/create-tenant-dialog.component';
 import { EditTenantDialogComponent } from './edit-tenant-dialog/edit-tenant-dialog.component';
-import { ToastService } from '../../../services/toast.service';
+import { ToastService } from '@app/services';
 import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
 

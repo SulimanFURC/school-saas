@@ -14,7 +14,7 @@ import { Textarea } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { TeacherDetail, TeacherService } from '../../../services/teacher.service';
+import { TeacherDetail, TeacherService } from '@app/services';
 
 @Component({
   selector: 'app-teacher-self-profile',

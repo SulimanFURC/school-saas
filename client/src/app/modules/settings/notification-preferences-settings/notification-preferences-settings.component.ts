@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { SettingsService, type NotificationPreferencesDto } from '../../../services/settings.service';
-import { ToastService } from '../../../services/toast.service';
+import { SettingsService, type NotificationPreferencesDto } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-notification-preferences-settings',

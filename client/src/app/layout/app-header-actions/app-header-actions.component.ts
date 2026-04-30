@@ -3,9 +3,9 @@ import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
-import { AuthService } from '../../services/auth.service';
-import { NotificationService, type AppNotification } from '../../services/notification.service';
-import { ThemeService } from '../../services/theme.service';
+import { AuthService } from '@app/services';
+import { NotificationService, type AppNotification } from '@app/services';
+import { ThemeService } from '@app/services';
 import { formatRelativeTime } from '../../utils/relative-time';
 
 function formatRole(role: string | undefined): string {

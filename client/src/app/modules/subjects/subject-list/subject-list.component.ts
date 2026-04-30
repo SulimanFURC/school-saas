@@ -11,7 +11,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { SubjectDto, SubjectService } from '../../../services/subject.service';
+import { SubjectDto, SubjectService } from '@app/services';
 
 @Component({
   selector: 'app-subject-list',

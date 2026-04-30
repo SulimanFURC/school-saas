@@ -596,6 +596,9 @@ exports.lookupByAdmission = async (req, res) => {
   }
 };
 
+/**
+ * Paginated student directory: `page`, `pageSize` (default 20, max 100). Supports `q`, `class_id`, `section_id`, `academic_year_id`.
+ */
 exports.list = async (req, res) => {
   try {
     const tenantId = req.tenant.id;

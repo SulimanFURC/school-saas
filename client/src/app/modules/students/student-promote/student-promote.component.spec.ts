@@ -3,9 +3,9 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { StudentPromoteComponent } from './student-promote.component';
-import { AcademicService } from '../../../services/academic.service';
-import { StudentListRow, StudentService } from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
+import { AcademicService } from '@app/services';
+import { StudentListRow, StudentService } from '@app/services';
+import { ToastService } from '@app/services';
 
 describe('StudentPromoteComponent', () => {
   let fixture: ComponentFixture<StudentPromoteComponent>;

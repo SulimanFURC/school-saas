@@ -9,13 +9,13 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 
-import { BrandingService } from '../../../services/branding.service';
-import { FeeCollection, FeeService } from '../../../services/fee.service';
+import { BrandingService } from '@app/services';
+import { FeeCollection, FeeService } from '@app/services';
 import {
   StudentService,
   resolveStudentDisplayName,
-} from '../../../services/student.service';
-import { ToastService } from '../../../services/toast.service';
+} from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-fee-receipt',

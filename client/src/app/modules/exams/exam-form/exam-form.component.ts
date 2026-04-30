@@ -16,13 +16,13 @@ import {
   AcademicService,
   type AcademicYearDto,
   type SchoolClassDto,
-} from '../../../services/academic.service';
+} from '@app/services';
 import {
   ExamCreatePayload,
   ExamDto,
   ExamService,
   type ExamType,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 const EXAM_TYPE_OPTIONS: { label: string; value: ExamType }[] = [
   { label: '1st Term', value: 'first_term' },

@@ -15,7 +15,7 @@ import {
   type GradingBandDto,
   type GradingSchemeCreatePayload,
   type GradingSchemeDto,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 interface BandRow extends GradingBandDto {
   __key: string;

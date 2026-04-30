@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '@app/services';
 
 const LS_TOKEN = 'school_saas_token';
 const LS_SUBDOMAIN = 'school_saas_subdomain';
@@ -37,6 +37,22 @@ function isAuthBypassUrl(url: string): boolean {
     url.includes('/auth/forgot-password') ||
     url.includes('/auth/reset-password')
   );
+}
+
+function tenantStatusMessage(err: HttpErrorResponse): string | null {
+  const maybeBody = err.error;
+  const msg =
+    maybeBody && typeof maybeBody === 'object' && 'message' in maybeBody
+      ? (maybeBody as { message?: unknown }).message
+      : null;
+  const normalized = typeof msg === 'string' ? msg.trim().toLowerCase() : '';
+  if (
+    normalized === 'your school account is inactive. please contact your administrator.' ||
+    normalized === 'your school account is pending approval. please try again later.'
+  ) {
+    return msg as string;
+  }
+  return null;
 }
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -79,6 +95,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(attachAuth(req)).pipe(
     catchError((err: HttpErrorResponse) => {
+      const blockedTenantMsg = tenantStatusMessage(err);
+      if (err.status === 403 && blockedTenantMsg) {
+        auth.logoutLocal();
+        return throwError(() => err);
+      }
       if (err.status !== 401 || req.context.get(AUTH_REFRESH_RETRIED) || isAuthBypassUrl(req.url)) {
         return throwError(() => err);
       }

@@ -1,7 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { map } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
+
+interface PagedRows<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export interface ClassTeacherSummary {
   id: string;
@@ -57,8 +65,11 @@ export class AcademicService {
   private base = environment.apiBaseUrl;
 
   listClasses(includeSections = false) {
-    const params = includeSections ? { include: 'sections' } : undefined;
-    return this.http.get<SchoolClassDto[]>(`${this.base}/classes`, { params });
+    const params: Record<string, string> = { page: '1', limit: '500' };
+    if (includeSections) params['include'] = 'sections';
+    return this.http
+      .get<PagedRows<SchoolClassDto>>(`${this.base}/classes`, { params })
+      .pipe(map((r) => r.data));
   }
 
   getClass(id: number) {
@@ -78,9 +89,11 @@ export class AcademicService {
   }
 
   listSections(classId: number) {
-    return this.http.get<SectionDto[]>(`${this.base}/sections`, {
-      params: { class_id: String(classId) },
-    });
+    return this.http
+      .get<PagedRows<SectionDto>>(`${this.base}/sections`, {
+        params: { class_id: String(classId), page: '1', limit: '500' },
+      })
+      .pipe(map((r) => r.data));
   }
 
   createSection(classId: number, name: string) {
@@ -96,7 +109,11 @@ export class AcademicService {
   }
 
   listAcademicYears() {
-    return this.http.get<AcademicYearDto[]>(`${this.base}/academic-years`);
+    return this.http
+      .get<PagedRows<AcademicYearDto>>(`${this.base}/academic-years`, {
+        params: { page: '1', limit: '500' },
+      })
+      .pipe(map((r) => r.data));
   }
 
   getCurrentAcademicYear() {

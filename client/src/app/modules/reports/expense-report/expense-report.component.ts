@@ -5,8 +5,8 @@ import { InputTextModule } from 'primeng/inputtext';
 
 import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
 import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
-import { ReportService } from '../../../services/report.service';
-import { ToastService } from '../../../services/toast.service';
+import { ReportService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-expense-report',

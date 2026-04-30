@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { ConfirmDialogService } from './services/confirm-dialog.service';
+import { ConfirmDialogService } from '@app/services';
 import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.component';
 
 @Component({

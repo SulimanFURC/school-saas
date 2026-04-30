@@ -3,8 +3,8 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 
-import { AuthService } from '../../services/auth.service';
-import { ToastService } from '../../services/toast.service';
+import { AuthService } from '@app/services';
+import { ToastService } from '@app/services';
 
 @Component({
   selector: 'app-teacher-login-credentials-modal',

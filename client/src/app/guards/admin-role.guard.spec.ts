@@ -3,7 +3,7 @@ import { Router, type ActivatedRouteSnapshot, type RouterStateSnapshot, type Url
 import { signal } from '@angular/core';
 
 import { adminRoleGuard } from './admin-role.guard';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '@app/services';
 
 describe('adminRoleGuard', () => {
   let userRole: ReturnType<typeof signal<string | null>>;

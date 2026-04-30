@@ -111,6 +111,9 @@
           [disabled]="submitting"
           styleClass="login-submit w-100"
         />
+        @if (statusMessage) {
+          <div class="login-field__error mt-3">{{ statusMessage }}</div>
+        }
       </form>
 
       <ng-template pTemplate="footer">

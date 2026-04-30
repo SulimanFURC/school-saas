@@ -23,6 +23,16 @@ const {
 
 const { Op } = require('sequelize');
 
+function tenantStatusBlockedMessage(status) {
+  if (status === 'inactive') {
+    return 'Your school account is inactive. Please contact your administrator.';
+  }
+  if (status === 'pending') {
+    return 'Your school account is pending approval. Please try again later.';
+  }
+  return null;
+}
+
 function jsonUser(user) {
   return {
     id: user.id,
@@ -117,6 +127,10 @@ exports.login = async (req, res) => {
   try {
     const { email, password, login } = req.body;
     const tenant = req.tenant;
+    const tenantBlockedMessage = tenantStatusBlockedMessage(String(tenant?.status || '').toLowerCase());
+    if (tenantBlockedMessage) {
+      return res.status(403).json({ message: tenantBlockedMessage });
+    }
 
     const loginRaw = login != null && login !== '' ? login : email;
     if (!loginRaw || !password) {

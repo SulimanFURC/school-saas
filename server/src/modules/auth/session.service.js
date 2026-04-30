@@ -60,6 +60,16 @@ function jwtExpiresAtFromToken(signed) {
   return new Date(decoded.exp * 1000);
 }
 
+function tenantStatusBlockedMessage(status) {
+  if (status === 'inactive') {
+    return 'Your school account is inactive. Please contact your administrator.';
+  }
+  if (status === 'pending') {
+    return 'Your school account is pending approval. Please try again later.';
+  }
+  return null;
+}
+
 /**
  * Issue new access JWT + opaque refresh, persist refresh hash.
  */
@@ -127,6 +137,7 @@ async function revokeRefreshByPlainToken(plainToken, tenantId, transaction = und
  * Rotate refresh: revoke matching row and create a new one; return new pair.
  */
 async function rotateRefreshToken(plainRefresh, tenant) {
+  const tenantBlockedMessage = tenantStatusBlockedMessage(String(tenant?.status || '').toLowerCase());
   const tokenHash = hashOpaque(plainRefresh);
   if (!tokenHash) {
     return { ok: false, status: 401, message: 'Invalid refresh token' };
@@ -150,6 +161,11 @@ async function rotateRefreshToken(plainRefresh, tenant) {
     if (row.expires_at < new Date()) {
       await row.update({ revoked_at: new Date() }, { transaction: t });
       return { ok: false, status: 401, message: 'Refresh token expired' };
+    }
+
+    if (tenantBlockedMessage) {
+      await row.update({ revoked_at: new Date() }, { transaction: t });
+      return { ok: false, status: 403, message: tenantBlockedMessage };
     }
 
     const user = await User.findOne({

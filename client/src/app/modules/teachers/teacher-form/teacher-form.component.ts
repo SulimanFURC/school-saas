@@ -17,7 +17,7 @@ import { Textarea } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { TeacherService, type TeacherDetail } from '../../../services/teacher.service';
+import { TeacherService, type TeacherDetail } from '@app/services';
 import { TeacherLoginCredentialsModalComponent } from '../../../shared/teacher-login-credentials-modal/teacher-login-credentials-modal.component';
 
 function optionalPasswordValidator(control: { value: string | null }) {

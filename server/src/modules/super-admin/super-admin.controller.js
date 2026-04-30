@@ -6,6 +6,7 @@ const User = require('../users/user.model');
 const Module = require('../module/module.model');
 const TenantModule = require('../tenant-module/tenantModule.model');
 const Student = require('../students/student.model');
+const RefreshToken = require('../auth/refreshToken.model');
 const { seedTenantModulesForTenant } = require('../../seed/moduleSeed');
 const { seedAcademicYearsForTenant } = require('../../seed/academicYearsSeed');
 const {
@@ -14,6 +15,7 @@ const {
   isValidSubdomain,
 } = require('../../core/utils/subdomain');
 const { recordAudit } = require('../audit/audit.service');
+const { parsePagination } = require('../../core/http/pagination');
 
 const ALLOWED_STATUS = new Set(['active', 'inactive', 'pending']);
 
@@ -25,19 +27,9 @@ function humanizeModuleKey(key) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function parsePagination(req) {
-  const pageRaw = parseInt(req.query.page, 10);
-  const limitRaw = parseInt(req.query.limit, 10);
-  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
-  let limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 10;
-  if (limit > 1000) limit = 1000;
-  const offset = (page - 1) * limit;
-  return { page, limit, offset };
-}
-
 exports.listTenants = async (req, res) => {
   try {
-    const { page, limit, offset } = parsePagination(req);
+    const { page, limit, offset } = parsePagination(req, { defaultLimit: 10, maxLimit: 1000 });
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
     const where = {};
     if (q) {
@@ -115,7 +107,7 @@ exports.listTenants = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('listTenants error:', err);
+    req.log?.error({ err }, 'listTenants error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -299,7 +291,7 @@ exports.getTenant = async (req, res) => {
     }
     return res.status(200).json({ tenant: tenant.toJSON() });
   } catch (err) {
-    console.error('getTenant error:', err);
+    req.log?.error({ err }, 'getTenant error');
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -367,6 +359,29 @@ exports.updateTenant = async (req, res) => {
     const before = tenant.toJSON();
     await tenant.update(updates);
 
+    const isDeactivatedFromActive =
+      before.status === 'active' &&
+      updates.status !== undefined &&
+      (updates.status === 'inactive' || updates.status === 'pending');
+
+    if (isDeactivatedFromActive) {
+      await Promise.all([
+        User.increment('token_version', {
+          by: 1,
+          where: { tenant_id: tenant.id },
+        }),
+        RefreshToken.update(
+          { revoked_at: new Date() },
+          {
+            where: {
+              tenant_id: tenant.id,
+              revoked_at: null,
+            },
+          }
+        ),
+      ]);
+    }
+
     const fresh = await Tenant.findByPk(tenant.id, {
       attributes: [
         'id',
@@ -392,7 +407,7 @@ exports.updateTenant = async (req, res) => {
     });
     return res.status(200).json({ message: 'Tenant updated', tenant: fresh.toJSON() });
   } catch (err) {
-    console.error('updateTenant error:', err);
+    req.log?.error({ err }, 'updateTenant error');
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -564,7 +579,7 @@ exports.superAdminDashboard = async (req, res) => {
       modules: { most_enabled },
     });
   } catch (err) {
-    console.error('superAdminDashboard error:', err);
+    req.log?.error({ err }, 'superAdminDashboard error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };

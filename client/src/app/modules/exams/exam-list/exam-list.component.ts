@@ -22,13 +22,13 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { AcademicService, type AcademicYearDto } from '../../../services/academic.service';
+import { AcademicService, type AcademicYearDto } from '@app/services';
 import {
   ExamDto,
   ExamService,
   type ExamStatus,
   type ExamType,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 const EXAM_TYPE_LABELS: Record<ExamType, string> = {
   first_term: '1st Term',

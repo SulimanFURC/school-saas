@@ -16,8 +16,8 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
-import { AcademicService, type SchoolClassDto } from '../../../services/academic.service';
-import { SubjectService, type SubjectDto } from '../../../services/subject.service';
+import { AcademicService, type SchoolClassDto } from '@app/services';
+import { SubjectService, type SubjectDto } from '@app/services';
 import {
   AdminProgressResponse,
   ExamDto,
@@ -28,7 +28,7 @@ import {
   ExamTimetableUpsertPayload,
   GradeDistributionResponse,
   GradingSchemeDto,
-} from '../../../services/exam.service';
+} from '@app/services';
 
 interface NewPaperForm {
   class_id: number | null;
