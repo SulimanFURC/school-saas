@@ -58,6 +58,15 @@
           <i class="bi bi-gear"></i>
           <span class="ds-body-sm">Tenant branding</span>
         </a>
+        <a
+          class="sa-nav-item"
+          routerLink="/super-admin/audit-logs"
+          routerLinkActive="sa-nav-item--active"
+          (click)="closeSidebarIfMobile()"
+        >
+          <i class="bi bi-journal-text"></i>
+          <span class="ds-body-sm">Audit logs</span>
+        </a>
         <a class="sa-nav-item" routerLink="/" (click)="closeSidebarIfMobile()">
           <i class="bi bi-arrow-left"></i>
           <span class="ds-body-sm">School app</span>

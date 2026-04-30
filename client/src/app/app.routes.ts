@@ -93,6 +93,14 @@ export const routes: Routes = [
           ),
         data: { title: 'Tenant branding' },
       },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./modules/super-admin/audit-log-viewer/audit-log-viewer.component').then(
+            (m) => m.AuditLogViewerComponent
+          ),
+        data: { title: 'Audit logs' },
+      },
     ],
   },
   {

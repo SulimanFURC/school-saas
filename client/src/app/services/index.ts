@@ -5,6 +5,7 @@
  */
 export * from './academic.service';
 export * from './api.service';
+export * from './audit-log.service';
 export * from './auth.service';
 export * from './branding.service';
 export * from './confirm-dialog.service';

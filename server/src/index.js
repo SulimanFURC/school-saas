@@ -25,6 +25,7 @@ const authMiddleware = require('./core/middleware/auth.middleware');
 const authorize = require('./core/middleware/authorize.middleware');
 const modulesRoutes = require('./modules/modules/modules.routes');
 const superAdminRoutes = require('./modules/super-admin/super-admin.routes');
+const auditRoutes = require('./modules/audit/audit.routes');
 const checkFeature = require('./core/middleware/feature.middleware');
 const tenantBrandingController = require('./modules/tenant-branding/tenantBranding.controller');
 require('./modules/classes/class.model');
@@ -165,6 +166,7 @@ app.use('/auth', authRoutes);
 app.get('/tenant-branding', authMiddleware, tenantBrandingController.getForCurrentTenant);
 app.use('/modules', modulesRoutes);
 app.use('/super-admin', authMiddleware, superAdminRoutes);
+app.use('/audit-logs', authMiddleware, auditRoutes);
 
 app.get('/secure', authMiddleware, (req, res) => {
   res.json({ message: 'Secure route', user: req.user });
