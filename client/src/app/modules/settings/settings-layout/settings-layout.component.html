@@ -26,6 +26,11 @@
             Notifications
           </a>
         }
+        @if (showAuditIntelligence()) {
+          <a class="nav-link rounded" routerLink="/settings/audit-intelligence" routerLinkActive="active">
+            Audit intelligence
+          </a>
+        }
         <a class="nav-link rounded" routerLink="/settings/password" routerLinkActive="active">Password</a>
       </nav>
     </div>

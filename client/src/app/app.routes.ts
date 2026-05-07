@@ -96,10 +96,10 @@ export const routes: Routes = [
       {
         path: 'audit-logs',
         loadComponent: () =>
-          import('./modules/super-admin/audit-log-viewer/audit-log-viewer.component').then(
-            (m) => m.AuditLogViewerComponent
+          import('./modules/settings/audit-intelligence-settings/audit-intelligence-settings.component').then(
+            (m) => m.AuditIntelligenceSettingsComponent
           ),
-        data: { title: 'Audit logs' },
+        data: { title: 'Audit intelligence' },
       },
     ],
   },
@@ -483,6 +483,15 @@ export const routes: Routes = [
                 (m) => m.RolesPermissionsSettingsComponent
               ),
             data: { title: 'Roles & permissions', permission: 'settings.read' },
+          },
+          {
+            path: 'audit-intelligence',
+            canActivate: [adminRoleGuard],
+            loadComponent: () =>
+              import('./modules/settings/audit-intelligence-settings/audit-intelligence-settings.component').then(
+                (m) => m.AuditIntelligenceSettingsComponent
+              ),
+            data: { title: 'Audit intelligence' },
           },
           {
             path: 'password',

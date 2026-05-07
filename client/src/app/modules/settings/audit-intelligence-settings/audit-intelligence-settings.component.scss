@@ -1,0 +1,26 @@
+.audit-intel__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.audit-intel__subtitle {
+  color: var(--ds-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.audit-intel__changes {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.75rem;
+}
+
+.audit-json {
+  max-height: 12rem;
+  overflow: auto;
+  border: 1px solid var(--ds-outline-variant);
+  border-radius: 0.35rem;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--bs-body-bg) 95%, var(--ds-surface-container-low) 5%);
+  font-size: 0.75rem;
+}

@@ -30,4 +30,9 @@ export class SettingsLayoutComponent {
     const r = this.auth.userRole()?.toLowerCase() ?? '';
     return r === 'admin' || r === 'super_admin';
   }
+
+  showAuditIntelligence(): boolean {
+    const r = this.auth.userRole()?.toLowerCase() ?? '';
+    return r === 'admin' || r === 'super_admin';
+  }
 }
