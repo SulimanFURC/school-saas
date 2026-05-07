@@ -38,27 +38,7 @@ import {
   resolveStudentDisplayName,
 } from '@app/services';
 import { ToastService } from '@app/services';
-
-function parseYmdToLocalDate(ymd: string): Date | null {
-  const parts = ymd.trim().split('-').map((p) => Number(p));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
-  const [y, m, d] = parts;
-  const dt = new Date(y, m - 1, d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function formatYmdForApi(v: Date | string | null | undefined): string {
-  if (v == null || v === '') return '';
-  if (v instanceof Date) {
-    if (Number.isNaN(v.getTime())) return '';
-    const y = v.getFullYear();
-    const mo = String(v.getMonth() + 1).padStart(2, '0');
-    const d = String(v.getDate()).padStart(2, '0');
-    return `${y}-${mo}-${d}`;
-  }
-  const s = String(v).trim();
-  return s ? s.slice(0, 10) : '';
-}
+import { formatYmdForApi, parseYmdToLocalDate } from '../../../shared/utils/date-ymd';
 
 @Component({
   selector: 'app-fee-collection',
@@ -364,7 +344,7 @@ export class FeeCollectionComponent implements OnInit {
       return;
     }
 
-    const collectionDate = formatYmdForApi(v.collection_date);
+    const collectionDate = formatYmdForApi(v.collection_date) ?? '';
     if (!collectionDate) {
       this.errorMessage.set('Collection date is required');
       return;

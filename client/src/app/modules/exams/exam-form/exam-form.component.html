@@ -9,8 +9,13 @@
     <a pButton routerLink="/exams" icon="pi pi-arrow-left" label="Back to exams" class="p-button-text"></a>
   </header>
 
-  <p-card>
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="exam-form">
+  <app-form-shell [loading]="loading()">
+    <p-card>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="exam-form">
+        <app-form-section
+          title="Exam configuration"
+          description="Configure schedule, academic year, and class scope."
+        >
       <div class="exam-form__row">
         <label>
           Title
@@ -73,6 +78,7 @@
           appendTo="body"
         ></p-multiselect>
       </label>
+        </app-form-section>
 
       <div class="exam-form__actions">
         <a pButton routerLink="/exams" label="Cancel" class="p-button-text"></a>
@@ -83,6 +89,7 @@
           icon="pi pi-check"
         ></p-button>
       </div>
-    </form>
-  </p-card>
+      </form>
+    </p-card>
+  </app-form-shell>
 </section>

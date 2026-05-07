@@ -183,6 +183,8 @@ export class StudentService {
     class_id?: number;
     section_id?: number;
     academic_year_id?: number;
+    sortBy?: string;
+    sortDir?: 'asc' | 'desc';
   }) {
     let httpParams = new HttpParams();
     if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
@@ -194,6 +196,8 @@ export class StudentService {
     if (params?.academic_year_id != null) {
       httpParams = httpParams.set('academic_year_id', String(params.academic_year_id));
     }
+    if (params?.sortBy) httpParams = httpParams.set('sort_by', params.sortBy);
+    if (params?.sortDir) httpParams = httpParams.set('sort_order', params.sortDir);
     return this.http.get<unknown>(`${this.base}/students`, { params: httpParams }).pipe(
       map((body) => normalizeStudentListResponse(body, params?.pageSize ?? 20))
     );

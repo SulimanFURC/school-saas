@@ -32,6 +32,7 @@ import { ToastModule } from 'primeng/toast';
 
 import { AcademicService, SchoolClassDto } from '@app/services';
 import { StudentService, resolveStudentFirstLast } from '@app/services';
+import { formatYmdForApi, parseYmdToLocalDate } from '../../../shared/utils/date-ymd';
 
 const BLOOD_OPTIONS = [
   'A+',
@@ -74,27 +75,6 @@ const GENDER_OPTIONS: { label: string; value: string }[] = [
   { label: 'Female', value: 'female' },
   { label: 'Other', value: 'other' },
 ];
-
-function parseYmdToLocalDate(ymd: string): Date | null {
-  const parts = ymd.trim().split('-').map((p) => Number(p));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
-  const [y, m, d] = parts;
-  const dt = new Date(y, m - 1, d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function formatDobForApi(v: Date | string | null | undefined): string | undefined {
-  if (v == null || v === '') return undefined;
-  if (v instanceof Date) {
-    if (Number.isNaN(v.getTime())) return undefined;
-    const y = v.getFullYear();
-    const m = String(v.getMonth() + 1).padStart(2, '0');
-    const d = String(v.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-  const s = String(v).trim();
-  return s ? s.slice(0, 10) : undefined;
-}
 
 function readFileAsBase64Payload(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -636,7 +616,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
           first_name: v1.first_name.trim(),
           last_name: v1.last_name?.trim() || undefined,
           gender: v1.gender || undefined,
-          dob: formatDobForApi(v1.dob),
+          dob: formatYmdForApi(v1.dob) ?? undefined,
           phone: v1.phone || undefined,
           email: v1.email || undefined,
           blood_group: m.blood_group || undefined,
@@ -743,7 +723,7 @@ export class StudentRegisterComponent implements OnInit, OnDestroy {
       first_name: v1.first_name.trim(),
       last_name: v1.last_name?.trim() || undefined,
       gender: v1.gender || undefined,
-      dob: formatDobForApi(v1.dob),
+      dob: formatYmdForApi(v1.dob) ?? undefined,
       phone: v1.phone || undefined,
       email: v1.email || undefined,
       blood_group: m.blood_group || undefined,

@@ -23,6 +23,9 @@ import {
   ExamService,
   type ExamType,
 } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
+import { FormShellComponent } from '../../../shared/form-shell/form-shell.component';
+import { formatYmdForApi, parseYmdToLocalDate } from '../../../shared/utils/date-ymd';
 
 const EXAM_TYPE_OPTIONS: { label: string; value: ExamType }[] = [
   { label: '1st Term', value: 'first_term' },
@@ -33,31 +36,14 @@ const EXAM_TYPE_OPTIONS: { label: string; value: ExamType }[] = [
   { label: 'Mock', value: 'mock' },
 ];
 
-function ymd(d: Date | string | null | undefined): string | null {
-  if (!d) return null;
-  if (d instanceof Date) {
-    if (Number.isNaN(d.getTime())) return null;
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-  return String(d).slice(0, 10);
-}
-
-function parseYmd(s: string | null | undefined): Date | null {
-  if (!s) return null;
-  const parts = String(s).slice(0, 10).split('-').map(Number);
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
-  return new Date(parts[0], parts[1] - 1, parts[2]);
-}
-
 @Component({
   selector: 'app-exam-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    FormShellComponent,
+    FormSectionComponent,
     CardModule,
     ButtonModule,
     InputTextModule,
@@ -149,8 +135,8 @@ export class ExamFormComponent implements OnInit {
       title: exam.title,
       exam_type: exam.exam_type,
       academic_year_id: exam.academic_year_id,
-      start_date: parseYmd(exam.start_date),
-      end_date: parseYmd(exam.end_date),
+      start_date: parseYmdToLocalDate(exam.start_date),
+      end_date: parseYmdToLocalDate(exam.end_date),
       is_internal: !!exam.is_internal,
       class_ids: (exam.classes || []).map((c) => c.class_id),
       recheck_window_days: exam.recheck_window_days,
@@ -172,8 +158,8 @@ export class ExamFormComponent implements OnInit {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     const v = this.form.getRawValue();
-    const start = ymd(v.start_date);
-    const end = ymd(v.end_date);
+    const start = formatYmdForApi(v.start_date);
+    const end = formatYmdForApi(v.end_date);
     if (!start || !end) {
       this.messages.add({ severity: 'warn', summary: 'Invalid dates', detail: 'Pick a start and end date' });
       return;

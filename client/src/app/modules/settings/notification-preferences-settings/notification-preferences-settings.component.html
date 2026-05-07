@@ -1,27 +1,44 @@
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h2 class="h6 mb-3">Notification preferences</h2>
-    @if (loading()) {
-      <p class="text-secondary small">Loading…</p>
-    } @else {
-      <div class="form-check form-switch mb-2">
-        <input class="form-check-input" type="checkbox" id="np-email" [(ngModel)]="model.email_notifications" />
-        <label class="form-check-label" for="np-email">Email notifications</label>
+<section class="page">
+  <header class="content-area-header sp-page-header" aria-labelledby="settings-notifications-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-bell"></i>
       </div>
-      <div class="form-check form-switch mb-2">
-        <input class="form-check-input" type="checkbox" id="np-sms" [(ngModel)]="model.sms_notifications" />
-        <label class="form-check-label" for="np-sms">SMS notifications</label>
+      <div>
+        <h1 id="settings-notifications-title" class="content-area-header__title sp-page-header__title">
+          Notifications
+        </h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">
+          Configure alert channels for important updates.
+        </p>
       </div>
-      <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="np-app" [(ngModel)]="model.in_app_notifications" />
-        <label class="form-check-label" for="np-app">In-app notifications</label>
+    </div>
+  </header>
+
+  <app-form-shell [loading]="loading()">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <app-form-section title="Notification preferences" description="Choose which channels can send alerts.">
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="np-email" [(ngModel)]="model.email_notifications" />
+          <label class="form-check-label" for="np-email">Email notifications</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="np-sms" [(ngModel)]="model.sms_notifications" />
+          <label class="form-check-label" for="np-sms">SMS notifications</label>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="np-app" [(ngModel)]="model.in_app_notifications" />
+          <label class="form-check-label" for="np-app">In-app notifications</label>
+        </div>
+        </app-form-section>
+        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          }
+          Save
+        </button>
       </div>
-      <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
-        @if (saving()) {
-          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-        }
-        Save
-      </button>
-    }
-  </div>
-</div>
+    </div>
+  </app-form-shell>
+</section>

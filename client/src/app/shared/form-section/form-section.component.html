@@ -1,0 +1,11 @@
+<section class="ds-form-section">
+  <header class="ds-form-section__header">
+    <h2 class="ds-form-section__title">{{ title() }}</h2>
+    @if (description()) {
+      <p class="ds-form-section__desc">{{ description() }}</p>
+    }
+  </header>
+  <div class="ds-form-section__body">
+    <ng-content />
+  </div>
+</section>

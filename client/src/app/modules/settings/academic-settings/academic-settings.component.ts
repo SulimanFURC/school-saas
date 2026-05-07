@@ -7,21 +7,36 @@ import { ToastService } from '@app/services';
   selector: 'app-academic-settings',
   standalone: true,
   template: `
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="h6 mb-3">Academic year</h2>
-        @if (loading()) {
-          <p class="text-secondary small">Loading…</p>
-        } @else if (error()) {
-          <p class="text-danger small">{{ error() }}</p>
-        } @else if (year()) {
-          <p class="mb-1"><strong>Active year:</strong> {{ year()?.name ?? '—' }}</p>
-          <p class="text-secondary small mb-0">
-            Switch or manage years under <strong>Classes</strong> → academic years workflow (same as Academic module).
-          </p>
-        }
+    <section class="page">
+      <header class="content-area-header sp-page-header" aria-labelledby="settings-academic-title">
+        <div class="content-area-header__main sp-page-header__main">
+          <div class="sp-page-header__icon" aria-hidden="true">
+            <i class="bi bi-calendar-range"></i>
+          </div>
+          <div>
+            <h1 id="settings-academic-title" class="content-area-header__title sp-page-header__title">Academic year</h1>
+            <p class="content-area-header__subtitle sp-page-header__subtitle">
+              Review the current academic year context for this school.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          @if (loading()) {
+            <p class="text-secondary small">Loading…</p>
+          } @else if (error()) {
+            <p class="text-danger small">{{ error() }}</p>
+          } @else if (year()) {
+            <p class="mb-1"><strong>Active year:</strong> {{ year()?.name ?? '—' }}</p>
+            <p class="text-secondary small mb-0">
+              Switch or manage years under <strong>Classes</strong> → academic years workflow (same as Academic module).
+            </p>
+          }
+        </div>
       </div>
-    </div>
+    </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

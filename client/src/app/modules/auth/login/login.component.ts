@@ -10,6 +10,7 @@ import { finalize, from, map, of, switchMap, tap } from 'rxjs';
 
 import { isApiClientError } from '../../../models/api-client-error';
 import { AuthService } from '@app/services';
+import { AuthorizationService } from '@app/services';
 import { FeatureService } from '@app/services';
 import { ToastService } from '@app/services';
 
@@ -35,6 +36,7 @@ export class LoginComponent {
   private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private features = inject(FeatureService);
+  private authorization = inject(AuthorizationService);
 
   readonly form = this.fb.nonNullable.group({
     subdomain: ['', [Validators.required, Validators.minLength(2)]],
@@ -72,7 +74,10 @@ export class LoginComponent {
           if (role === 'super_admin') {
             return of(loginRes);
           }
-          return from(this.features.loadForCurrentTenant().catch(() => undefined)).pipe(map(() => loginRes));
+          return from(this.features.loadForCurrentTenant().catch(() => undefined)).pipe(
+            switchMap(() => this.authorization.loadMyPermissions()),
+            map(() => loginRes)
+          );
         }),
         tap((loginRes) => {
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] as string | undefined;

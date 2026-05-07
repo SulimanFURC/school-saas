@@ -139,7 +139,9 @@ export class ExamDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.academic.listClasses().subscribe((cls) => this.classes.set(cls));
-    this.subjectsApi.list({ activeOnly: true }).subscribe((subs) => this.subjects.set(subs));
+    this.subjectsApi
+      .list({ activeOnly: true })
+      .subscribe((res) => this.subjects.set(Array.isArray(res.data) ? res.data : []));
     this.api.listGradingSchemes().subscribe((res) => this.schemes.set(res.data));
 
     const id = this.route.snapshot.paramMap.get('id');

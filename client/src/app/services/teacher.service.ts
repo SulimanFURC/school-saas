@@ -201,12 +201,20 @@ export class TeacherService {
   private http = inject(HttpClient);
   private base = `${environment.apiBaseUrl}`;
 
-  list(params?: { page?: number; pageSize?: number; q?: string }): Observable<TeacherListResponse> {
+  list(params?: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    sortBy?: string;
+    sortDir?: 'asc' | 'desc';
+  }): Observable<TeacherListResponse> {
     let httpParams = new HttpParams();
     const pageSize = params?.pageSize ?? 20;
     if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
     if (params?.pageSize != null) httpParams = httpParams.set('pageSize', String(params.pageSize));
     if (params?.q != null && params.q.trim() !== '') httpParams = httpParams.set('q', params.q.trim());
+    if (params?.sortBy) httpParams = httpParams.set('sort_by', params.sortBy);
+    if (params?.sortDir) httpParams = httpParams.set('sort_order', params.sortDir);
     return this.http
       .get<unknown>(`${this.base}/teachers`, { params: httpParams })
       .pipe(map((body) => normalizeList(body, pageSize)));

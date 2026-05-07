@@ -154,7 +154,8 @@ export class TeacherDetailComponent implements OnInit {
     });
 
     this.subjectsApi.list({ activeOnly: true }).subscribe({
-      next: (rows: SubjectDto[]) => {
+      next: (res) => {
+        const rows: SubjectDto[] = Array.isArray(res.data) ? res.data : [];
         this.subjectOptions.set(
           (rows || [])
             .filter((s) => s.is_active)

@@ -21,6 +21,7 @@ import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { AcademicService, SchoolClassDto } from '@app/services';
+import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 import { compareNullableString, nextSortDir, type SortDir, sortCopy } from '../../../utils/table-sort';
 
 export type ClassSortKey = 'name' | 'teacher' | 'sections';
@@ -35,6 +36,7 @@ export type ClassSortKey = 'name' | 'teacher' | 'sections';
     ConfirmDialogModule,
     ToastModule,
     TagModule,
+    TablePaginationFooterComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './class-list.component.html',
@@ -55,6 +57,8 @@ export class ClassListComponent implements OnInit {
 
   loading = signal(true);
   rows = signal<SchoolClassDto[]>([]);
+  page = signal(1);
+  pageSize = signal(10);
 
   sortKey = signal<ClassSortKey | null>(null);
   sortDir = signal<SortDir>('asc');
@@ -65,6 +69,11 @@ export class ClassListComponent implements OnInit {
     if (!key) return data;
     const dir = this.sortDir();
     return sortCopy(data, (a, b) => this.compareByKey(a, b, key), dir);
+  });
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.sortedRows().length / this.pageSize())));
+  readonly pagedRows = computed(() => {
+    const start = (this.page() - 1) * this.pageSize();
+    return this.sortedRows().slice(start, start + this.pageSize());
   });
 
   ngOnInit(): void {
@@ -100,6 +109,11 @@ export class ClassListComponent implements OnInit {
       this.sortKey.set(key);
       this.sortDir.set('asc');
     }
+    this.page.set(1);
+  }
+
+  onPageChange(nextPage: number): void {
+    this.page.set(nextPage);
   }
 
   sortAria(key: ClassSortKey): 'none' | 'ascending' | 'descending' {

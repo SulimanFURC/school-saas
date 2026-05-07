@@ -18,33 +18,15 @@ import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { TeacherService, type TeacherDetail } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
+import { FormShellComponent } from '../../../shared/form-shell/form-shell.component';
 import { TeacherLoginCredentialsModalComponent } from '../../../shared/teacher-login-credentials-modal/teacher-login-credentials-modal.component';
+import { formatYmdForApi, parseYmdToLocalDate } from '../../../shared/utils/date-ymd';
 
 function optionalPasswordValidator(control: { value: string | null }) {
   const v = control.value?.trim() ?? '';
   if (!v) return null;
   return v.length >= 6 ? null : { minlength: true };
-}
-
-function parseYmdToLocalDate(ymd: string): Date | null {
-  const parts = ymd.trim().split('-').map((p) => Number(p));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
-  const [y, m, d] = parts;
-  const dt = new Date(y, m - 1, d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function formatYmdForApi(v: Date | string | null | undefined): string | null {
-  if (v == null || v === '') return null;
-  if (v instanceof Date) {
-    if (Number.isNaN(v.getTime())) return null;
-    const y = v.getFullYear();
-    const mo = String(v.getMonth() + 1).padStart(2, '0');
-    const d = String(v.getDate()).padStart(2, '0');
-    return `${y}-${mo}-${d}`;
-  }
-  const s = String(v).trim();
-  return s ? s.slice(0, 10) : null;
 }
 
 const GENDER_OPTIONS: { label: string; value: string }[] = [
@@ -64,6 +46,8 @@ const ACCOUNT_STATUS_OPTIONS: { label: string; value: 'active' | 'inactive' }[] 
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    FormShellComponent,
+    FormSectionComponent,
     TeacherLoginCredentialsModalComponent,
     CardModule,
     ButtonModule,

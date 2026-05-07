@@ -607,6 +607,9 @@ exports.list = async (req, res) => {
     const offset = (page - 1) * pageSize;
 
     const q = req.query.q != null ? String(req.query.q).trim() : '';
+    const sortBy = req.query.sort_by != null ? String(req.query.sort_by).trim() : '';
+    const sortOrderRaw = req.query.sort_order != null ? String(req.query.sort_order).trim().toLowerCase() : '';
+    const sortOrder = sortOrderRaw === 'desc' ? 'DESC' : 'ASC';
     const classId = parseQueryInt(req.query.class_id);
     const sectionId = parseQueryInt(req.query.section_id);
     const explicitYear = parseQueryInt(req.query.academic_year_id);
@@ -627,6 +630,21 @@ exports.list = async (req, res) => {
     }
 
     const hasEnrollmentFilter = Boolean(explicitYear || classId || sectionId);
+
+    const studentSortMap = {
+      admission_no: 'admission_no',
+      full_name: 'full_name',
+      first_name: 'first_name',
+      last_name: 'last_name',
+      dob: 'dob',
+      gender: 'gender',
+      phone: 'phone',
+    };
+
+    const enrollmentSortMap = {
+      class_name: [{ model: SchoolClass, as: 'schoolClass' }, 'name'],
+      section_name: [{ model: Section, as: 'section' }, 'name'],
+    };
 
     const enrollmentWhere = { tenant_id: tenantId };
     if (yearForEnrollment) {
@@ -652,6 +670,18 @@ exports.list = async (req, res) => {
        * distinct/col — Sequelize 6 + PostgreSQL emits invalid SQL (missing FROM-clause for
        * "Student->Student" or "StudentEnrollment->StudentEnrollment").
        */
+      const enrollmentOrder = [];
+      if (Object.prototype.hasOwnProperty.call(studentSortMap, sortBy)) {
+        enrollmentOrder.push([
+          { model: Student, as: 'student' },
+          studentSortMap[sortBy],
+          sortOrder,
+        ]);
+      } else if (Object.prototype.hasOwnProperty.call(enrollmentSortMap, sortBy)) {
+        enrollmentOrder.push([...(enrollmentSortMap[sortBy]), sortOrder]);
+      }
+      enrollmentOrder.push([{ model: Student, as: 'student' }, 'admission_no', 'ASC']);
+
       const [enrollmentRows, enrollmentTotal] = await Promise.all([
         StudentEnrollment.findAll({
           where: enrollmentWhere,
@@ -669,7 +699,7 @@ exports.list = async (req, res) => {
             { model: Section, as: 'section', attributes: ['id', 'name'] },
             { model: AcademicYear, as: 'academicYear', attributes: ['id', 'name'] },
           ],
-          order: [[{ model: Student, as: 'student' }, 'admission_no', 'ASC']],
+          order: enrollmentOrder,
         }),
         StudentEnrollment.count({
           where: enrollmentWhere,
@@ -690,10 +720,16 @@ exports.list = async (req, res) => {
         return listRowFromStudentAndEnrollmentPlain(p, ePlain);
       });
     } else {
+      const studentOrder = [];
+      if (Object.prototype.hasOwnProperty.call(studentSortMap, sortBy)) {
+        studentOrder.push([studentSortMap[sortBy], sortOrder]);
+      }
+      studentOrder.push(['admission_no', 'ASC']);
+
       const result = await Student.findAndCountAll({
         where: studentWhere,
         attributes: { exclude: ['photo_base64'] },
-        order: [['admission_no', 'ASC']],
+        order: studentOrder,
         limit: pageSize,
         offset,
       });

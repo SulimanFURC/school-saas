@@ -19,7 +19,7 @@
 
   <div class="card shadow-sm border-0">
     <p-table
-      [value]="rows()"
+      [value]="pagedRows()"
       [loading]="loading()"
       dataKey="id"
       styleClass="p-datatable-sm p-datatable-striped"
@@ -60,6 +60,14 @@
         </tr>
       </ng-template>
     </p-table>
+    <app-table-pagination-footer
+      [total]="total()"
+      [page]="page()"
+      [pageSize]="pageSize()"
+      [totalPages]="totalPages()"
+      entryLabel="subjects"
+      (pageChange)="onPageChange($event)"
+    />
   </div>
 </section>
 

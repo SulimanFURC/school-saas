@@ -13,6 +13,7 @@ import { filter, map, startWith, tap } from 'rxjs';
 import { TENANT_NAV_CONFIG, isNavGroup, type NavEntry, type NavGroupConfig } from '../../config/nav.config';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '@app/services';
+import { AuthorizationService } from '@app/services';
 import { BrandingService } from '@app/services';
 import { FeatureService } from '@app/services';
 import { AppHeaderActionsComponent } from '../app-header-actions/app-header-actions.component';
@@ -49,6 +50,7 @@ export class MainLayoutComponent {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
+  readonly authorization = inject(AuthorizationService);
   private features = inject(FeatureService);
   readonly branding = inject(BrandingService);
   readonly logoUrl = this.branding.logoUrl;
@@ -75,6 +77,10 @@ export class MainLayoutComponent {
     const role = this.auth.userRole()?.toLowerCase() ?? '';
 
     const base = TENANT_NAV_CONFIG.filter((entry) => {
+      const hasPermission = isNavGroup(entry)
+        ? this.authorization.hasModuleRead(entry.moduleKey)
+        : this.authorization.hasModuleRead(entry.moduleKey);
+      if (!hasPermission) return false;
       const key = isNavGroup(entry) ? entry.moduleKey : entry.moduleKey;
       if (!key) return true;
       return enabled.has(key);
@@ -142,6 +148,16 @@ export class MainLayoutComponent {
     effect(() => {
       this.navEntries();
       this.ensureGroupsExpandedForUrl(this.router.url);
+    });
+
+    effect(() => {
+      if (
+        this.auth.isAuthenticated() &&
+        this.auth.userRole()?.toLowerCase() !== 'super_admin' &&
+        !this.authorization.loaded()
+      ) {
+        this.authorization.loadMyPermissions().subscribe();
+      }
     });
   }
 

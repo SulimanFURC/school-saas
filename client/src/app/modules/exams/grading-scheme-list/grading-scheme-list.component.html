@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <p-table [value]="schemes()" [loading]="loading()" [rowHover]="true">
+  <p-table [value]="pagedSchemes()" [loading]="loading()" [rowHover]="true">
     <ng-template pTemplate="header">
       <tr>
         <th>Name</th>
@@ -61,4 +61,12 @@
       </tr>
     </ng-template>
   </p-table>
+  <app-table-pagination-footer
+    [total]="schemes().length"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [totalPages]="totalPages()"
+    entryLabel="grading schemes"
+    (pageChange)="onPageChange($event)"
+  />
 </section>

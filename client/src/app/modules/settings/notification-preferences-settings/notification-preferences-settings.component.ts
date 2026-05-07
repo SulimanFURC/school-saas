@@ -3,11 +3,13 @@ import { FormsModule } from '@angular/forms';
 
 import { SettingsService, type NotificationPreferencesDto } from '@app/services';
 import { ToastService } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
+import { FormShellComponent } from '../../../shared/form-shell/form-shell.component';
 
 @Component({
   selector: 'app-notification-preferences-settings',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, FormShellComponent, FormSectionComponent],
   templateUrl: './notification-preferences-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

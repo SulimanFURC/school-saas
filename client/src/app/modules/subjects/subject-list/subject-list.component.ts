@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { SubjectDto, SubjectService } from '@app/services';
+import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 
 @Component({
   selector: 'app-subject-list',
@@ -24,6 +25,7 @@ import { SubjectDto, SubjectService } from '@app/services';
     ToastModule,
     TagModule,
     ConfirmDialogModule,
+    TablePaginationFooterComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './subject-list.component.html',
@@ -38,6 +40,11 @@ export class SubjectListComponent implements OnInit {
 
   loading = signal(true);
   rows = signal<SubjectDto[]>([]);
+  page = signal(1);
+  pageSize = signal(10);
+  total = signal(0);
+  totalPages = signal(1);
+  readonly pagedRows = computed(() => this.rows());
 
   dialogVisible = signal(false);
   submitting = signal(false);
@@ -52,7 +59,7 @@ export class SubjectListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.api
-      .list()
+      .list({ page: this.page(), limit: this.pageSize() })
       .pipe(
         catchError((e: { error?: { message?: string } }) => {
           this.messages.add({
@@ -61,16 +68,24 @@ export class SubjectListComponent implements OnInit {
             detail: e.error?.message || 'Failed to load subjects',
             life: 5000,
           });
-          return of([] as SubjectDto[]);
+          return of({ data: [] as SubjectDto[], total: 0, page: 1, limit: this.pageSize(), totalPages: 1 });
         }),
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
-        next: (rows) => {
-          this.rows.set((rows || []).slice().sort((a, b) => a.name.localeCompare(b.name)));
+        next: (res) => {
+          const rows = (res.data || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+          this.rows.set(rows);
+          this.total.set(res.total ?? rows.length);
+          this.totalPages.set(Math.max(1, res.totalPages ?? 1));
         },
       });
+  }
+
+  onPageChange(nextPage: number): void {
+    this.page.set(nextPage);
+    this.load();
   }
 
   openCreate(): void {

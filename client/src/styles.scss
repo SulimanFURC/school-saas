@@ -963,6 +963,12 @@ table.app-data-table.table-sm tbody td {
   color: #ffffff;
 }
 
+/* Shared danger style for row action menus across modules */
+.p-menu .p-menuitem-link .ds-row-action-danger,
+.p-menu .ds-row-action-danger {
+  color: var(--p-red-600) !important;
+}
+
 /* Tenant branding (v1): chrome — see BrandingService + html.tenant-branding-active */
 :root {
   --primary-color: var(--primary);

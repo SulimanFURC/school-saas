@@ -3,11 +3,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { SettingsService } from '@app/services';
 import { ToastService } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
 
 @Component({
   selector: 'app-change-password-settings',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormSectionComponent],
   templateUrl: './change-password-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

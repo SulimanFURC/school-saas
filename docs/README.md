@@ -1,3 +1,3 @@
 # School SaaS — Documentation
 
-Project documentation will live here.
+- [PrimeNG-first design system guidelines](./design-system-guidelines.md)

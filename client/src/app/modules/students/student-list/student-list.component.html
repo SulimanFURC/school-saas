@@ -36,7 +36,7 @@
 
   <div class="card shadow-sm border-0 mt-3">
     <p-table
-      [value]="sortedRows()"
+      [value]="rows()"
       [lazy]="true"
       [lazyLoadOnInit]="true"
       (onLazyLoad)="onLazyLoad($event)"

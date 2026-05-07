@@ -1,252 +1,151 @@
-# School SaaS — Project Report (Implementation-Aligned)
+# School SaaS — Project Report (Executive Version)
 
-Updated to match the current code in `client/` and `server/`.  
-Removed outdated/unused claims and kept only implemented features or clearly marked placeholders.
-
----
-
-## 1) Project Overview
-
-School SaaS is a multi-tenant school management platform:
-
-- **Frontend:** Angular 19 standalone app (`client/`)
-- **Backend:** Node.js + Express 5 API (`server/`)
-- **Database:** PostgreSQL via Sequelize 6
-- **Isolation model:** tenant-level row isolation using `tenant_id`
-
-### Primary user roles
-
-- **super_admin**: platform-level tenant/module/branding management
-- **admin**: school-level academic and operations management
-- **teacher**: self-profile + teacher exam workflows
-- **student**: student exam/result/recheck workflows
+This report reflects implemented functionality in `client/` and `server/` as of the latest RBAC rollout.
 
 ---
 
-## 2) Stack Summary
+## 1) Executive Summary
 
-### Frontend (`client/package.json`)
+School SaaS is a multi-tenant school management platform for school operations and platform-level administration.
 
-- Angular 19 (`@angular/*`)
-- PrimeNG 19 + PrimeIcons + `@primeuix/themes`
-- Bootstrap 5 + Bootstrap Icons + Popper
-- RxJS, Zone.js
-- Standalone components + route lazy loading
-- Guards and interceptor based access control
+- **Frontend:** Angular 19 standalone architecture
+- **Backend:** Express 5 API with Sequelize 6
+- **Database:** PostgreSQL
+- **Isolation model:** strict tenant scoping using `tenant_id`
+- **Access model:** role + feature + permission-based controls
 
-### Backend (`server/package.json`)
+Primary roles in active use:
 
-- Express 5 (`express`)
-- Sequelize 6 + `pg`
-- JWT auth (`jsonwebtoken`)
-- Validation with Zod
-- Rate limiting (`express-rate-limit`)
-- Uploads (`multer`)
-- Image processing (`sharp`)
-- Logging (`pino`)
-
-### Testing/tooling
-
-- Client tests: Karma + Jasmine
-- Server tests: Node test runner (`node --test`)
-- DB migrations: `sequelize-cli` (`db:migrate`, `db:migrate:undo`, `db:migrate:status`)
+- `super_admin`: platform-level control
+- `admin`: full tenant administration
+- `teacher`: teacher workflows and self-service
+- `student`: student-facing exam workflows
 
 ---
 
-## 3) Active Modules (Implemented)
+## 2) Business Capability Coverage
 
-### Platform / Super Admin
+### Platform (Super Admin)
 
-- Super-admin dashboard
-- Tenant list/create
-- Tenant module toggles
-- Platform settings
-- Tenant branding settings and logo upload
+- Tenant onboarding and lifecycle management
+- Tenant feature toggle management
+- Platform settings and tenant branding controls
+- Audit-log visibility
 
-### School (Tenant) Modules
+### Tenant (School)
 
-- Dashboard (`/home`) with role-based data
-- Classes, sections, academic years
-- Subjects
-- Students (register, list, detail, edit, promote)
-- Teachers (admin CRUD + assignments + self profile/dashboard)
-- Fees
-- Expenses
-- Exams (grading schemes, exam lifecycle, timetable, marks, PDF cards, rechecks)
-- Reports (enrollment, fee collection, defaulters, expenses, exam result, teacher assignment)
-- Settings (school profile, academic snippet, notifications, password)
-- Notifications
+- Academic setup: classes, sections, academic years, subjects
+- Student lifecycle: registration, listing, detail, edit, promotion
+- Teacher lifecycle: CRUD, assignment flows, self profile
+- Finance: fee collection and expense tracking
+- Exams: grading schemes, exam setup, timetable, marks, recheck flows
+- Reporting: enrollment, fee, defaulter, expense, and related operational reports
+- Settings: school profile, academic, notifications, password, roles & permissions
 
-### Placeholder / not full business implementation
+### Partial / Placeholder Areas
 
-- **Attendance**: currently placeholder route/UI and attendance report stub
-- **Library / Transport / Results (standalone)**: in module catalog but no full frontend module implementation
+- Attendance is currently partial (placeholder/report stub level)
+- Library, transport, and standalone results are in catalog scope but not fully delivered as modules
 
 ---
 
-## 4) Frontend Architecture (`client/src/app`)
+## 3) Architecture Snapshot
 
-### Routing and layouts
+### Frontend
 
-- `app.routes.ts` uses standalone lazy-loaded components
-- Main shells:
-  - `layout/main-layout`
-  - `layout/super-admin-layout`
-- Public auth routes: login, signup, forgot password, reset password
-- Dedicated `/404` route and wildcard redirect
+- Standalone components with lazy route loading in `app.routes.ts`
+- Role and feature guards across protected pages
+- API authorization via token + tenant header interceptor
+- Permission-awareness via `authorization.service.ts` and `/roles/me`
 
-### Guards used
+### Backend
 
-- `authGuard`
-- `guestGuard`
-- `superAdminGuard`
-- `featureGuard`
-- role guards (`adminRoleGuard`, `teacherRoleGuard`, `studentRoleGuard`)
-- settings guards (`settingsTenantAdminGuard`, `settingsNotificationsGuard`)
+- `POST /auth/signup` mounted before tenant resolution middleware
+- Tenant context resolved centrally, then protected route stack enforced
+- Key route groups include `/auth`, `/modules`, `/roles`, `/super-admin`, `/dashboard`, `/settings`, `/reports`
+- Module APIs mounted for classes, students, teachers, exams, notifications, fees, and expenses
 
-### Core services
+### Security & Access Pattern
 
-- `auth.service.ts`
-- `feature.service.ts`
-- `branding.service.ts`
-- `student.service.ts`
-- `teacher.service.ts`
-- `exam.service.ts`
-- `fee.service.ts`
-- `settings.service.ts`
-- `report.service.ts`
-- `dashboard.service.ts`
-- `notification.service.ts`
-- `theme.service.ts`
+- Tenant context (`tenantMiddleware`) -> authentication (`authMiddleware`) -> access checks (`authorize(...)` and `requirePermission(...)`) -> feature checks (`checkFeature(...)`)
+- All tenant business data is scoped by `tenant_id`
+- `super_admin` cross-tenant operations supported through `x-tenant-id`
 
 ---
 
-## 5) Backend Architecture (`server/src`)
+## 4) Data Model and API Scope
 
-### App composition (`server/src/index.js`)
+Core implemented model domains:
 
-- `POST /auth/signup` mounted **before** tenant middleware
-- `tenantMiddleware` applied globally after signup route
-- Route mounts include:
-  - `/auth`
-  - `/modules`
-  - `/super-admin`
-  - `/dashboard`
-  - `/settings`
-  - `/reports`
-  - root-mounted module routers for classes/subjects/students/teachers/exams/notifications
-  - `/fees`
-  - `/expenses`
+- Tenant/auth domain (`tenants`, `users`, token models)
+- Feature/branding domain (`modules`, `tenant_modules`, `tenant_branding`)
+- Academic domain (`classes`, `sections`, `academic_years`, `subjects`)
+- Student domain (profile, enrollment, guardian, documents, promotions)
+- Teacher domain (profile + academic assignments)
+- Finance domain (fee collections, expenses)
+- Exam domain (exam lifecycle, timetable, marks, grading, rechecks)
+- Notification/settings domain
+- Audit logging
 
-### Middleware pattern
+Tenant RBAC data foundation:
 
-- `tenantMiddleware` -> `authMiddleware` -> `authorize(...)` -> `checkFeature(...)` as needed
-- Validation middleware via Zod schemas in module routes
-- Global error middleware returns safe internal errors
+- `tenant_roles`
+- `tenant_permissions`
+- `tenant_role_permissions`
+- `user_tenant_roles`
 
----
-
-## 6) API Surface (High-Level)
-
-### Auth
-
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
-- `POST /auth/logout`
-
-### Core tenant/super-admin
+Representative access APIs:
 
 - `GET /modules`
 - `GET /tenant-branding`
-- `/super-admin/*` for tenant management, platform settings, and branding
-
-### Academic + operations
-
-- Classes/sections/academic years
-- Subjects
-- Students + enrollments
-- Teachers + assignments + self endpoints
-- Fees and expenses
-- Exams (admin/teacher/student flows)
-- Notifications
-- Reports
-- Dashboard
-- Settings
+- `GET /roles/me`
+- `/roles/*` (role management, permission matrix, assignment flows)
+- `/super-admin/*` (platform operations)
 
 ---
 
-## 7) Data Model Coverage
+## 5) Recent Delivered Changes
 
-Major implemented model groups include:
+### A) Tenant Status Enforcement in Authentication
 
-- Tenant/user/auth: `tenants`, `users`, auth token-related models
-- Feature/branding: `modules`, `tenant_modules`, `tenant_branding`
-- Academic: `classes`, `sections`, `academic_years`, `subjects`
-- Students: student profile + enrollments + guardians + docs + promotions
-- Teachers: teacher profile + academic assignments
-- Finance: fee collections + expenses
-- Exams: exams, classes, timetable, marks, audits, grading, rechecks
-- Notifications and settings models
-- Audit log
+- Login now blocks `inactive` and `pending` tenants with explicit messages
+- Refresh rotation is rejected for non-active tenants and relevant tokens are revoked
+- Protected APIs enforce active-tenant checks, preventing stale access
+- Super-admin tenant status downgrade invalidates sessions by revoking refresh tokens and bumping user `token_version`
 
----
+### B) Tenant RBAC Rollout
 
-## 8) Multi-Tenant and Access Control
+- Added migration `20260507131500-create-tenant-rbac-tables.js`
+- Seeded system roles (`admin`, `teacher`, `student`, `accountant`, `transport_manager`, `receptionist`)
+- Seeded permission catalog using `module.action` codes
+- Seeded initial role-permission mappings and tenant user-role links
+- Added role access resolution service and `requirePermission(...)` middleware
+- Added `/roles` APIs for role CRUD, permission assignment, user-role assignment, and current-user permission snapshot
+- Added tenant settings UI for role and permission administration
 
-- Tenant context resolved in `tenant.middleware.js`
-- Tenant data isolation done by filtering with `tenant_id`
-- `super_admin` can operate cross-tenant using `x-tenant-id`
-- Frontend interceptor injects auth token and tenant header
-- Feature gating is enforced on both backend (`checkFeature`) and frontend (`featureGuard`)
+### C) Super Admin Dialog UX Consistency
 
----
-
-## 9) Environment Configuration
-
-### Server (`server/.env.example`)
-
-- `PORT`
-- `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_HOST`
-- `JWT_SECRET`
-- `JSON_BODY_LIMIT`
-- `SUPER_ADMIN_PASSWORD`
-- `STUDENT_DEFAULT_PASSWORD`
-- rate-limit env vars (login/signup and related)
-
-### Client
-
-- `client/src/environments/environment.ts`
-- `client/src/environments/environment.development.ts`
+- Tenant create/edit flows moved from drawer pattern to centered modal dialogs
+- Drawer-specific styles removed
+- Dialog body constraints relaxed to reduce nested-scroll UX issues
 
 ---
 
-## 10) Current Gaps / Planned Items
+## 6) Delivery Risks / Remaining Gaps
 
-- Attendance remains partial (placeholder + report stub)
-- Catalog keys exist for library/transport/results without full module UI/API coverage
-- Test coverage is still limited compared to module breadth
+- Attendance, library, transport, and standalone results remain incomplete
+- Automated test coverage still trails implemented module breadth
+- Production hardening still requires stricter CORS policy and deployment environment finalization
 
 ---
 
-## 11) Recent Implemented Updates
+## 7) Environment & Runbook Reference
 
-### Tenant status enforcement in auth flow
-
-- Tenant `inactive` and `pending` states now block login with explicit user-facing messages.
-- Refresh token rotation is rejected for non-active tenants, with refresh token revocation.
-- Protected APIs enforce tenant active status in auth middleware, cutting off existing sessions when tenant status is no longer active.
-- Super-admin tenant status change from `active` to `inactive/pending` now invalidates all tenant sessions by:
-  - revoking active refresh tokens
-  - incrementing `token_version` for tenant users
-
-### Super admin tenant dialog consistency
-
-- Tenant **Edit** UI was migrated from PrimeNG drawer to centered PrimeNG modal dialog.
-- Tenant **Create** UI was migrated from PrimeNG drawer to centered PrimeNG modal dialog.
-- Drawer-specific code/styles for these dialogs were removed in favor of modal-specific styles.
-- Dialog body height constraints were relaxed (no forced min/max height on `.ct-dialog__body`) to avoid nested scroll behavior.
+- Backend environment template: `server/.env.example`
+- Client environment files:
+  - `client/src/environments/environment.ts`
+  - `client/src/environments/environment.development.ts`
+- Root setup reference: `README.md`
 
 ---
 

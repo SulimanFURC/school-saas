@@ -5,8 +5,8 @@ const express = require('express');
 const multer = require('multer');
 const { asyncHandler } = require('../../core/http/async-handler');
 const authMiddleware = require('../../core/middleware/auth.middleware');
-const authorize = require('../../core/middleware/authorize.middleware');
 const checkFeature = require('../../core/middleware/feature.middleware');
+const { requirePermission } = require('../../core/middleware/permission.middleware');
 const controller = require('./expense.controller');
 
 const router = express.Router();
@@ -62,12 +62,12 @@ function multerReceiptErrorHandler(err, req, res, next) {
 
 router.use(authMiddleware);
 router.use(checkFeature('expenses'));
-router.use(authorize('admin', 'super_admin'));
 
-router.get('/', asyncHandler(controller.list));
-router.post('/', asyncHandler(controller.create));
+router.get('/', requirePermission('expenses.read'), asyncHandler(controller.list));
+router.post('/', requirePermission('expenses.create'), asyncHandler(controller.create));
 router.post(
   '/:id/receipt',
+  requirePermission('expenses.update'),
   (req, res, next) => {
     receiptUpload.single('receipt')(req, res, (err) => {
       if (err) return multerReceiptErrorHandler(err, req, res, next);
@@ -76,9 +76,9 @@ router.post(
   },
   asyncHandler(controller.uploadReceipt)
 );
-router.delete('/:id/receipt', asyncHandler(controller.deleteReceipt));
-router.get('/:id', asyncHandler(controller.getOne));
-router.put('/:id', asyncHandler(controller.update));
-router.delete('/:id', asyncHandler(controller.remove));
+router.delete('/:id/receipt', requirePermission('expenses.update'), asyncHandler(controller.deleteReceipt));
+router.get('/:id', requirePermission('expenses.read'), asyncHandler(controller.getOne));
+router.put('/:id', requirePermission('expenses.update'), asyncHandler(controller.update));
+router.delete('/:id', requirePermission('expenses.delete'), asyncHandler(controller.remove));
 
 module.exports = router;

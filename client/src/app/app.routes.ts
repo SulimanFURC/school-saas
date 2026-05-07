@@ -476,6 +476,15 @@ export const routes: Routes = [
             data: { title: 'Notifications' },
           },
           {
+            path: 'roles-permissions',
+            canActivate: [settingsTenantAdminGuard],
+            loadComponent: () =>
+              import('./modules/settings/roles-permissions-settings/roles-permissions-settings.component').then(
+                (m) => m.RolesPermissionsSettingsComponent
+              ),
+            data: { title: 'Roles & permissions', permission: 'settings.read' },
+          },
+          {
             path: 'password',
             loadComponent: () =>
               import('./modules/settings/change-password-settings/change-password-settings.component').then(

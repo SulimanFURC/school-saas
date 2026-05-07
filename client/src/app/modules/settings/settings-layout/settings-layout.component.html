@@ -15,6 +15,11 @@
           </a>
           <a class="nav-link rounded" routerLink="/settings/academic" routerLinkActive="active">Academic year</a>
           <a class="nav-link rounded" routerLink="/settings/grading" routerLinkActive="active">Grading schemes</a>
+          @if (showRoleManagement()) {
+            <a class="nav-link rounded" routerLink="/settings/roles-permissions" routerLinkActive="active">
+              Roles & permissions
+            </a>
+          }
         }
         @if (showNotifications()) {
           <a class="nav-link rounded" routerLink="/settings/notifications" routerLinkActive="active">

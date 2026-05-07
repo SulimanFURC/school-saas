@@ -19,6 +19,8 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([apiErrorInterceptor, authInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
+      ripple: true,
+      inputVariant: 'filled',
       theme: {
         preset: Aura,
         options: {

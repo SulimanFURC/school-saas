@@ -24,15 +24,11 @@
     </div>
   </header>
 
-  <p-card styleClass="class-form-card shadow-sm border-0">
-    @if (loading()) {
-      <div class="text-center py-5">
-        <i class="pi pi-spin pi-spinner" style="font-size: 1.75rem"></i>
-        <p class="mt-2 mb-0 text-secondary">Loading…</p>
-      </div>
-    } @else {
+  <app-form-shell [loading]="loading()">
+    <p-card styleClass="class-form-card shadow-sm border-0">
       <form [formGroup]="form" (ngSubmit)="submit()" class="class-form" novalidate>
-        <div class="row g-3">
+        <app-form-section title="Class information" description="Define the class teacher and section structure.">
+          <div class="row g-3">
           <div class="col-12 col-md-6">
             <label class="form-label fw-medium" for="cf-name">Class name <span class="text-danger">*</span></label>
             <input
@@ -80,7 +76,8 @@
               Teachers already assigned to another class are disabled.
             </small>
           </div>
-        </div>
+          </div>
+        </app-form-section>
 
         <hr class="my-4" />
 
@@ -147,6 +144,6 @@
           />
         </div>
       </form>
-    }
-  </p-card>
+    </p-card>
+  </app-form-shell>
 </section>

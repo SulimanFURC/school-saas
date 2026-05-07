@@ -29,6 +29,7 @@ import {
   type ExamStatus,
   type ExamType,
 } from '@app/services';
+import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 
 const EXAM_TYPE_LABELS: Record<ExamType, string> = {
   first_term: '1st Term',
@@ -64,6 +65,7 @@ const STATUS_OPTIONS: SelectItem[] = [
     TagModule,
     ToastModule,
     ConfirmDialogModule,
+    TablePaginationFooterComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './exam-list.component.html',
@@ -89,6 +91,10 @@ export class ExamListComponent implements OnInit {
   selectedStatus = signal<ExamStatus | ''>('');
   searchQuery = signal('');
   includeArchived = signal(false);
+  page = signal(1);
+  pageSize = signal(10);
+  total = signal(0);
+  totalPages = signal(1);
 
   readonly yearOptions = computed<SelectItem[]>(() => [
     { label: 'All academic years', value: null },
@@ -131,6 +137,8 @@ export class ExamListComponent implements OnInit {
         status: status || undefined,
         q: this.searchQuery().trim() || undefined,
         include_archived: this.includeArchived(),
+        page: this.page(),
+        limit: this.pageSize(),
       })
       .pipe(
         catchError((e: { error?: { message?: string } }) => {
@@ -140,13 +148,20 @@ export class ExamListComponent implements OnInit {
             detail: e.error?.message || 'Failed to load exams',
             life: 4000,
           });
-          return of({ data: [] as ExamDto[] });
+          return of({ data: [] as ExamDto[], total: 0, page: 1, limit: this.pageSize(), totalPages: 1 });
         }),
         finalize(() => this.loading.set(false))
       )
       .subscribe((res) => {
         this.rows.set(res.data || []);
+        this.total.set(res.total ?? (res.data?.length ?? 0));
+        this.totalPages.set(Math.max(1, res.totalPages ?? 1));
       });
+  }
+
+  onPageChange(nextPage: number): void {
+    this.page.set(nextPage);
+    this.load();
   }
 
   examTypeLabel(type: ExamType): string {

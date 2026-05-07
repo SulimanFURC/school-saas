@@ -3,11 +3,13 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { SettingsService } from '@app/services';
 import { ToastService } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
+import { FormShellComponent } from '../../../shared/form-shell/form-shell.component';
 
 @Component({
   selector: 'app-school-profile-settings',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormShellComponent, FormSectionComponent],
   templateUrl: './school-profile-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -17,6 +19,7 @@ export class SchoolProfileSettingsComponent implements OnInit {
   private toast = inject(ToastService);
 
   readonly saving = signal(false);
+  readonly loading = signal(true);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required]],
@@ -35,8 +38,12 @@ export class SchoolProfileSettingsComponent implements OnInit {
           phone: d.phone ?? '',
           address: d.address ?? '',
         });
+        this.loading.set(false);
       },
-      error: () => this.toast.open('Could not load school profile', 'Dismiss', { duration: 5000 }),
+      error: () => {
+        this.loading.set(false);
+        this.toast.open('Could not load school profile', 'Dismiss', { duration: 5000 });
+      },
     });
   }
 

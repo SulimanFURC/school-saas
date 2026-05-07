@@ -26,12 +26,7 @@ import { catchError, debounceTime, distinctUntilChanged, finalize, of, Subject }
 import { InlineErrorComponent } from '../../../shared/inline-error/inline-error.component';
 import { SkeletonTableComponent } from '../../../shared/skeleton-table/skeleton-table.component';
 import { TeacherAssignmentStatsRow, TeacherListRow, TeacherService } from '@app/services';
-import {
-  compareNullableString,
-  nextSortDir,
-  type SortDir,
-  sortCopy,
-} from '../../../utils/table-sort';
+import { nextSortDir, type SortDir } from '../../../utils/table-sort';
 import { TeacherLoginCredentialsModalComponent } from '../../../shared/teacher-login-credentials-modal/teacher-login-credentials-modal.component';
 
 export type TeacherSortKey = 'name' | 'email' | 'designation' | 'username' | 'account';
@@ -85,14 +80,6 @@ export class TeacherListComponent implements OnInit {
   sortKey = signal<TeacherSortKey | null>(null);
   sortDir = signal<SortDir>('asc');
 
-  readonly sortedRows = computed(() => {
-    const data = this.rows();
-    const key = this.sortKey();
-    if (!key) return data;
-    const dir = this.sortDir();
-    return sortCopy(data, (a, b) => this.compareByKey(a, b, key), dir);
-  });
-
   readonly firstIndex = computed(() => Math.max(0, (this.page() - 1) * this.pageSize()));
 
   loginCredentials = signal<{ username: string; password: string } | null>(null);
@@ -133,6 +120,7 @@ export class TeacherListComponent implements OnInit {
         page: this.page(),
         pageSize: this.pageSize(),
         ...(q ? { q } : {}),
+        ...(this.sortKey() ? { sortBy: this.sortQueryField(this.sortKey()!), sortDir: this.sortDir() } : {}),
       })
       .pipe(
         catchError((e: { error?: { message?: string }; message?: string }) => {
@@ -189,6 +177,8 @@ export class TeacherListComponent implements OnInit {
       this.sortKey.set(key);
       this.sortDir.set('asc');
     }
+    this.page.set(1);
+    this.load();
   }
 
   sortAria(key: TeacherSortKey): 'none' | 'ascending' | 'descending' {
@@ -201,20 +191,20 @@ export class TeacherListComponent implements OnInit {
     return this.sortDir() === 'asc' ? 'pi pi-sort-up-fill' : 'pi pi-sort-down-fill';
   }
 
-  private compareByKey(a: TeacherListRow, b: TeacherListRow, key: TeacherSortKey): number {
+  private sortQueryField(key: TeacherSortKey): string {
     switch (key) {
       case 'name':
-        return compareNullableString(this.displayName(a), this.displayName(b));
+        return 'first_name';
       case 'email':
-        return compareNullableString(a.email, b.email);
+        return 'email';
       case 'designation':
-        return compareNullableString(a.designation, b.designation);
+        return 'designation';
       case 'username':
-        return compareNullableString(a.login?.username ?? null, b.login?.username ?? null);
+        return 'username';
       case 'account':
-        return compareNullableString(a.login?.status ?? null, b.login?.status ?? null);
+        return 'status';
       default:
-        return 0;
+        return 'first_name';
     }
   }
 

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { AuthorizationService } from '@app/services';
 import { AuthService } from '@app/services';
 
 @Component({
@@ -13,14 +14,20 @@ import { AuthService } from '@app/services';
 })
 export class SettingsLayoutComponent {
   readonly auth = inject(AuthService);
+  readonly authorization = inject(AuthorizationService);
 
   showSchoolTabs(): boolean {
     const r = this.auth.userRole()?.toLowerCase() ?? '';
-    return r === 'admin' || r === 'super_admin';
+    return r === 'admin' || r === 'super_admin' || this.authorization.hasPermission('settings.read');
   }
 
   showNotifications(): boolean {
     const r = this.auth.userRole()?.toLowerCase() ?? '';
-    return r === 'admin' || r === 'super_admin' || r === 'teacher';
+    return r === 'admin' || r === 'super_admin' || r === 'teacher' || this.authorization.hasPermission('settings.read');
+  }
+
+  showRoleManagement(): boolean {
+    const r = this.auth.userRole()?.toLowerCase() ?? '';
+    return r === 'admin' || r === 'super_admin';
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -11,6 +11,7 @@ import { ToastModule } from 'primeng/toast';
 import { catchError, finalize, of } from 'rxjs';
 
 import { ExamService, type GradingSchemeDto } from '@app/services';
+import { TablePaginationFooterComponent } from '../../../shared/table-pagination-footer/table-pagination-footer.component';
 
 @Component({
   selector: 'app-grading-scheme-list',
@@ -24,6 +25,7 @@ import { ExamService, type GradingSchemeDto } from '@app/services';
     TagModule,
     ToastModule,
     ConfirmDialogModule,
+    TablePaginationFooterComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './grading-scheme-list.component.html',
@@ -38,6 +40,13 @@ export class GradingSchemeListComponent implements OnInit {
 
   schemes = signal<GradingSchemeDto[]>([]);
   loading = signal(true);
+  page = signal(1);
+  pageSize = signal(10);
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.schemes().length / this.pageSize())));
+  readonly pagedSchemes = computed(() => {
+    const start = (this.page() - 1) * this.pageSize();
+    return this.schemes().slice(start, start + this.pageSize());
+  });
 
   ngOnInit(): void {
     this.load();
@@ -59,6 +68,10 @@ export class GradingSchemeListComponent implements OnInit {
         finalize(() => this.loading.set(false))
       )
       .subscribe((res) => this.schemes.set(res.data));
+  }
+
+  onPageChange(nextPage: number): void {
+    this.page.set(nextPage);
   }
 
   archive(row: GradingSchemeDto): void {

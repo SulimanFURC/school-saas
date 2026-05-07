@@ -1,0 +1,135 @@
+<section class="page">
+  <header class="content-area-header sp-page-header" aria-labelledby="settings-roles-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-person-gear"></i>
+      </div>
+      <div>
+        <h1 id="settings-roles-title" class="content-area-header__title sp-page-header__title">Roles & permissions</h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">
+          Create tenant roles and assign module-level access.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-body">
+      @if (loading()) {
+        <p class="text-secondary mb-0">Loading roles and permissions...</p>
+      } @else {
+        <div class="row g-4">
+          <div class="col-12 col-lg-4">
+            <h3 class="h6 mb-2">Roles</h3>
+            <div class="list-group mb-3">
+              @for (role of roles(); track role.id) {
+                <button
+                  type="button"
+                  class="list-group-item list-group-item-action"
+                  [class.active]="selectedRoleId() === role.id"
+                  (click)="selectRole(role)"
+                >
+                  <div class="fw-semibold">{{ role.name }}</div>
+                  <small class="text-body-secondary">{{ role.description || 'No description' }}</small>
+                </button>
+              }
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Role name</label>
+              <input class="form-control" [ngModel]="roleName()" (ngModelChange)="roleName.set($event)" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" rows="2" [ngModel]="roleDescription()" (ngModelChange)="roleDescription.set($event)"></textarea>
+            </div>
+            <div class="d-flex gap-2">
+              <p-button label="Create" size="small" [disabled]="saving()" (onClick)="createRole()" />
+              <p-button label="Update" size="small" [outlined]="true" [disabled]="!selectedRoleId() || saving()" (onClick)="updateRole()" />
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <h3 class="h6 mb-2">Permission matrix</h3>
+            @if (!selectedRoleId()) {
+              <p class="text-secondary mb-0">Select or create a role to manage permissions.</p>
+            } @else {
+              <div class="permission-grid">
+                @for (group of groupedPermissions(); track group.moduleKey) {
+                  <div class="permission-group">
+                    <div class="fw-semibold text-capitalize">{{ group.moduleKey }}</div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                      @for (p of group.permissions; track p.id) {
+                        <label class="form-check form-check-inline permission-check">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            [checked]="isPermissionChecked(p.id)"
+                            (change)="togglePermission(p.id, $any($event.target).checked)"
+                          />
+                          <span class="form-check-label text-capitalize">{{ p.action }}</span>
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              <p-button
+                class="mt-3 d-inline-block"
+                label="Save permissions"
+                [disabled]="saving()"
+                (onClick)="savePermissions()"
+              />
+            }
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h3 class="h6 mb-2">User role assignment</h3>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Current role</th>
+                <th>Assign role</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of pagedAssignments(); track user.id) {
+                <tr>
+                  <td>{{ user.name }}</td>
+                  <td>{{ user.email || '—' }}</td>
+                  <td>{{ user.assigned_role_name || user.role }}</td>
+                  <td>
+                    <select
+                      class="form-select form-select-sm"
+                      [ngModel]="user.assigned_role_id || ''"
+                      (ngModelChange)="assignRole(user.id, $event)"
+                    >
+                      <option value="" disabled>Select role</option>
+                      @for (role of roles(); track role.id) {
+                        <option [value]="role.id">{{ role.name }}</option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-table-pagination-footer
+          [total]="assignments().length"
+          [page]="assignmentPage()"
+          [pageSize]="assignmentPageSize()"
+          [totalPages]="assignmentTotalPages()"
+          entryLabel="users"
+          (pageChange)="onAssignmentPageChange($event)"
+        />
+      }
+    </div>
+  </section>
+</section>
+

@@ -1,29 +1,48 @@
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h2 class="h6 mb-3">School profile</h2>
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="mb-3">
-        <label class="form-label" for="sch-name">School name</label>
-        <input id="sch-name" class="form-control" type="text" formControlName="name" />
+<section class="page">
+  <header class="content-area-header sp-page-header" aria-labelledby="settings-school-profile-title">
+    <div class="content-area-header__main sp-page-header__main">
+      <div class="sp-page-header__icon" aria-hidden="true">
+        <i class="bi bi-building"></i>
       </div>
-      <div class="mb-3">
-        <label class="form-label" for="sch-email">Contact email</label>
-        <input id="sch-email" class="form-control" type="email" formControlName="contact_email" />
+      <div>
+        <h1 id="settings-school-profile-title" class="content-area-header__title sp-page-header__title">
+          School profile
+        </h1>
+        <p class="content-area-header__subtitle sp-page-header__subtitle">Update school identity and contact details.</p>
       </div>
-      <div class="mb-3">
-        <label class="form-label" for="sch-phone">Phone</label>
-        <input id="sch-phone" class="form-control" type="text" formControlName="phone" />
+    </div>
+  </header>
+
+  <app-form-shell [loading]="loading()">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <app-form-section title="School profile" description="Update core school contact details.">
+          <div class="mb-3">
+            <label class="form-label" for="sch-name">School name</label>
+            <input id="sch-name" class="form-control" type="text" formControlName="name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sch-email">Contact email</label>
+            <input id="sch-email" class="form-control" type="email" formControlName="contact_email" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sch-phone">Phone</label>
+            <input id="sch-phone" class="form-control" type="text" formControlName="phone" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="sch-addr">Address</label>
+            <textarea id="sch-addr" class="form-control" rows="3" formControlName="address"></textarea>
+          </div>
+          </app-form-section>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            }
+            Save
+          </button>
+        </form>
       </div>
-      <div class="mb-3">
-        <label class="form-label" for="sch-addr">Address</label>
-        <textarea id="sch-addr" class="form-control" rows="3" formControlName="address"></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary" [disabled]="saving()">
-        @if (saving()) {
-          <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-        }
-        Save
-      </button>
-    </form>
-  </div>
-</div>
+    </div>
+  </app-form-shell>
+</section>

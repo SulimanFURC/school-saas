@@ -30,6 +30,31 @@ export interface PlatformSettingsDto {
   max_tenants_allowed: number;
 }
 
+export interface TenantRolePermissionDto {
+  id: string;
+  module_key: string;
+  action: 'create' | 'read' | 'update' | 'delete';
+  code: string;
+}
+
+export interface TenantRoleDto {
+  id: string;
+  name: string;
+  description: string | null;
+  is_system_role: boolean;
+  permissions: TenantRolePermissionDto[];
+}
+
+export interface RoleAssignmentDto {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+  status: string;
+  assigned_role_id: string | null;
+  assigned_role_name: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private http = inject(HttpClient);
@@ -80,5 +105,39 @@ export class SettingsService {
       `${this.base}/super-admin/platform-settings`,
       body
     );
+  }
+
+  listRoles(): Observable<{ data: TenantRoleDto[] }> {
+    return this.http.get<{ data: TenantRoleDto[] }>(`${this.base}/roles`);
+  }
+
+  createRole(body: { name: string; description?: string | null }): Observable<{ message: string; data: TenantRoleDto }> {
+    return this.http.post<{ message: string; data: TenantRoleDto }>(`${this.base}/roles`, body);
+  }
+
+  updateRole(id: string, body: { name?: string; description?: string | null }): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(`${this.base}/roles/${id}`, body);
+  }
+
+  deleteRole(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.base}/roles/${id}`);
+  }
+
+  listPermissionCatalog(): Observable<{ data: TenantRolePermissionDto[] }> {
+    return this.http.get<{ data: TenantRolePermissionDto[] }>(`${this.base}/roles/permissions/catalog`);
+  }
+
+  replaceRolePermissions(roleId: string, permissionIds: string[]): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.base}/roles/${roleId}/permissions`, {
+      permission_ids: permissionIds,
+    });
+  }
+
+  listRoleAssignments(): Observable<{ data: RoleAssignmentDto[] }> {
+    return this.http.get<{ data: RoleAssignmentDto[] }>(`${this.base}/roles/users/assignments`);
+  }
+
+  assignUserRole(userId: string, roleId: string): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.base}/roles/users/${userId}/assign`, { role_id: roleId });
   }
 }

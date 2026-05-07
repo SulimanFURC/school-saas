@@ -29,13 +29,7 @@ import {
   StudentListRow,
   resolveStudentDisplayName,
 } from '@app/services';
-import {
-  compareDates,
-  compareNullableString,
-  nextSortDir,
-  type SortDir,
-  sortCopy,
-} from '../../../utils/table-sort';
+import { nextSortDir, type SortDir } from '../../../utils/table-sort';
 
 export type StudentSortKey = 'admission_no' | 'name' | 'class' | 'dob' | 'gender' | 'phone';
 
@@ -93,14 +87,6 @@ export class StudentListComponent implements OnInit {
   sortKey = signal<StudentSortKey | null>(null);
   sortDir = signal<SortDir>('asc');
 
-  readonly sortedRows = computed(() => {
-    const data = this.rows();
-    const key = this.sortKey();
-    if (!key) return data;
-    const dir = this.sortDir();
-    return sortCopy(data, (a, b) => this.compareByKey(a, b, key), dir);
-  });
-
   readonly firstIndex = computed(() => Math.max(0, (this.page() - 1) * this.pageSize()));
 
   ngOnInit(): void {
@@ -136,6 +122,7 @@ export class StudentListComponent implements OnInit {
         page: this.page(),
         pageSize: this.pageSize(),
         ...(q ? { q } : {}),
+        ...(this.sortKey() ? { sortBy: this.sortQueryField(this.sortKey()!), sortDir: this.sortDir() } : {}),
       })
       .pipe(
         catchError((e: { error?: { message?: string }; message?: string }) => {
@@ -172,6 +159,8 @@ export class StudentListComponent implements OnInit {
       this.sortKey.set(key);
       this.sortDir.set('asc');
     }
+    this.page.set(1);
+    this.load();
   }
 
   sortAria(key: StudentSortKey): 'none' | 'ascending' | 'descending' {
@@ -184,22 +173,22 @@ export class StudentListComponent implements OnInit {
     return this.sortDir() === 'asc' ? 'pi pi-sort-up-fill' : 'pi pi-sort-down-fill';
   }
 
-  private compareByKey(a: StudentListRow, b: StudentListRow, key: StudentSortKey): number {
+  private sortQueryField(key: StudentSortKey): string {
     switch (key) {
       case 'admission_no':
-        return compareNullableString(a.admission_no, b.admission_no);
+        return 'admission_no';
       case 'name':
-        return compareNullableString(this.displayName(a), this.displayName(b));
+        return 'full_name';
       case 'class':
-        return compareNullableString(a.class_name, b.class_name);
+        return 'class_name';
       case 'dob':
-        return compareDates(a.dob, b.dob);
+        return 'dob';
       case 'gender':
-        return compareNullableString(a.gender, b.gender);
+        return 'gender';
       case 'phone':
-        return compareNullableString(a.phone, b.phone);
+        return 'phone';
       default:
-        return 0;
+        return 'admission_no';
     }
   }
 

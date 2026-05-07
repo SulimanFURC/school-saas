@@ -152,6 +152,9 @@ exports.list = async (req, res) => {
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 20));
     const offset = (page - 1) * pageSize;
     const q = req.query.q != null ? String(req.query.q).trim() : '';
+    const sortBy = req.query.sort_by != null ? String(req.query.sort_by).trim() : '';
+    const sortOrderRaw = req.query.sort_order != null ? String(req.query.sort_order).trim().toLowerCase() : '';
+    const sortOrder = sortOrderRaw === 'desc' ? 'DESC' : 'ASC';
 
     const where = { tenant_id: tenantId };
     if (q) {
@@ -162,6 +165,27 @@ exports.list = async (req, res) => {
         { designation: { [Op.iLike]: `%${q}%` } },
       ];
     }
+
+    const teacherSortMap = {
+      first_name: ['first_name'],
+      last_name: ['last_name'],
+      email: ['email'],
+      designation: ['designation'],
+      joining_date: ['joining_date'],
+    };
+
+    const loginSortMap = {
+      username: ['username'],
+      status: ['status'],
+    };
+
+    const order = [];
+    if (Object.prototype.hasOwnProperty.call(teacherSortMap, sortBy)) {
+      order.push([...(teacherSortMap[sortBy]), sortOrder]);
+    } else if (Object.prototype.hasOwnProperty.call(loginSortMap, sortBy)) {
+      order.push([{ model: User, as: 'login_user' }, ...(loginSortMap[sortBy]), sortOrder]);
+    }
+    order.push(['last_name', 'ASC'], ['first_name', 'ASC']);
 
     const { count, rows } = await Teacher.findAndCountAll({
       where,
@@ -174,7 +198,7 @@ exports.list = async (req, res) => {
           attributes: ['id', 'username', 'email', 'status'],
         },
       ],
-      order: [['last_name', 'ASC'], ['first_name', 'ASC']],
+      order,
       limit: pageSize,
       offset,
     });

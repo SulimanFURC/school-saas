@@ -33,6 +33,8 @@ import {
 } from '@app/services';
 import { LookupService } from '@app/services';
 import { TeacherListRow, TeacherService } from '@app/services';
+import { FormSectionComponent } from '../../../shared/form-section/form-section.component';
+import { FormShellComponent } from '../../../shared/form-shell/form-shell.component';
 
 interface TeacherOption {
   label: string;
@@ -46,6 +48,8 @@ interface TeacherOption {
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    FormShellComponent,
+    FormSectionComponent,
     CardModule,
     ButtonModule,
     InputTextModule,

@@ -1,7 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { map } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { normalizePaginatedResponse, PaginatedResponse } from '../shared/data-table/pagination.types';
 
 export interface SubjectDto {
   id: number;
@@ -28,12 +30,20 @@ export class SubjectService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  list(params?: { q?: string; activeOnly?: boolean }) {
+  list(params?: { q?: string; activeOnly?: boolean; page?: number; limit?: number }) {
     let httpParams = new HttpParams();
     const q = params?.q != null ? params.q.trim() : '';
     if (q) httpParams = httpParams.set('q', q);
     if (params?.activeOnly === true) httpParams = httpParams.set('activeOnly', 'true');
-    return this.http.get<SubjectDto[]>(`${this.base}/subjects`, { params: httpParams });
+    if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params?.limit != null) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http
+      .get<unknown>(`${this.base}/subjects`, { params: httpParams })
+      .pipe(
+        map((body) =>
+          normalizePaginatedResponse<SubjectDto>(body, { page: params?.page ?? 1, limit: params?.limit ?? 20 })
+        )
+      );
   }
 
   create(body: SubjectCreatePayload) {

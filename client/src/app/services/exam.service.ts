@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { normalizePaginatedResponse, PaginatedResponse } from '../shared/data-table/pagination.types';
 
 export type ExamType = 'first_term' | 'second_term' | 'mid_term' | 'final' | 'unit_test' | 'mock';
 export type ExamStatus =
@@ -425,13 +426,19 @@ export class ExamService {
     status?: ExamStatus | '';
     q?: string;
     include_archived?: boolean;
-  }): Observable<{ data: ExamDto[] }> {
+    page?: number;
+    limit?: number;
+  }): Observable<PaginatedResponse<ExamDto>> {
     let p = new HttpParams();
     if (params?.academic_year_id != null) p = p.set('academic_year_id', String(params.academic_year_id));
     if (params?.status) p = p.set('status', params.status);
     if (params?.q) p = p.set('q', params.q);
     if (params?.include_archived) p = p.set('include_archived', 'true');
-    return this.http.get<{ data: ExamDto[] }>(`${this.base}/exams`, { params: p });
+    if (params?.page != null) p = p.set('page', String(params.page));
+    if (params?.limit != null) p = p.set('limit', String(params.limit));
+    return this.http
+      .get<unknown>(`${this.base}/exams`, { params: p })
+      .pipe(map((body) => normalizePaginatedResponse<ExamDto>(body, { page: params?.page ?? 1, limit: params?.limit ?? 20 })));
   }
 
   get(id: string): Observable<{ data: ExamDto }> {

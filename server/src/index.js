@@ -13,6 +13,10 @@ require('./modules/module/module.model');
 require('./modules/tenant-module/tenantModule.model');
 require('./modules/tenant-branding/tenantBranding.model');
 require('./modules/subjects/subject.model');
+const TenantRole = require('./modules/roles/tenantRole.model');
+const TenantPermission = require('./modules/roles/tenantPermission.model');
+const TenantRolePermission = require('./modules/roles/tenantRolePermission.model');
+const UserTenantRole = require('./modules/roles/userTenantRole.model');
 const tenantMiddleware = require('./core/middleware/tenant.middleware');
 const requestContextMiddleware = require('./core/middleware/request-context.middleware');
 const logger = require('./core/logger/logger');
@@ -60,6 +64,7 @@ const Notification = require('./modules/notifications/notification.model');
 const NotificationRead = require('./modules/notifications/notificationRead.model');
 const PlatformSetting = require('./modules/settings/platformSetting.model');
 const UserNotificationPreference = require('./modules/settings/userNotificationPreference.model');
+const rolesRoutes = require('./modules/roles/roles.routes');
 User.belongsTo(Student, { foreignKey: 'student_id', as: 'student' });
 User.belongsTo(Teacher, { foreignKey: 'teacher_id', as: 'teacher' });
 Teacher.hasOne(User, { foreignKey: 'teacher_id', as: 'login_user' });
@@ -113,6 +118,21 @@ Notification.hasMany(NotificationRead, { foreignKey: 'notification_id', as: 'rea
 UserNotificationPreference.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 UserNotificationPreference.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
 
+TenantRole.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
+Tenant.hasMany(TenantRole, { foreignKey: 'tenant_id', as: 'roles' });
+
+TenantRolePermission.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
+TenantRolePermission.belongsTo(TenantRole, { foreignKey: 'role_id', as: 'role' });
+TenantRolePermission.belongsTo(TenantPermission, { foreignKey: 'permission_id', as: 'permission' });
+TenantRole.hasMany(TenantRolePermission, { foreignKey: 'role_id', as: 'rolePermissions' });
+TenantPermission.hasMany(TenantRolePermission, { foreignKey: 'permission_id', as: 'permissionRoles' });
+
+UserTenantRole.belongsTo(Tenant, { foreignKey: 'tenant_id', as: 'tenant' });
+UserTenantRole.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+UserTenantRole.belongsTo(TenantRole, { foreignKey: 'role_id', as: 'role' });
+User.hasOne(UserTenantRole, { foreignKey: 'user_id', as: 'tenantRoleAssignment' });
+TenantRole.hasMany(UserTenantRole, { foreignKey: 'role_id', as: 'userAssignments' });
+
 const academicRoutes = require('./modules/classes/academic.routes');
 const studentApiRoutes = require('./modules/students/student.routes');
 const teacherApiRoutes = require('./modules/teachers/teacher.routes');
@@ -165,6 +185,7 @@ app.get('/', (req, res) => {
 app.use('/auth', authRoutes);
 app.get('/tenant-branding', authMiddleware, tenantBrandingController.getForCurrentTenant);
 app.use('/modules', modulesRoutes);
+app.use('/roles', rolesRoutes);
 app.use('/super-admin', authMiddleware, superAdminRoutes);
 app.use('/audit-logs', authMiddleware, auditRoutes);
 
